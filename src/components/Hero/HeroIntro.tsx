@@ -60,11 +60,11 @@ export const HeroIntro: React.FC = () => {
   return (
     <div
       ref={containerRef}
-      className="relative z-10 w-full max-w-xl sm:max-w-2xl mx-auto flex flex-col items-center justify-center text-center pt-24 sm:pt-28 md:pt-32 pb-4 sm:pb-6 md:h-[66vh] md:min-h-[500px] md:max-h-[590px]"
+      className="relative z-10 w-full max-w-xl sm:max-w-2xl mx-auto flex flex-col items-center justify-center text-center pt-16 sm:pt-20 md:pt-24 pb-2 sm:pb-4 h-[71svh] min-h-[460px]"
     >
       {/* App Icon Container */}
-      <div ref={iconRef} className="mb-3.5 sm:mb-4">
-        <div className="w-[74px] h-[74px] sm:w-[82px] sm:h-[82px] md:w-[86px] md:h-[86px] rounded-[22px] sm:rounded-[26px] bg-white/90 backdrop-blur-md p-1.5 ring-1 ring-black/[0.06] shadow-[0_8px_22px_rgba(0,0,0,0.05)] hover:shadow-[0_12px_28px_rgba(0,0,0,0.07)] transition-all duration-300">
+      <div ref={iconRef} className="mb-3 sm:mb-4">
+        <div className="w-[72px] h-[72px] sm:w-[80px] sm:h-[80px] md:w-[84px] md:h-[84px] rounded-[22px] sm:rounded-[26px] bg-white/90 backdrop-blur-md p-1.5 ring-1 ring-black/[0.06] shadow-[0_8px_22px_rgba(0,0,0,0.05)] hover:shadow-[0_12px_28px_rgba(0,0,0,0.07)] transition-all duration-300">
           <img
             src="/assets/app-icon-circle.png"
             alt="课程表 App 图标"
@@ -76,7 +76,7 @@ export const HeroIntro: React.FC = () => {
       {/* Product Name */}
       <h1
         ref={titleRef}
-        className="text-3xl sm:text-5xl md:text-[54px] font-semibold tracking-[-0.035em] text-neutral-950 mb-2 sm:mb-2.5 leading-tight"
+        className="text-3xl sm:text-5xl md:text-[52px] font-semibold tracking-[-0.035em] text-neutral-950 mb-2 sm:mb-2.5 leading-tight"
       >
         课程表
       </h1>
@@ -84,13 +84,13 @@ export const HeroIntro: React.FC = () => {
       {/* Subtitle */}
       <p
         ref={subtitleRef}
-        className="text-[14px] sm:text-base md:text-[18px] font-normal text-neutral-600 tracking-[-0.01em] max-w-md sm:max-w-lg mx-auto mb-5 sm:mb-6"
+        className="text-[14px] sm:text-base md:text-[18px] font-normal text-neutral-600 tracking-[-0.01em] max-w-md sm:max-w-lg mx-auto mb-4 sm:mb-6"
       >
         山东商务学子的专属课程表
       </p>
 
       {/* Download Android Button */}
-      <div ref={ctaRef} className="mb-3.5 sm:mb-4">
+      <div ref={ctaRef} className="mb-3 sm:mb-4">
         <a
           href="#download"
           onClick={handleDownloadClick}

@@ -1,0 +1,30 @@
+[
+  {
+    "width": 1366,
+    "height": 768,
+    "cardTopY": 605,
+    "viewportHeight": 768,
+    "ratio": "78.81%"
+  },
+  {
+    "width": 1440,
+    "height": 900,
+    "cardTopY": 699,
+    "viewportHeight": 900,
+    "ratio": "77.67%"
+  },
+  {
+    "width": 1920,
+    "height": 1080,
+    "cardTopY": 827,
+    "viewportHeight": 1080,
+    "ratio": "76.56%"
+  },
+  {
+    "width": 390,
+    "height": 844,
+    "cardTopY": 651,
+    "viewportHeight": 844,
+    "ratio": "77.16%"
+  }
+]

@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import { Download } from 'lucide-react'
 
 const GithubIcon: React.FC<{ className?: string }> = ({ className }) => (
@@ -17,40 +17,64 @@ const GithubIcon: React.FC<{ className?: string }> = ({ className }) => (
 )
 
 export const Header: React.FC = () => {
+  const [isScrolled, setIsScrolled] = useState<boolean>(false)
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollY = window.scrollY
+      // Hysteresis threshold to prevent flickering around boundary
+      if (scrollY > 16) {
+        setIsScrolled(true)
+      } else if (scrollY < 8) {
+        setIsScrolled(false)
+      }
+    }
+
+    handleScroll()
+    window.addEventListener('scroll', handleScroll, { passive: true })
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
+
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 sm:px-10 h-16 md:h-20 bg-white/30 backdrop-blur-xl border-b border-neutral-900/[0.03] transition-all">
+    <header
+      className={`fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-4 sm:px-8 h-12 sm:h-14 transition-[background-color,border-color,box-shadow] duration-150 ease-out select-none ${
+        isScrolled
+          ? 'bg-[#FBFBFD] border-b border-black/[0.06] shadow-[0_1px_3px_rgba(0,0,0,0.02)]'
+          : 'bg-transparent border-b border-transparent'
+      }`}
+    >
       {/* Brand Identity */}
-      <div className="flex items-center gap-3">
-        <div className="w-8 h-8 rounded-xl overflow-hidden ring-1 ring-black/10 shadow-sm bg-white p-0.5 flex items-center justify-center">
+      <div className="flex items-center gap-2.5">
+        <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-lg sm:rounded-xl overflow-hidden ring-1 ring-black/[0.08] shadow-xs bg-white p-0.5 flex items-center justify-center">
           <img
             src="/assets/app-icon-circle.png"
             alt="课程表 Logo"
-            className="w-full h-full object-cover"
+            className="w-full h-full object-cover rounded-[6px] sm:rounded-[8px]"
           />
         </div>
-        <span className="font-medium tracking-tight text-neutral-900 text-[15px]">
+        <span className="font-medium tracking-tight text-neutral-900 text-[13px] sm:text-[14px]">
           课程表
         </span>
       </div>
 
       {/* Navigation & Secondary Actions */}
       <div className="flex items-center gap-3 sm:gap-6">
-        <nav className="hidden md:flex items-center gap-6 text-[13px] font-normal text-neutral-600">
+        <nav className="hidden md:flex items-center gap-5 lg:gap-6 text-[13px] font-normal text-neutral-600">
           <a
             href="#hero"
-            className="hover:text-neutral-950 transition-colors"
+            className="hover:text-neutral-950 transition-colors duration-150"
           >
             概览
           </a>
           <a
             href="#showcase"
-            className="hover:text-neutral-950 transition-colors"
+            className="hover:text-neutral-950 transition-colors duration-150"
           >
             界面展示
           </a>
           <a
             href="#performance"
-            className="hover:text-neutral-950 transition-colors"
+            className="hover:text-neutral-950 transition-colors duration-150"
           >
             原生性能
           </a>
@@ -60,7 +84,7 @@ export const Header: React.FC = () => {
           {/* Subtle Github/Open Source indicator */}
           <a
             href="#download"
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-[13px] text-neutral-700 hover:text-neutral-950 rounded-full hover:bg-neutral-900/[0.04] transition-all"
+            className="inline-flex items-center gap-1.5 px-2.5 py-1 text-[12px] sm:text-[13px] text-neutral-700 hover:text-neutral-950 rounded-full hover:bg-neutral-900/[0.04] transition-colors duration-150"
             aria-label="开源仓库"
           >
             <GithubIcon className="w-3.5 h-3.5" />
@@ -70,9 +94,9 @@ export const Header: React.FC = () => {
           {/* Quick Header CTA */}
           <a
             href="#download"
-            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-[13px] font-medium text-white bg-neutral-950 rounded-full shadow-sm hover:bg-neutral-800 transition-all active:scale-[0.98]"
+            className="inline-flex items-center gap-1.5 px-3 py-1 sm:px-3.5 sm:py-1.5 text-[12px] sm:text-[13px] font-medium text-white bg-neutral-950 rounded-full shadow-xs hover:bg-neutral-800 transition-colors duration-150 active:scale-[0.98]"
           >
-            <Download className="w-3.5 h-3.5" />
+            <Download className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
             <span>下载</span>
           </a>
         </div>
