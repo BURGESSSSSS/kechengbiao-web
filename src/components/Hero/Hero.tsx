@@ -22,7 +22,7 @@ export const Hero: React.FC = () => {
 
       tl.fromTo(
         iconRef.current,
-        { opacity: 0, y: 16, scale: 0.95 },
+        { opacity: 0, y: 16, scale: 0.96 },
         { opacity: 1, y: 0, scale: 1, duration: 0.8 }
       )
         .fromTo(
@@ -51,8 +51,8 @@ export const Hero: React.FC = () => {
         )
         .fromTo(
           peekRef.current,
-          { opacity: 0, y: 40 },
-          { opacity: 1, y: 0, duration: 1.0 },
+          { opacity: 0, y: 36 },
+          { opacity: 1, y: 0, duration: 0.9 },
           '-=0.5'
         )
     }, heroRef)
@@ -70,20 +70,20 @@ export const Hero: React.FC = () => {
     <section
       id="hero"
       ref={heroRef}
-      className="relative min-h-[100svh] w-full flex flex-col items-center justify-between pt-28 sm:pt-32 md:pt-36 px-6 overflow-hidden select-none"
+      className="relative min-h-[100svh] w-full flex flex-col items-center justify-between pt-20 sm:pt-28 md:pt-36 px-4 sm:px-6 overflow-hidden select-none"
     >
       {/* Living Ethereal Ambient Canvas */}
       <AmbientBackground />
 
       {/* Central Hero Information Hierarchy */}
-      <div className="relative z-10 flex flex-col items-center text-center max-w-2xl mx-auto my-auto">
-        {/* App Icon Container */}
-        <div ref={iconRef} className="mb-6 md:mb-7">
-          <div className="w-18 h-18 sm:w-20 sm:h-20 rounded-[24px] sm:rounded-[26px] bg-white/90 backdrop-blur-xl p-1.5 ring-1 ring-black/[0.07] shadow-[0_10px_28px_rgba(0,0,0,0.06)] hover:shadow-[0_12px_32px_rgba(0,0,0,0.09)] transition-all duration-300">
+      <div className="relative z-10 flex flex-col items-center text-center max-w-xl sm:max-w-2xl mx-auto my-auto pt-4 sm:pt-0">
+        {/* App Icon Container: strictly controlled anchor scale (76-88px) */}
+        <div ref={iconRef} className="mb-4 sm:mb-6">
+          <div className="w-[76px] h-[76px] sm:w-[84px] sm:h-[84px] md:w-[88px] md:h-[88px] rounded-[22px] sm:rounded-[26px] bg-white/85 backdrop-blur-md p-1.5 ring-1 ring-black/[0.06] shadow-[0_8px_20px_rgba(0,0,0,0.04)] hover:shadow-[0_10px_24px_rgba(0,0,0,0.06)] transition-all duration-300">
             <img
               src="/assets/app-icon-circle.png"
               alt="课程表 App 图标"
-              className="w-full h-full object-cover rounded-[19px] sm:rounded-[21px]"
+              className="w-full h-full object-cover rounded-[18px] sm:rounded-[21px]"
             />
           </div>
         </div>
@@ -91,7 +91,7 @@ export const Hero: React.FC = () => {
         {/* Product Name */}
         <h1
           ref={titleRef}
-          className="text-4xl sm:text-5xl md:text-[56px] font-semibold tracking-[-0.035em] text-neutral-950 mb-3.5 leading-tight"
+          className="text-3xl sm:text-5xl md:text-[58px] font-semibold tracking-[-0.035em] text-neutral-950 mb-2 sm:mb-3.5 leading-tight"
         >
           课程表
         </h1>
@@ -99,27 +99,27 @@ export const Hero: React.FC = () => {
         {/* Subtitle */}
         <p
           ref={subtitleRef}
-          className="text-base sm:text-lg md:text-[19px] font-normal text-neutral-600 tracking-[-0.01em] max-w-lg mx-auto mb-8 md:mb-9"
+          className="text-[14px] sm:text-lg md:text-[19px] font-normal text-neutral-600 tracking-[-0.01em] max-w-md sm:max-w-lg mx-auto mb-6 sm:mb-8"
         >
           山东商务学子的专属课程表
         </p>
 
         {/* Download Android Button */}
-        <div ref={ctaRef} className="mb-6 md:mb-7">
+        <div ref={ctaRef} className="mb-4 sm:mb-6">
           <a
             href="#download"
             onClick={handleDownloadClick}
-            className="group inline-flex items-center gap-2.5 px-6 py-3 sm:px-7 sm:py-3.5 rounded-full bg-neutral-950 text-white text-[14px] sm:text-[15px] font-medium tracking-tight shadow-[0_4px_14px_rgba(0,0,0,0.12)] hover:bg-neutral-800 hover:shadow-[0_8px_24px_rgba(0,0,0,0.18)] active:scale-[0.98] transition-all duration-200 cursor-pointer"
+            className="group inline-flex items-center gap-2 px-6 py-2.5 sm:px-7 sm:py-3.5 rounded-full bg-neutral-950 text-white text-[13px] sm:text-[15px] font-medium tracking-tight shadow-[0_4px_14px_rgba(0,0,0,0.1)] hover:bg-neutral-800 hover:shadow-[0_6px_18px_rgba(0,0,0,0.14)] active:scale-[0.98] transition-all duration-200 cursor-pointer"
           >
-            <Download className="w-4 h-4 transition-transform group-hover:-translate-y-0.5 duration-200" />
+            <Download className="w-3.5 h-3.5 sm:w-4 sm:h-4 transition-transform group-hover:-translate-y-0.5 duration-200" />
             <span>下载 Android</span>
           </a>
         </div>
 
-        {/* Lightweight Metadata Attributes (Not Feature Cards) */}
+        {/* Lightweight Metadata Attributes */}
         <div
           ref={attributesRef}
-          className="flex items-center justify-center gap-2.5 sm:gap-3.5 text-xs sm:text-[13px] font-normal text-neutral-500 tracking-wide"
+          className="flex items-center justify-center gap-2 sm:gap-3 text-xs sm:text-[13px] font-normal text-neutral-400 sm:text-neutral-500 tracking-wide"
         >
           <span>开源</span>
           <span className="text-neutral-300 select-none">·</span>
@@ -131,30 +131,23 @@ export const Hero: React.FC = () => {
         </div>
       </div>
 
-      {/* Bottom fold peek: Top chrome of product interface peeking up into view (Codex hallmark) */}
+      {/* Bottom fold peek: Directly and naturally peeking the real 今日 interface */}
       <div
         ref={peekRef}
-        className="relative z-10 w-full max-w-4xl mx-auto flex flex-col items-center mt-6 sm:mt-10"
+        className="relative z-10 w-full max-w-md sm:max-w-lg md:max-w-xl mx-auto flex flex-col items-center mt-4 sm:mt-6"
       >
         <a
           href="#showcase"
-          className="group block w-full max-w-lg md:max-w-xl mx-auto translate-y-4 sm:translate-y-6 hover:translate-y-2 transition-transform duration-300"
+          className="group block w-full translate-y-3 sm:translate-y-6 hover:translate-y-1 transition-transform duration-300"
           aria-label="查看产品界面"
         >
-          <div className="rounded-t-[28px] sm:rounded-t-[32px] bg-white/80 backdrop-blur-xl p-3 pb-0 ring-1 ring-black/[0.06] shadow-[0_-8px_24px_rgba(0,0,0,0.04)]">
-            <div className="h-10 sm:h-12 border-b border-neutral-100 flex items-center justify-between px-4 text-xs text-neutral-400">
-              <div className="flex items-center gap-2">
-                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500/80 animate-pulse" />
-                <span className="font-medium text-neutral-700">实时课表就绪</span>
-              </div>
-              <span className="text-[11px] text-neutral-400 group-hover:text-neutral-900 transition-colors">
-                滚动查看界面 ↓
-              </span>
-            </div>
-            {/* Top clipping of Today view header */}
-            <div className="h-10 sm:h-12 bg-white/60 flex items-center justify-between px-4 text-xs text-neutral-500">
-              <span className="font-semibold text-neutral-900 text-sm">今日 · 周一</span>
-              <span className="px-2 py-0.5 rounded-full bg-neutral-100 text-[11px] text-neutral-600">3 节课</span>
+          <div className="w-[270px] sm:w-[300px] md:w-[320px] mx-auto rounded-t-[28px] sm:rounded-t-[32px] overflow-hidden bg-white ring-1 ring-black/[0.05] shadow-[0_-4px_24px_rgba(0,0,0,0.03)] p-1.5 sm:p-2 pb-0">
+            <div className="rounded-t-[22px] sm:rounded-t-[26px] overflow-hidden bg-[#FBFBFD] max-h-[90px] sm:max-h-[120px] md:max-h-[140px]">
+              <img
+                src="/assets/screen-today.jpg"
+                alt="今日界面预览"
+                className="w-full h-auto object-cover object-top block"
+              />
             </div>
           </div>
         </a>
