@@ -1,0 +1,54 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+}
+
+html {
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Custom subtle scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.12);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.22);
+}
+
+/* Smooth card shadows */
+.soft-card-shadow {
+  box-shadow: 
+    0 1px 2px -1px rgba(0, 0, 0, 0.04),
+    0 4px 12px -2px rgba(0, 0, 0, 0.06),
+    0 16px 40px -8px rgba(0, 0, 0, 0.08);
+}
+
+.hero-screen-shadow {
+  box-shadow: 
+    0 2px 4px rgba(0, 0, 0, 0.02),
+    0 10px 24px rgba(15, 23, 42, 0.06),
+    0 30px 70px rgba(15, 23, 42, 0.12);
+}
+
+.secondary-screen-shadow {
+  box-shadow: 
+    0 1px 3px rgba(0, 0, 0, 0.02),
+    0 8px 20px rgba(15, 23, 42, 0.05),
+    0 24px 50px rgba(15, 23, 42, 0.09);
+}
