@@ -1,11 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
-
-interface CardItem {
-  id: string
-  name: string
-  image: string
-}
+import { CardViewport, CardItem } from './CardViewport'
 
 const CARDS: CardItem[] = [
   {
@@ -28,216 +23,287 @@ const CARDS: CardItem[] = [
 export const ThreeCardShowcase: React.FC = () => {
   // Default center is "今日" (index 1)
   const [activeIndex, setActiveIndex] = useState<number>(1)
-  const [dragOffset, setDragOffset] = useState<number>(0)
-  const [isDragging, setIsDragging] = useState<boolean>(false)
-  const [isAnimating, setIsAnimating] = useState<boolean>(false)
+  // Continuous drag progress: in range approx [-1.2, 1.2]
+  // 0: current card centered
+  // +1: left card centered (dragged right)
+  // -1: right card centered (dragged left)
+  const [dragProgress, setDragProgress] = useState<number>(0)
+  const [windowWidth, setWindowWidth] = useState<number>(
+    typeof window !== 'undefined' ? window.innerWidth : 1440
+  )
 
-  const startXRef = useRef<number>(0)
-  const currentXRef = useRef<number>(0)
   const isPointerDownRef = useRef<boolean>(false)
-  const containerRef = useRef<HTMLDivElement>(null)
+  const startXRef = useRef<number>(0)
+  const startProgressRef = useRef<number>(0)
+  const animFrameRef = useRef<number | null>(null)
+  const dragProgressRef = useRef<number>(0)
+  dragProgressRef.current = dragProgress
 
-  const goToNext = useCallback(() => {
-    setActiveIndex((prev) => (prev + 1) % 3)
-    setIsAnimating(true)
-  }, [])
-
-  const goToPrev = useCallback(() => {
-    setActiveIndex((prev) => (prev - 1 + 3) % 3)
-    setIsAnimating(true)
-  }, [])
-
+  // Window resize observer for responsive step spacing
   useEffect(() => {
-    if (isAnimating) {
-      const timer = setTimeout(() => setIsAnimating(false), 600)
-      return () => clearTimeout(timer)
-    }
-  }, [isAnimating])
+    const handleResize = () => setWindowWidth(window.innerWidth)
+    window.addEventListener('resize', handleResize, { passive: true })
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
 
-  // Pointer drag/swipe event handlers (unified for mouse and touch)
-  const handlePointerDown = (e: React.PointerEvent) => {
+  // Clean up RAF on unmount
+  useEffect(() => {
+    return () => {
+      if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current)
+    }
+  }, [])
+
+  // Unified smooth spring/snap animation driving dragProgress
+  const animateToTarget = useCallback(
+    (targetProgress: number, targetIndexDelta: number) => {
+      if (animFrameRef.current) {
+        cancelAnimationFrame(animFrameRef.current)
+        animFrameRef.current = null
+      }
+
+      const initialProgress = dragProgressRef.current
+      const startTime = performance.now()
+      const duration = 320 // ms
+
+      const step = (now: number) => {
+        const elapsed = now - startTime
+        const t = Math.min(1, elapsed / duration)
+        // Cubic ease out: 1 - (1 - t)^3
+        const ease = 1 - Math.pow(1 - t, 3)
+        const current = initialProgress + (targetProgress - initialProgress) * ease
+
+        setDragProgress(current)
+
+        if (t < 1) {
+          animFrameRef.current = requestAnimationFrame(step)
+        } else {
+          animFrameRef.current = null
+          if (targetIndexDelta !== 0) {
+            setActiveIndex((prev) => (prev + targetIndexDelta + 3) % 3)
+          }
+          setDragProgress(0)
+        }
+      }
+
+      animFrameRef.current = requestAnimationFrame(step)
+    },
+    []
+  )
+
+  // Pointer event handlers with setPointerCapture (mouse and touch)
+  const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (animFrameRef.current) {
+      cancelAnimationFrame(animFrameRef.current)
+      animFrameRef.current = null
+    }
+
     isPointerDownRef.current = true
     startXRef.current = e.clientX
-    currentXRef.current = e.clientX
-    setIsDragging(false)
-  }
+    startProgressRef.current = dragProgressRef.current
 
-  const handlePointerMove = (e: React.PointerEvent) => {
-    if (!isPointerDownRef.current) return
-    const diff = e.clientX - startXRef.current
-    if (Math.abs(diff) > 6) {
-      setIsDragging(true)
-      setDragOffset(diff * 0.75)
+    try {
+      e.currentTarget.setPointerCapture(e.pointerId)
+    } catch {
+      // ignore
     }
   }
 
-  const handlePointerUp = (e: React.PointerEvent) => {
+  const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!isPointerDownRef.current) return
+
+    const deltaX = e.clientX - startXRef.current
+    const swipeDistance = windowWidth < 640 ? 210 : 300
+    const progressDelta = deltaX / swipeDistance
+
+    let nextProgress = startProgressRef.current + progressDelta
+    // Resistance beyond [-1, 1]
+    if (nextProgress > 1) {
+      nextProgress = 1 + (nextProgress - 1) * 0.35
+    } else if (nextProgress < -1) {
+      nextProgress = -1 + (nextProgress + 1) * 0.35
+    }
+
+    setDragProgress(nextProgress)
+  }
+
+  const handlePointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
     if (!isPointerDownRef.current) return
     isPointerDownRef.current = false
-    const diff = e.clientX - startXRef.current
 
-    if (Math.abs(diff) > 45) {
-      if (diff < 0) {
-        goToNext()
-      } else {
-        goToPrev()
+    try {
+      if (e.currentTarget.hasPointerCapture(e.pointerId)) {
+        e.currentTarget.releasePointerCapture(e.pointerId)
       }
+    } catch {
+      // ignore
     }
-    setDragOffset(0)
-    setTimeout(() => setIsDragging(false), 50)
+
+    const currentP = dragProgressRef.current
+    const snapThreshold = 0.22
+
+    let targetP = 0
+    let deltaIndex = 0
+
+    if (currentP > snapThreshold) {
+      targetP = 1
+      deltaIndex = -1 // left card slides into center
+    } else if (currentP < -snapThreshold) {
+      targetP = -1
+      deltaIndex = 1 // right card slides into center
+    } else {
+      targetP = 0
+      deltaIndex = 0
+    }
+
+    animateToTarget(targetP, deltaIndex)
   }
 
-  const handlePointerCancel = () => {
+  const handlePointerCancel = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!isPointerDownRef.current) return
     isPointerDownRef.current = false
-    setDragOffset(0)
-    setIsDragging(false)
+    try {
+      if (e.currentTarget.hasPointerCapture(e.pointerId)) {
+        e.currentTarget.releasePointerCapture(e.pointerId)
+      }
+    } catch {
+      // ignore
+    }
+    animateToTarget(0, 0)
   }
 
-  // Card click behavior: Clicking flank cards shifts them to center
-  const handleCardClick = (index: number) => {
-    if (isDragging) return
-    const diff = (index - activeIndex + 3) % 3
-    if (diff === 1) {
-      goToNext()
-    } else if (diff === 2) {
-      goToPrev()
+  // Click on flank card smoothly rotates it to center
+  const handleCardClick = (baseOffset: number) => {
+    if (baseOffset === -1) {
+      animateToTarget(1, -1)
+    } else if (baseOffset === 1) {
+      animateToTarget(-1, 1)
     }
   }
+
+  // Step spacing between card centers
+  const stepSpacing =
+    windowWidth < 640 ? 190 : windowWidth < 768 ? 260 : windowWidth < 1024 ? 315 : 360
 
   return (
-    <div
-      ref={containerRef}
-      className="relative w-full max-w-6xl mx-auto flex flex-col items-center select-none pt-2 pb-12 overflow-hidden"
-    >
-      {/* Current Active Label: Quiet and minimal */}
-      <div className="h-7 mb-4 flex items-center justify-center">
-        <span className="text-[13px] sm:text-sm font-medium tracking-wide text-neutral-800 transition-opacity duration-300">
-          {CARDS[activeIndex].name}
-        </span>
+    <div className="relative w-full max-w-6xl mx-auto flex flex-col items-center select-none pt-1 pb-16 overflow-hidden">
+      {/* 
+        Independent Label Track:
+        All three labels exist on the exact same horizontal baseline.
+        They shift and crossfade continuously with dragProgress,
+        never enter card DOM, never blur, and never drop to the bottom.
+      */}
+      <div className="relative w-full max-w-xs mx-auto h-8 mb-4 sm:mb-6 flex items-center justify-center">
+        {CARDS.map((card, i) => {
+          const baseOffset = ((i - activeIndex + 1) % 3 + 3) % 3 - 1
+          const continuousPos = baseOffset + dragProgress
+          const normPos = ((continuousPos + 1.5) % 3 + 3) % 3 - 1.5
+          const absPos = Math.abs(normPos)
+
+          const labelSpacing = 92
+          const labelX = normPos * labelSpacing
+          const labelOpacity = Math.max(0.35, 1.0 - 0.58 * Math.min(1, absPos))
+          const isPrimary = absPos < 0.45
+
+          return (
+            <button
+              key={card.id}
+              onClick={() => {
+                if (baseOffset === -1) animateToTarget(1, -1)
+                else if (baseOffset === 1) animateToTarget(-1, 1)
+              }}
+              style={{
+                transform: `translateX(${labelX.toFixed(2)}px)`,
+                opacity: labelOpacity,
+              }}
+              className={`absolute text-[13px] sm:text-sm tracking-wide transition-colors duration-150 cursor-pointer ${
+                isPrimary
+                  ? 'text-neutral-900 font-medium'
+                  : 'text-neutral-400 font-normal hover:text-neutral-600'
+              }`}
+            >
+              {card.name}
+            </button>
+          )
+        })}
       </div>
 
-      {/* Interactive Carousel Stage */}
+      {/* Interactive Carousel Stage with Direct Manipulation */}
       <div
-        className="relative w-full h-[520px] sm:h-[600px] md:h-[640px] flex items-center justify-center cursor-grab active:cursor-grabbing touch-pan-y"
+        className="relative w-full h-[540px] sm:h-[600px] md:h-[660px] lg:h-[700px] flex items-center justify-center cursor-grab active:cursor-grabbing touch-pan-y"
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
         onPointerCancel={handlePointerCancel}
       >
         {CARDS.map((card, index) => {
-          // Circular relative offset: 0 = center, 1 = right, 2 = left
-          const diff = (index - activeIndex + 3) % 3
-          const isCenter = diff === 0
-          const isRight = diff === 1
-          const isLeft = diff === 2
+          // Circular relative offset in {-1, 0, 1}
+          const baseOffset = ((index - activeIndex + 1) % 3 + 3) % 3 - 1
+          const continuousPos = baseOffset + dragProgress
+          const normPos = ((continuousPos + 1.5) % 3 + 3) % 3 - 1.5
+          const absPos = Math.abs(normPos)
 
-          // Responsive spatial offsets
-          let scale = 1.0
-          let opacity = 1.0
-          let blur = '0px'
-          let zIndex = 20
-
-          if (isCenter) {
-            scale = 1.0
-            opacity = 1.0
-            blur = isAnimating ? '1px' : '0px'
-            zIndex = 30
-          } else if (isRight) {
-            scale = 0.88
-            opacity = 0.72
-            blur = '1.5px'
-            zIndex = 10
-          } else if (isLeft) {
-            scale = 0.88
-            opacity = 0.72
-            blur = '1.5px'
-            zIndex = 10
-          }
+          // Continuous interpolation for all properties
+          const x = normPos * stepSpacing
+          const scale = 1.0 - 0.12 * Math.min(1, absPos)
+          const opacity = Math.max(
+            0.25,
+            1.0 - 0.28 * Math.min(1, absPos) - 0.45 * Math.max(0, absPos - 1)
+          )
+          const blurAmount = 1.5 * Math.min(1, absPos)
+          const filter = blurAmount > 0.05 ? `blur(${blurAmount.toFixed(2)}px)` : 'none'
+          const zIndex = Math.round(30 - 20 * Math.min(1.5, absPos))
+          const isCenter = absPos < 0.35
 
           return (
             <div
               key={card.id}
-              onClick={() => handleCardClick(index)}
+              onClick={() => handleCardClick(baseOffset)}
               style={{
-                zIndex,
+                transform: `translateX(${x.toFixed(2)}px) scale(${scale.toFixed(3)})`,
                 opacity,
-                filter: `blur(${blur})`,
-                transform: isCenter && dragOffset !== 0 ? `translateX(${dragOffset}px)` : undefined,
-                transition: isDragging
-                  ? 'none'
-                  : 'transform 0.65s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.5s ease, filter 0.5s ease',
+                filter,
+                zIndex,
+                willChange: 'transform, opacity, filter',
               }}
               className={`absolute top-0 bottom-0 flex flex-col items-center justify-start ${
-                isCenter
-                  ? 'cursor-default pointer-events-auto'
-                  : 'cursor-pointer hover:opacity-90'
-              } ${
-                isRight
-                  ? 'translate-x-[190px] sm:translate-x-[260px] md:translate-x-[320px] lg:translate-x-[360px]'
-                  : isLeft
-                  ? '-translate-x-[190px] sm:-translate-x-[260px] md:-translate-x-[320px] lg:-translate-x-[360px]'
-                  : ''
+                isCenter ? 'cursor-default pointer-events-auto' : 'cursor-pointer'
               }`}
             >
-              {/* Card Container with subtle software-first framing */}
-              <div
-                style={{
-                  transform: isCenter ? `scale(${scale})` : `scale(${scale})`,
-                }}
-                className={`relative w-[240px] sm:w-[280px] md:w-[310px] lg:w-[325px] rounded-[28px] sm:rounded-[32px] overflow-hidden bg-white ring-1 ring-black/[0.04] ${
-                  isCenter
-                    ? 'shadow-[0_12px_40px_rgba(15,23,42,0.08)] ring-black/[0.06]'
-                    : 'shadow-[0_4px_20px_rgba(15,23,42,0.03)] ring-black/[0.03]'
-                } transition-shadow duration-500`}
-              >
-                <img
-                  src={card.image}
-                  alt={card.name}
-                  draggable={false}
-                  className="w-full h-auto object-cover block pointer-events-none"
-                  loading="eager"
-                />
-              </div>
-
-              {/* Minimal identification tag below flanking cards */}
-              {!isCenter && (
-                <span className="mt-3 text-xs font-normal tracking-wide text-neutral-400 select-none">
-                  {card.name}
-                </span>
-              )}
+              <CardViewport card={card} isCenter={isCenter} />
             </div>
           )
         })}
 
-        {/* Restrained Flank Navigation Buttons (Desktop only, subtle) */}
+        {/* Quiet desktop flank navigation arrows */}
         <button
-          onClick={goToPrev}
+          onClick={() => animateToTarget(1, -1)}
           aria-label="查看上一视图"
-          className="hidden md:flex absolute left-4 lg:left-12 z-40 w-10 h-10 rounded-full bg-white/70 backdrop-blur-md ring-1 ring-black/[0.06] shadow-sm items-center justify-center text-neutral-600 hover:text-neutral-950 hover:bg-white transition-all active:scale-95"
+          className="hidden md:flex absolute left-4 lg:left-10 z-40 w-10 h-10 rounded-full bg-white/75 backdrop-blur-md ring-1 ring-black/[0.06] shadow-sm items-center justify-center text-neutral-600 hover:text-neutral-950 hover:bg-white transition-all active:scale-95 cursor-pointer"
         >
           <ChevronLeft className="w-5 h-5 -translate-x-0.5" />
         </button>
 
         <button
-          onClick={goToNext}
+          onClick={() => animateToTarget(-1, 1)}
           aria-label="查看下一视图"
-          className="hidden md:flex absolute right-4 lg:right-12 z-40 w-10 h-10 rounded-full bg-white/70 backdrop-blur-md ring-1 ring-black/[0.06] shadow-sm items-center justify-center text-neutral-600 hover:text-neutral-950 hover:bg-white transition-all active:scale-95"
+          className="hidden md:flex absolute right-4 lg:right-10 z-40 w-10 h-10 rounded-full bg-white/75 backdrop-blur-md ring-1 ring-black/[0.06] shadow-sm items-center justify-center text-neutral-600 hover:text-neutral-950 hover:bg-white transition-all active:scale-95 cursor-pointer"
         >
           <ChevronRight className="w-5 h-5 translate-x-0.5" />
         </button>
       </div>
 
-      {/* Pagination Dot Indicators: Quiet and refined */}
+      {/* Pagination Dot Indicators */}
       <div className="flex items-center gap-2 mt-4 sm:mt-6 z-30">
         {CARDS.map((card, idx) => (
           <button
             key={card.id}
             onClick={() => {
-              setActiveIndex(idx)
-              setIsAnimating(true)
+              const diff = ((idx - activeIndex + 1) % 3 + 3) % 3 - 1
+              if (diff === 1) animateToTarget(-1, 1)
+              else if (diff === -1) animateToTarget(1, -1)
             }}
             aria-label={`切换至${card.name}`}
-            className={`transition-all duration-300 rounded-full ${
+            className={`transition-all duration-300 rounded-full cursor-pointer ${
               idx === activeIndex
                 ? 'w-6 h-1.5 bg-neutral-900'
                 : 'w-1.5 h-1.5 bg-neutral-300 hover:bg-neutral-400'
