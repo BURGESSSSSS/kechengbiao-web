@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react'
 import gsap from 'gsap'
 import { AmbientBackground } from './AmbientBackground'
+import { ThreeCardShowcase } from '../Showcase/ThreeCardShowcase'
 import { Download } from 'lucide-react'
 
 export const Hero: React.FC = () => {
@@ -10,7 +11,7 @@ export const Hero: React.FC = () => {
   const subtitleRef = useRef<HTMLParagraphElement>(null)
   const ctaRef = useRef<HTMLDivElement>(null)
   const attributesRef = useRef<HTMLDivElement>(null)
-  const peekRef = useRef<HTMLDivElement>(null)
+  const showcaseWrapperRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     const ctx = gsap.context(() => {
@@ -22,7 +23,7 @@ export const Hero: React.FC = () => {
 
       tl.fromTo(
         iconRef.current,
-        { opacity: 0, y: 16, scale: 0.96 },
+        { opacity: 0, y: 16, scale: 0.95 },
         { opacity: 1, y: 0, scale: 1, duration: 0.8 }
       )
         .fromTo(
@@ -50,8 +51,8 @@ export const Hero: React.FC = () => {
           '-=0.55'
         )
         .fromTo(
-          peekRef.current,
-          { opacity: 0, y: 36 },
+          showcaseWrapperRef.current,
+          { opacity: 0, y: 32 },
           { opacity: 1, y: 0, duration: 0.9 },
           '-=0.5'
         )
@@ -70,16 +71,16 @@ export const Hero: React.FC = () => {
     <section
       id="hero"
       ref={heroRef}
-      className="relative min-h-[100svh] w-full flex flex-col items-center justify-between pt-20 sm:pt-28 md:pt-36 px-4 sm:px-6 overflow-hidden select-none"
+      className="relative w-full flex flex-col items-center pt-20 sm:pt-24 md:pt-28 px-4 sm:px-6 overflow-hidden select-none"
     >
-      {/* Living Ethereal Ambient Canvas */}
+      {/* Living Ethereal Ambient Canvas (Continuous across Hero & Showcase) */}
       <AmbientBackground />
 
-      {/* Central Hero Information Hierarchy */}
-      <div className="relative z-10 flex flex-col items-center text-center max-w-xl sm:max-w-2xl mx-auto my-auto pt-4 sm:pt-0">
-        {/* App Icon Container: strictly controlled anchor scale (76-88px) */}
-        <div ref={iconRef} className="mb-4 sm:mb-6">
-          <div className="w-[76px] h-[76px] sm:w-[84px] sm:h-[84px] md:w-[88px] md:h-[88px] rounded-[22px] sm:rounded-[26px] bg-white/85 backdrop-blur-md p-1.5 ring-1 ring-black/[0.06] shadow-[0_8px_20px_rgba(0,0,0,0.04)] hover:shadow-[0_10px_24px_rgba(0,0,0,0.06)] transition-all duration-300">
+      {/* Central Hero Information Hierarchy: Concentrated, balanced, and steady */}
+      <div className="relative z-10 flex flex-col items-center text-center max-w-xl sm:max-w-2xl mx-auto mb-6 sm:mb-8">
+        {/* App Icon Container: strictly controlled anchor scale */}
+        <div ref={iconRef} className="mb-3.5 sm:mb-4">
+          <div className="w-[74px] h-[74px] sm:w-[82px] sm:h-[82px] md:w-[86px] md:h-[86px] rounded-[22px] sm:rounded-[26px] bg-white/90 backdrop-blur-md p-1.5 ring-1 ring-black/[0.06] shadow-[0_8px_22px_rgba(0,0,0,0.05)] hover:shadow-[0_12px_28px_rgba(0,0,0,0.07)] transition-all duration-300">
             <img
               src="/assets/app-icon-circle.png"
               alt="课程表 App 图标"
@@ -91,7 +92,7 @@ export const Hero: React.FC = () => {
         {/* Product Name */}
         <h1
           ref={titleRef}
-          className="text-3xl sm:text-5xl md:text-[58px] font-semibold tracking-[-0.035em] text-neutral-950 mb-2 sm:mb-3.5 leading-tight"
+          className="text-3xl sm:text-5xl md:text-[54px] font-semibold tracking-[-0.035em] text-neutral-950 mb-2 sm:mb-2.5 leading-tight"
         >
           课程表
         </h1>
@@ -99,13 +100,13 @@ export const Hero: React.FC = () => {
         {/* Subtitle */}
         <p
           ref={subtitleRef}
-          className="text-[14px] sm:text-lg md:text-[19px] font-normal text-neutral-600 tracking-[-0.01em] max-w-md sm:max-w-lg mx-auto mb-6 sm:mb-8"
+          className="text-[14px] sm:text-base md:text-[18px] font-normal text-neutral-600 tracking-[-0.01em] max-w-md sm:max-w-lg mx-auto mb-5 sm:mb-6"
         >
           山东商务学子的专属课程表
         </p>
 
         {/* Download Android Button */}
-        <div ref={ctaRef} className="mb-4 sm:mb-6">
+        <div ref={ctaRef} className="mb-3.5 sm:mb-4">
           <a
             href="#download"
             onClick={handleDownloadClick}
@@ -119,7 +120,7 @@ export const Hero: React.FC = () => {
         {/* Lightweight Metadata Attributes */}
         <div
           ref={attributesRef}
-          className="flex items-center justify-center gap-2 sm:gap-3 text-xs sm:text-[13px] font-normal text-neutral-400 sm:text-neutral-500 tracking-wide"
+          className="flex items-center justify-center gap-2 sm:gap-3 text-xs sm:text-[13px] font-normal text-neutral-400 tracking-wide"
         >
           <span>开源</span>
           <span className="text-neutral-300 select-none">·</span>
@@ -131,26 +132,15 @@ export const Hero: React.FC = () => {
         </div>
       </div>
 
-      {/* Bottom fold peek: Directly and naturally peeking the real 今日 interface */}
+      {/* The Three-Card Interactive Component:
+          Directly exposed in the first screen (~50% visible without scrolling),
+          mirroring the OpenAI Codex Hero product stage */}
       <div
-        ref={peekRef}
-        className="relative z-10 w-full max-w-md sm:max-w-lg md:max-w-xl mx-auto flex flex-col items-center mt-4 sm:mt-6"
+        id="showcase"
+        ref={showcaseWrapperRef}
+        className="relative z-10 w-full max-w-6xl mx-auto mt-2 sm:mt-4"
       >
-        <a
-          href="#showcase"
-          className="group block w-full translate-y-3 sm:translate-y-6 hover:translate-y-1 transition-transform duration-300"
-          aria-label="查看产品界面"
-        >
-          <div className="w-[270px] sm:w-[300px] md:w-[320px] mx-auto rounded-t-[28px] sm:rounded-t-[32px] overflow-hidden bg-white ring-1 ring-black/[0.05] shadow-[0_-4px_24px_rgba(0,0,0,0.03)] p-1.5 sm:p-2 pb-0">
-            <div className="rounded-t-[22px] sm:rounded-t-[26px] overflow-hidden bg-[#FBFBFD] max-h-[90px] sm:max-h-[120px] md:max-h-[140px]">
-              <img
-                src="/assets/screen-today.jpg"
-                alt="今日界面预览"
-                className="w-full h-auto object-cover object-top block"
-              />
-            </div>
-          </div>
-        </a>
+        <ThreeCardShowcase />
       </div>
     </section>
   )

@@ -18,16 +18,16 @@ uniform vec2 uMouse;
 
 varying vec2 vUv;
 
-// Smooth cubic Simplex-style noise for silky organic motion
+// High-grade 2D Simplex Noise with smooth cubic falloff
 vec3 mod289(vec3 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
 vec2 mod289(vec2 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
 vec3 permute(vec3 x) { return mod289(((x*34.0)+1.0)*x); }
 
 float snoise(vec2 v) {
-  const vec4 C = vec4(0.211324865405187,  // (3.0-sqrt(3.0))/6.0
-                      0.366025403784439,  // 0.5*(sqrt(3.0)-1.0)
-                     -0.577350269189626,  // -1.0 + 2.0 * C.x
-                      0.024390243902439); // 1.0 / 41.0
+  const vec4 C = vec4(0.211324865405187,
+                      0.366025403784439,
+                     -0.577350269189626,
+                      0.024390243902439);
   vec2 i  = floor(v + dot(v, C.yy) );
   vec2 x0 = v -   i + dot(i, C.xx);
   vec2 i1;
@@ -38,8 +38,8 @@ float snoise(vec2 v) {
   vec3 p = permute( permute( i.y + vec3(0.0, i1.y, 1.0 ))
     + i.x + vec3(0.0, i1.x, 1.0 ));
   vec3 m = max(0.5 - vec3(dot(x0,x0), dot(x12.xy,x12.xy), dot(x12.zw,x12.zw)), 0.0);
-  m = m*m ;
-  m = m*m ;
+  m = m*m;
+  m = m*m;
   vec3 x = 2.0 * fract(p * C.www) - 1.0;
   vec3 h = abs(x) - 0.5;
   vec3 ox = floor(x + 0.5);
@@ -51,11 +51,12 @@ float snoise(vec2 v) {
   return 130.0 * dot(m, g);
 }
 
-// Broad, low-frequency atmospheric noise (no ripple marbling)
-float smoothAtmosphere(vec2 p) {
+// Broad atmospheric octave blending
+float fbm(vec2 p) {
   float v = 0.0;
-  v += 0.65 * snoise(p * 0.45);
-  v += 0.35 * snoise(p * 0.9 + vec2(1.7, 3.2));
+  v += 0.55 * snoise(p * 0.5);
+  v += 0.30 * snoise(p * 1.0 + vec2(2.1, 4.3));
+  v += 0.15 * snoise(p * 2.0 + vec2(7.8, 1.2));
   return v;
 }
 
@@ -66,62 +67,71 @@ void main() {
   vec2 uv = st;
   uv.x *= aspect;
 
-  // Ultra-slow, peaceful breathing time
-  float t = uTime * 0.045;
+  // Noticeable, continuous living flow (perceptible without being fast)
+  float t = uTime * 0.095;
 
-  // Smooth lerped mouse influence (nudges atmospheric center gently)
-  vec2 mouseOffset = (uMouse - 0.5) * 0.05;
+  // Gentle, damped mouse parallax
+  vec2 mouseOffset = (uMouse - 0.5) * 0.07;
 
-  // Domain warp with very gentle broad strokes
+  // Domain warping for fluid silk-like organic atmospheric currents
   vec2 q = vec2(
-    smoothAtmosphere(uv * 0.35 + vec2(0.0, 0.0) + t * 0.5 + mouseOffset),
-    smoothAtmosphere(uv * 0.35 + vec2(4.3, 2.1) - t * 0.4)
+    fbm(uv * 0.42 + vec2(0.0, 0.0) + t * 0.6 + mouseOffset),
+    fbm(uv * 0.42 + vec2(5.2, 1.7) - t * 0.5)
   );
 
   vec2 r = vec2(
-    smoothAtmosphere(uv * 0.3 + 0.8 * q + vec2(2.1, 5.8) + t * 0.3),
-    smoothAtmosphere(uv * 0.3 + 0.8 * q + vec2(7.4, 1.9) - t * 0.25)
+    fbm(uv * 0.38 + 1.2 * q + vec2(1.8, 8.4) + t * 0.4),
+    fbm(uv * 0.38 + 1.2 * q + vec2(8.3, 3.1) - t * 0.35)
   );
 
-  float f = smoothAtmosphere(uv * 0.25 + 0.7 * r + t * 0.2);
+  float f = fbm(uv * 0.32 + 1.1 * r + t * 0.25);
 
-  // Exact OpenAI Codex Ambient Palette:
-  // Pristine luminous white/ice base
-  vec3 colBase = vec3(0.980, 0.985, 0.996);
-  // Serene periwinkle cornflower (#778CF7)
-  vec3 colBlue = vec3(0.467, 0.549, 0.969);
-  // Gentle lavender violet (#979EFC)
-  vec3 colLavender = vec3(0.592, 0.620, 0.988);
-  // Ethereal airy mist lilac (#B4BFFD)
-  vec3 colMist = vec3(0.706, 0.749, 0.992);
-  // Pure glowing white
+  // OpenAI Codex Ambient Color Palette (Rich, perceptible, harmonious)
+  // Luminous breathable white/ice base
+  vec3 colBase = vec3(0.978, 0.982, 0.996);
+  // Vibrant cornflower periwinkle (#637FF5)
+  vec3 colBlue = vec3(0.388, 0.498, 0.961);
+  // Soft ambient lavender/violet (#8E82F7)
+  vec3 colViolet = vec3(0.557, 0.510, 0.969);
+  // Ethereal purple mist (#A78BFA)
+  vec3 colPurple = vec3(0.655, 0.545, 0.980);
+  // Airy sky mist (#BAE6FD)
+  vec3 colSky = vec3(0.729, 0.902, 0.992);
+  // Pure luminous center
   vec3 colWhite = vec3(1.0, 1.0, 1.0);
 
-  // Atmospheric falloff: rich light towards the top flanks, airy and calm in center
-  float topSpread = smoothstep(-0.2, 1.0, st.y);
-  float edgeDist = abs(st.x - 0.5);
-  float flankSpread = smoothstep(0.1, 0.7, edgeDist);
-  float aura = clamp(topSpread * 0.55 + flankSpread * 0.45, 0.0, 1.0);
+  // Atmospheric gradient weighting:
+  // Stronger aura on upper flanks and top, fading seamlessly into center & lower sections
+  float topGradient = smoothstep(-0.15, 1.05, st.y);
+  float flankSpread = smoothstep(0.08, 0.75, abs(st.x - 0.5));
+  float atmosphere = clamp(topGradient * 0.68 + flankSpread * 0.52, 0.0, 1.0);
 
   vec3 color = colBase;
 
-  // Soft layer blending (silk-smooth transitions)
-  float blend1 = smoothstep(-0.6, 0.8, f + q.x * 0.4);
-  color = mix(color, colMist, blend1 * 0.48 * aura);
+  // Harmonious multi-layered color blending:
+  // 1. Soft sky blue wash
+  float blendSky = smoothstep(-0.5, 0.7, f + q.x * 0.5);
+  color = mix(color, colSky, blendSky * 0.55 * atmosphere);
 
-  float blend2 = smoothstep(-0.4, 0.9, r.x + q.y * 0.3);
-  color = mix(color, colLavender, blend2 * 0.38 * aura);
+  // 2. Lavender violet current
+  float blendViolet = smoothstep(-0.3, 0.85, r.x + q.y * 0.4);
+  color = mix(color, colViolet, blendViolet * 0.50 * atmosphere);
 
-  float blend3 = smoothstep(0.0, 1.0, f + r.y * 0.4);
-  color = mix(color, colBlue, blend3 * 0.24 * aura);
+  // 3. Ethereal purple edge wash
+  float blendPurple = smoothstep(-0.1, 0.9, f + r.y * 0.5);
+  color = mix(color, colPurple, blendPurple * 0.45 * atmosphere);
 
-  // High-key luminous center for pristine text contrast
-  float centerDist = length(vec2((st.x - 0.5) * aspect, st.y - 0.55));
-  float centerLuminance = 1.0 - smoothstep(0.0, 0.85, centerDist);
-  color = mix(color, colWhite, centerLuminance * 0.5);
+  // 4. Periwinkle depth accent
+  float blendBlue = smoothstep(0.2, 1.0, r.y + q.x * 0.4);
+  color = mix(color, colBlue, blendBlue * 0.35 * atmosphere);
 
-  // Ultra-fine photographic dithering noise to prevent 8-bit banding
-  float grain = (fract(sin(dot(gl_FragCoord.xy, vec2(12.9898, 78.233))) * 43758.5453) - 0.5) * 0.012;
+  // 5. Crisp luminous high-key center for text readability & visual hold
+  float centerDist = length(vec2((st.x - 0.5) * aspect, st.y - 0.58));
+  float centerLuminance = 1.0 - smoothstep(0.0, 0.9, centerDist);
+  color = mix(color, colWhite, centerLuminance * 0.55);
+
+  // Delicate micro-dithering noise to completely eradicate 8-bit color banding
+  float grain = (fract(sin(dot(gl_FragCoord.xy, vec2(12.9898, 78.233))) * 43758.5453) - 0.5) * 0.016;
   color += grain;
 
   gl_FragColor = vec4(color, 1.0);
@@ -210,8 +220,8 @@ export function AmbientBackground() {
       const delta = clock.getDelta()
       uniforms.uTime.value += delta
 
-      mouse.x += (mouse.targetX - mouse.x) * 0.02
-      mouse.y += (mouse.targetY - mouse.y) * 0.02
+      mouse.x += (mouse.targetX - mouse.x) * 0.03
+      mouse.y += (mouse.targetY - mouse.y) * 0.03
       uniforms.uMouse.value.set(mouse.x, mouse.y)
 
       renderer.render(scene, camera)

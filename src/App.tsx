@@ -1,13 +1,12 @@
 import React from 'react'
 import { Header } from './components/Header/Header'
 import { Hero } from './components/Hero/Hero'
-import { ProductShowcase } from './components/Showcase/ProductShowcase'
 import { PerformanceSection } from './components/Performance/PerformanceSection'
 import { Footer } from './components/Footer/Footer'
 import { useSmoothScroll } from './hooks/useSmoothScroll'
 
 export const App: React.FC = () => {
-  // Initialize Lenis smooth scroll synced with GSAP
+  // Initialize Lenis momentum smooth scroll
   useSmoothScroll()
 
   return (
@@ -15,7 +14,6 @@ export const App: React.FC = () => {
       <Header />
       <main className="flex-1">
         <Hero />
-        <ProductShowcase />
         <PerformanceSection />
       </main>
       <Footer />
