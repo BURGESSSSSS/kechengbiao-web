@@ -90,7 +90,7 @@ export const HeroIntro: React.FC = () => {
       </p>
 
       {/* Download Android Button */}
-      <div ref={ctaRef} className="mb-3 sm:mb-4">
+      <div ref={ctaRef} className="mb-2 sm:mb-2.5">
         <a
           href="#download"
           onClick={handleDownloadClick}
@@ -101,18 +101,18 @@ export const HeroIntro: React.FC = () => {
         </a>
       </div>
 
-      {/* Lightweight Metadata Attributes */}
+      {/* Enhanced Secondary Anchor: 4 Core Attributes */}
       <div
         ref={attributesRef}
-        className="flex items-center justify-center gap-2 sm:gap-3 text-xs sm:text-[13px] font-normal text-neutral-400 tracking-wide"
+        className="flex items-center justify-center gap-2.5 sm:gap-3 text-[13.5px] sm:text-[15px] font-medium text-neutral-700 tracking-[-0.01em]"
       >
-        <span>开源</span>
-        <span className="text-neutral-300 select-none">·</span>
-        <span>安全</span>
-        <span className="text-neutral-300 select-none">·</span>
-        <span>离线</span>
-        <span className="text-neutral-300 select-none">·</span>
-        <span>快捷</span>
+        <span className="hover:text-neutral-950 transition-colors">开源</span>
+        <span className="text-neutral-400 select-none text-[12px] sm:text-[13px] font-bold">·</span>
+        <span className="hover:text-neutral-950 transition-colors">安全</span>
+        <span className="text-neutral-400 select-none text-[12px] sm:text-[13px] font-bold">·</span>
+        <span className="hover:text-neutral-950 transition-colors">离线</span>
+        <span className="text-neutral-400 select-none text-[12px] sm:text-[13px] font-bold">·</span>
+        <span className="hover:text-neutral-950 transition-colors">快捷</span>
       </div>
     </div>
   )

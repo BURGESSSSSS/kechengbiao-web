@@ -37,29 +37,29 @@ export const Header: React.FC = () => {
 
   return (
     <header
-      className={`fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-4 sm:px-8 h-12 sm:h-14 transition-[background-color,border-color,box-shadow] duration-150 ease-out select-none ${
+      className={`fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-4 sm:px-8 h-13 sm:h-14 transition-[background-color,border-color,box-shadow] duration-150 ease-out select-none ${
         isScrolled
           ? 'bg-[#FBFBFD] border-b border-black/[0.06] shadow-[0_1px_3px_rgba(0,0,0,0.02)]'
           : 'bg-transparent border-b border-transparent'
       }`}
     >
       {/* Brand Identity */}
-      <div className="flex items-center gap-2.5">
-        <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-lg sm:rounded-xl overflow-hidden ring-1 ring-black/[0.08] shadow-xs bg-white p-0.5 flex items-center justify-center">
+      <div className="flex items-center gap-2.5 sm:gap-3">
+        <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-[9px] sm:rounded-[10px] overflow-hidden ring-1 ring-black/[0.08] shadow-xs bg-white p-0.5 flex items-center justify-center">
           <img
             src="/assets/app-icon-circle.png"
             alt="课程表 Logo"
-            className="w-full h-full object-cover rounded-[6px] sm:rounded-[8px]"
+            className="w-full h-full object-cover rounded-[7px] sm:rounded-[8px]"
           />
         </div>
-        <span className="font-medium tracking-tight text-neutral-900 text-[13px] sm:text-[14px]">
+        <span className="font-semibold tracking-[-0.015em] text-neutral-950 text-[14.5px] sm:text-[15.5px]">
           课程表
         </span>
       </div>
 
       {/* Navigation & Secondary Actions */}
       <div className="flex items-center gap-3 sm:gap-6">
-        <nav className="hidden md:flex items-center gap-5 lg:gap-6 text-[13px] font-normal text-neutral-600">
+        <nav className="hidden md:flex items-center gap-6 lg:gap-7 text-[14px] font-medium text-neutral-600">
           <a
             href="#hero"
             className="hover:text-neutral-950 transition-colors duration-150"
@@ -80,23 +80,23 @@ export const Header: React.FC = () => {
           </a>
         </nav>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 sm:gap-2.5">
           {/* Subtle Github/Open Source indicator */}
           <a
             href="#download"
-            className="inline-flex items-center gap-1.5 px-2.5 py-1 text-[12px] sm:text-[13px] text-neutral-700 hover:text-neutral-950 rounded-full hover:bg-neutral-900/[0.04] transition-colors duration-150"
+            className="inline-flex items-center gap-1.5 px-2.5 py-1 sm:px-3 sm:py-1.5 text-[13px] sm:text-[13.5px] font-medium text-neutral-700 hover:text-neutral-950 rounded-full hover:bg-neutral-900/[0.04] transition-colors duration-150"
             aria-label="开源仓库"
           >
-            <GithubIcon className="w-3.5 h-3.5" />
+            <GithubIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             <span className="hidden sm:inline">开源</span>
           </a>
 
           {/* Quick Header CTA */}
           <a
             href="#download"
-            className="inline-flex items-center gap-1.5 px-3 py-1 sm:px-3.5 sm:py-1.5 text-[12px] sm:text-[13px] font-medium text-white bg-neutral-950 rounded-full shadow-xs hover:bg-neutral-800 transition-colors duration-150 active:scale-[0.98]"
+            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 sm:px-4 sm:py-1.5 text-[13px] sm:text-[13.5px] font-medium text-white bg-neutral-950 rounded-full shadow-xs hover:bg-neutral-800 transition-colors duration-150 active:scale-[0.98]"
           >
-            <Download className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+            <Download className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             <span>下载</span>
           </a>
         </div>
