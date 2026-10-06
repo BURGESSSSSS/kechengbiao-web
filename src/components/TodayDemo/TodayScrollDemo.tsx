@@ -34,7 +34,7 @@ export function computeCourseState(progress: number) {
 
 export const TodayScrollDemo: React.FC = () => {
   const sectionRef = useRef<HTMLElement>(null)
-  const pinWrapperRef = useRef<HTMLDivElement>(null)
+  const contentWrapperRef = useRef<HTMLDivElement>(null)
   const statusTextRef = useRef<HTMLSpanElement>(null)
   const progressBarRef = useRef<HTMLDivElement>(null)
   const topRowRef = useRef<HTMLDivElement>(null)
@@ -43,8 +43,8 @@ export const TodayScrollDemo: React.FC = () => {
 
   useEffect(() => {
     const section = sectionRef.current
-    const pinWrapper = pinWrapperRef.current
-    if (!section || !pinWrapper) return
+    const contentWrapper = contentWrapperRef.current
+    if (!section || !contentWrapper) return
 
     const updateFromProgress = (rawProgress: number) => {
       const { statusText, barPercent, p } = computeCourseState(rawProgress)
@@ -60,7 +60,7 @@ export const TodayScrollDemo: React.FC = () => {
       }
 
       // 3. Synchronized subtle Depth of Field (DOF) for upper & lower courses
-      // Smoothly deepens as user scrolls into the demo, keeping active card 100% sharp
+      // Smoothly deepens as user scrolls through the demo, keeping active card 100% sharp
       const dofCurve = Math.sin(p * Math.PI * 0.5) // 0 at p=0 -> 1 at p=1
       const blurPx = 0.4 + dofCurve * 0.75 // 0.4px -> 1.15px (subtle optical DOF, never mosaic-like)
       const sideOpacity = 0.82 - dofCurve * 0.22 // 0.82 -> 0.60
@@ -89,11 +89,9 @@ export const TodayScrollDemo: React.FC = () => {
 
     const ctx = gsap.context(() => {
       ScrollTrigger.create({
-        trigger: pinWrapper,
-        start: 'center 53%',
-        end: '+=130%',
-        pin: pinWrapper,
-        pinSpacing: true,
+        trigger: activeRowRef.current || contentWrapper,
+        start: 'bottom 88%',
+        end: 'top 16%',
         scrub: 0.12,
         onUpdate: (self) => {
           updateFromProgress(self.progress)
@@ -108,15 +106,15 @@ export const TodayScrollDemo: React.FC = () => {
     <section
       id="today-demo"
       ref={sectionRef}
-      className="relative w-full bg-[#FBFBFD] select-none"
+      className="relative w-full bg-[#FBFBFD] select-none pt-6 sm:pt-7 md:pt-9 pb-[360px] sm:pb-[400px] md:pb-[450px]"
     >
       <div
-        ref={pinWrapperRef}
-        className="w-full flex items-center justify-center px-5 sm:px-10 md:px-14 lg:px-20 pt-6 sm:pt-8 md:pt-10 pb-10 sm:pb-14 md:pb-16"
+        ref={contentWrapperRef}
+        className="w-full px-5 sm:px-10 md:px-14 lg:px-20"
       >
-        <div className="w-full max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-7 sm:gap-10 md:gap-12 lg:gap-16">
+        <div className="w-full max-w-6xl mx-auto flex flex-col md:flex-row items-start md:items-center justify-between gap-6 sm:gap-9 md:gap-12 lg:gap-16">
           {/* Left Column (Desktop 38%): Fixed Narrative Copy */}
-          <div className="w-full md:w-[38%] flex flex-col items-start text-left shrink-0">
+          <div className="w-full md:w-[38%] flex flex-col items-start text-left shrink-0 md:-mt-10">
             <h2
               style={{ lineHeight: 1.25 }}
               className="text-2xl sm:text-4xl lg:text-[42px] font-semibold tracking-[-0.03em] text-neutral-950 leading-[1.25] sm:leading-[1.25] lg:leading-[1.25] mb-3 sm:mb-5"

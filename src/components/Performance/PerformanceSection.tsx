@@ -4,7 +4,7 @@ export const PerformanceSection: React.FC = () => {
   return (
     <section
       id="performance"
-      className="relative w-full pt-10 sm:pt-14 md:pt-16 pb-11 sm:pb-16 md:pb-20 px-6 sm:px-10 bg-[#FBFBFD] overflow-hidden"
+      className="relative w-full pt-8 sm:pt-12 md:pt-14 pb-9 sm:pb-12 md:pb-14 px-6 sm:px-10 bg-[#FBFBFD] overflow-hidden"
     >
       <div className="max-w-4xl mx-auto text-center">
         {/* Primary Headline: Unified solid black, emphasizing 0.3 秒 through weight & size */}
