@@ -503,7 +503,7 @@ export const WeekScrollDemo: React.FC = () => {
     <section
       id="week-demo"
       ref={sectionRef}
-      className="relative w-full bg-[#FBFBFD] select-none overflow-x-clip pt-10 sm:pt-14 md:pt-16 pb-[380px] sm:pb-[420px] md:pb-[480px]"
+      className="relative w-full bg-[#FBFBFD] select-none overflow-x-clip pt-10 sm:pt-14 md:pt-16 pb-14 sm:pb-20 md:pb-24"
     >
       <div className="w-full px-3.5 sm:px-8 md:px-14 lg:px-20">
         <div className="w-full max-w-6xl mx-auto flex flex-col md:flex-row items-start md:items-center justify-between gap-6 sm:gap-9 md:gap-12 lg:gap-16">
