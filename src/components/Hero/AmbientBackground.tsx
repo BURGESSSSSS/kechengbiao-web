@@ -67,28 +67,28 @@ void main() {
   vec2 uv = st;
   uv.x *= aspect;
 
-  // Noticeable, continuous living flow (perceptible within 1-2s of observation)
-  float t = uTime * 0.138;
+  // Gentle, dignified breathing tempo (slow living presence, non-distracting)
+  float t = uTime * 0.075;
 
-  // Gentle, responsive mouse parallax
-  vec2 mouseOffset = (uMouse - 0.5) * 0.085;
+  // Very subtle, damped mouse parallax (calm spatial depth without eye-jarring shifts)
+  vec2 mouseOffset = (uMouse - 0.5) * 0.035;
 
-  // Enhanced domain warping for fluid, billowy silk-like atmospheric currents & masses
+  // Moderated domain warping: cohesive undulating silk sheets rather than rapid churning
   vec2 q = vec2(
-    fbm(uv * 0.44 + vec2(0.0, 0.0) + t * 0.68 + mouseOffset),
-    fbm(uv * 0.44 + vec2(5.2, 1.7) - t * 0.58)
+    fbm(uv * 0.40 + vec2(0.0, 0.0) + t * 0.38 + mouseOffset),
+    fbm(uv * 0.40 + vec2(5.2, 1.7) - t * 0.30)
   );
 
   vec2 r = vec2(
-    fbm(uv * 0.38 + 1.32 * q + vec2(1.8, 8.4) + t * 0.48),
-    fbm(uv * 0.38 + 1.32 * q + vec2(8.3, 3.1) - t * 0.40)
+    fbm(uv * 0.36 + 0.95 * q + vec2(1.8, 8.4) + t * 0.28),
+    fbm(uv * 0.36 + 0.95 * q + vec2(8.3, 3.1) - t * 0.22)
   );
 
-  float f = fbm(uv * 0.32 + 1.25 * r + t * 0.32);
+  float f = fbm(uv * 0.30 + 0.85 * r + t * 0.18);
 
-  // OpenAI Codex Ambient Color Palette (Richer, deeper, ethereal yet dignified)
-  // Luminous breathable white/ice base
-  vec3 colBase = vec3(0.972, 0.978, 0.995);
+  // OpenAI Codex Ambient Color Palette (Rich, deep, ethereal, yet calm and dignified)
+  // Luminous breathable cool white/ice base
+  vec3 colBase = vec3(0.970, 0.976, 0.995);
   // Vibrant cornflower periwinkle azure
   vec3 colBlue = vec3(0.315, 0.450, 0.975);
   // Soft, deep ambient lavender violet
@@ -221,8 +221,8 @@ export function AmbientBackground() {
       const delta = clock.getDelta()
       uniforms.uTime.value += delta
 
-      mouse.x += (mouse.targetX - mouse.x) * 0.03
-      mouse.y += (mouse.targetY - mouse.y) * 0.03
+      mouse.x += (mouse.targetX - mouse.x) * 0.018
+      mouse.y += (mouse.targetY - mouse.y) * 0.018
       uniforms.uMouse.value.set(mouse.x, mouse.y)
 
       renderer.render(scene, camera)

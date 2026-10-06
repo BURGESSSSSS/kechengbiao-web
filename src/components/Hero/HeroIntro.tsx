@@ -101,17 +101,17 @@ export const HeroIntro: React.FC = () => {
         </a>
       </div>
 
-      {/* Enhanced Secondary Anchor: 4 Core Attributes */}
+      {/* Second Information Tier: 4 Core Attributes */}
       <div
         ref={attributesRef}
-        className="flex items-center justify-center gap-2.5 sm:gap-3 text-[13.5px] sm:text-[15px] font-medium text-neutral-700 tracking-[-0.01em]"
+        className="flex items-center justify-center gap-3 sm:gap-4 text-[15px] sm:text-[16.5px] font-medium text-neutral-700 tracking-normal select-none"
       >
         <span className="hover:text-neutral-950 transition-colors">开源</span>
-        <span className="text-neutral-400 select-none text-[12px] sm:text-[13px] font-bold">·</span>
+        <span className="text-neutral-400 select-none text-[13px] sm:text-[14px] font-black">·</span>
         <span className="hover:text-neutral-950 transition-colors">安全</span>
-        <span className="text-neutral-400 select-none text-[12px] sm:text-[13px] font-bold">·</span>
+        <span className="text-neutral-400 select-none text-[13px] sm:text-[14px] font-black">·</span>
         <span className="hover:text-neutral-950 transition-colors">离线</span>
-        <span className="text-neutral-400 select-none text-[12px] sm:text-[13px] font-bold">·</span>
+        <span className="text-neutral-400 select-none text-[13px] sm:text-[14px] font-black">·</span>
         <span className="hover:text-neutral-950 transition-colors">快捷</span>
       </div>
     </div>

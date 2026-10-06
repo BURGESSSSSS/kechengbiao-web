@@ -45,21 +45,21 @@ export const Header: React.FC = () => {
     >
       {/* Brand Identity */}
       <div className="flex items-center gap-2.5 sm:gap-3">
-        <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-[9px] sm:rounded-[10px] overflow-hidden ring-1 ring-black/[0.08] shadow-xs bg-white p-0.5 flex items-center justify-center">
+        <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-[10px] sm:rounded-[11px] overflow-hidden ring-1 ring-black/[0.08] shadow-xs bg-white p-0.5 flex items-center justify-center shrink-0">
           <img
             src="/assets/app-icon-circle.png"
             alt="课程表 Logo"
-            className="w-full h-full object-cover rounded-[7px] sm:rounded-[8px]"
+            className="w-full h-full object-cover rounded-[8px] sm:rounded-[9px]"
           />
         </div>
-        <span className="font-semibold tracking-[-0.015em] text-neutral-950 text-[14.5px] sm:text-[15.5px]">
+        <span className="font-semibold tracking-tight text-neutral-950 text-[15px] sm:text-[16.5px]">
           课程表
         </span>
       </div>
 
       {/* Navigation & Secondary Actions */}
       <div className="flex items-center gap-3 sm:gap-6">
-        <nav className="hidden md:flex items-center gap-6 lg:gap-7 text-[14px] font-medium text-neutral-600">
+        <nav className="hidden md:flex items-center gap-7 lg:gap-8 text-[14.5px] sm:text-[15px] font-medium text-neutral-600">
           <a
             href="#hero"
             className="hover:text-neutral-950 transition-colors duration-150"
@@ -84,17 +84,17 @@ export const Header: React.FC = () => {
           {/* Subtle Github/Open Source indicator */}
           <a
             href="#download"
-            className="inline-flex items-center gap-1.5 px-2.5 py-1 sm:px-3 sm:py-1.5 text-[13px] sm:text-[13.5px] font-medium text-neutral-700 hover:text-neutral-950 rounded-full hover:bg-neutral-900/[0.04] transition-colors duration-150"
+            className="inline-flex items-center gap-1.5 px-2.5 py-1.5 sm:px-3 sm:py-1.5 text-[13.5px] sm:text-[14px] font-medium text-neutral-700 hover:text-neutral-950 rounded-full hover:bg-neutral-900/[0.04] transition-colors duration-150"
             aria-label="开源仓库"
           >
-            <GithubIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+            <GithubIcon className="w-4 h-4" />
             <span className="hidden sm:inline">开源</span>
           </a>
 
           {/* Quick Header CTA */}
           <a
             href="#download"
-            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 sm:px-4 sm:py-1.5 text-[13px] sm:text-[13.5px] font-medium text-white bg-neutral-950 rounded-full shadow-xs hover:bg-neutral-800 transition-colors duration-150 active:scale-[0.98]"
+            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 sm:px-4.5 sm:py-2 text-[13px] sm:text-[14px] font-medium text-white bg-neutral-950 rounded-full shadow-xs hover:bg-neutral-800 transition-colors duration-150 active:scale-[0.98]"
           >
             <Download className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             <span>下载</span>

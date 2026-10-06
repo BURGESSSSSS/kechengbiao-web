@@ -68,8 +68,8 @@ async function run() {
     await ctx.close()
   }
 
-  // 2. Hero Background Living Motion Video (1440x900, top unscrolled)
-  console.log('Recording Hero Background Motion (1440x900)...')
+  // 2. Hero Background Living Motion Video (1440x900, top unscrolled, 8.5 seconds still observation)
+  console.log('Recording Hero Background Motion (1440x900, 8s still observation)...')
   const motionCtx = await browser.newContext({
     viewport: { width: 1440, height: 900 },
     deviceScaleFactor: 2,
@@ -80,13 +80,14 @@ async function run() {
   })
   const motionPage = await motionCtx.newPage()
   await motionPage.goto('http://localhost:4173', { waitUntil: 'networkidle' })
-  // Record living ambient shader motion for 4.5 seconds
-  await motionPage.waitForTimeout(4500)
+  // Record living ambient shader motion for 8.5 seconds of calm still observation
+  await motionPage.waitForTimeout(8500)
   const motionVideo = await motionPage.video()?.path()
   await motionCtx.close()
   if (motionVideo && fs.existsSync(motionVideo)) {
     fs.copyFileSync(motionVideo, path.join(outputDir, 'hero_background_motion.webm'))
-    console.log('✓ Saved hero_background_motion.webm')
+    fs.copyFileSync(motionVideo, path.join(outputDir, 'hero_background_8s_still.webm'))
+    console.log('✓ Saved hero_background_motion.webm and hero_background_8s_still.webm')
   }
 
   // 3. Header Dual-State Transition Video & Scrolled Screenshot
