@@ -89,8 +89,8 @@ export const TodayScrollDemo: React.FC = () => {
 
     const ctx = gsap.context(() => {
       ScrollTrigger.create({
-        trigger: section,
-        start: 'top top',
+        trigger: pinWrapper,
+        start: 'center 53%',
         end: '+=130%',
         pin: pinWrapper,
         pinSpacing: true,
@@ -108,11 +108,11 @@ export const TodayScrollDemo: React.FC = () => {
     <section
       id="today-demo"
       ref={sectionRef}
-      className="relative w-full bg-[#FBFBFD] border-t border-neutral-900/[0.04] select-none"
+      className="relative w-full bg-[#FBFBFD] select-none"
     >
       <div
         ref={pinWrapperRef}
-        className="w-full min-h-screen flex items-center justify-center px-5 sm:px-10 md:px-14 lg:px-20 pt-14 pb-6"
+        className="w-full flex items-center justify-center px-5 sm:px-10 md:px-14 lg:px-20 pt-6 sm:pt-8 md:pt-10 pb-10 sm:pb-14 md:pb-16"
       >
         <div className="w-full max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-7 sm:gap-10 md:gap-12 lg:gap-16">
           {/* Left Column (Desktop 38%): Fixed Narrative Copy */}

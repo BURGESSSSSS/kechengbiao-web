@@ -24,9 +24,9 @@ export const Hero: React.FC = () => {
     <section
       id="hero"
       ref={heroRef}
-      className="relative w-full flex flex-col items-center select-none overflow-hidden"
+      className="relative w-full flex flex-col items-center select-none overflow-hidden pb-12 sm:pb-16 md:pb-20"
     >
-      {/* Living Ethereal Ambient Canvas (Continuous across Hero & Showcase) */}
+      {/* Living Ethereal Ambient Canvas (Extends across Hero, Showcase, and Bottom Fade Zone) */}
       <AmbientBackground />
 
       {/* HeroIntro: strictly controlled viewport-relative geometry */}
@@ -40,6 +40,16 @@ export const Hero: React.FC = () => {
       >
         <ThreeCardShowcase />
       </div>
+
+      {/* Bottom Visual Fade Zone (200-260px): smoothly dissolves blue-purple aura into #FBFBFD */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-x-0 bottom-0 h-[200px] sm:h-[230px] md:h-[260px] z-[5]"
+        style={{
+          background:
+            'linear-gradient(180deg, rgba(251,251,253,0) 0%, rgba(251,251,253,0.16) 24%, rgba(251,251,253,0.44) 50%, rgba(251,251,253,0.76) 74%, rgba(251,251,253,0.94) 90%, #FBFBFD 100%)',
+        }}
+      />
     </section>
   )
 }

@@ -132,8 +132,13 @@ void main() {
   color = mix(color, colWhite, centerLuminance * 0.66);
 
   // Delicate micro-dithering noise to completely eradicate 8-bit color banding
-  float grain = (fract(sin(dot(gl_FragCoord.xy, vec2(12.9898, 78.233))) * 43758.5453) - 0.5) * 0.016;
+  float bottomFade = smoothstep(0.0, 0.09, st.y);
+  float grain = (fract(sin(dot(gl_FragCoord.xy, vec2(12.9898, 78.233))) * 43758.5453) - 0.5) * 0.016 * bottomFade;
   color += grain;
+
+  // Seamless dissolve into page background #FBFBFD (251, 251, 253) at the very bottom edge
+  vec3 colPageBg = vec3(0.98431, 0.98431, 0.99216);
+  color = mix(colPageBg, color, bottomFade);
 
   gl_FragColor = vec4(color, 1.0);
 }
