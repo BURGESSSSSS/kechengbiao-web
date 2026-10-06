@@ -106,7 +106,7 @@ export const TodayScrollDemo: React.FC = () => {
     <section
       id="today-demo"
       ref={sectionRef}
-      className="relative w-full bg-[#FBFBFD] select-none pt-6 sm:pt-7 md:pt-9 pb-[360px] sm:pb-[400px] md:pb-[450px]"
+      className="relative w-full bg-[#FBFBFD] select-none pt-6 sm:pt-7 md:pt-9 pb-14 sm:pb-20 md:pb-24"
     >
       <div
         ref={contentWrapperRef}

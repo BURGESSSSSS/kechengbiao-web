@@ -3,6 +3,7 @@ import { Header } from './components/Header/Header'
 import { Hero } from './components/Hero/Hero'
 import { PerformanceSection } from './components/Performance/PerformanceSection'
 import { TodayScrollDemo } from './components/TodayDemo/TodayScrollDemo'
+import { WeekScrollDemo } from './components/WeekDemo/WeekScrollDemo'
 import { Footer } from './components/Footer/Footer'
 import { useSmoothScroll } from './hooks/useSmoothScroll'
 
@@ -17,6 +18,7 @@ export const App: React.FC = () => {
         <Hero />
         <PerformanceSection />
         <TodayScrollDemo />
+        <WeekScrollDemo />
       </main>
       <Footer />
     </div>
