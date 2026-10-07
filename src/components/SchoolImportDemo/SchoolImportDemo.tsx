@@ -13,8 +13,11 @@ import {
 } from './schoolImportData'
 import {
   clamp,
-  computeCourseMorphState,
+  computeFullPhase05CourseState,
+  computePhase05MacroState,
   lerp,
+  PHASE05B_GLOBAL_END,
+  PHASE05C_GLOBAL_START,
   type MorphRect,
   type StageGeometryCache,
 } from './courseMorphEngine'
@@ -384,7 +387,8 @@ export const ImportPreviewStage: React.FC<{
   courses: SchoolImportCourse[]
   registerPreviewNode?: (courseId: string, el: HTMLDivElement | null) => void
   panelRef?: React.MutableRefObject<HTMLDivElement | null>
-}> = ({ courses, registerPreviewNode, panelRef }) => {
+  countBadgeRef?: React.MutableRefObject<HTMLSpanElement | null>
+}> = ({ courses, registerPreviewNode, panelRef, countBadgeRef }) => {
   return (
     <div
       ref={panelRef}
@@ -396,7 +400,10 @@ export const ImportPreviewStage: React.FC<{
         <span className="text-[13.5px] font-semibold text-neutral-900 tracking-tight">
           导入课表 · 第7周
         </span>
-        <span className="text-[11.5px] text-neutral-400 font-normal">
+        <span
+          ref={countBadgeRef}
+          className="text-[11.5px] text-neutral-400 font-normal tabular-nums"
+        >
           共 {courses.length} 门课程
         </span>
       </div>
@@ -433,11 +440,21 @@ export const ImportPreviewStage: React.FC<{
 }
 
 /**
- * 5. DESTINATION: 课程表 App 本地周视图（完全复用 Phase 03 视觉语言，Phase 05B 保持静态）
+ * 5. DESTINATION: 课程表 App 本地周视图（完全复用 Phase 03 视觉语言，Phase 05C 接收批量课程写入）
  */
 export const DestinationAppWeekStage: React.FC<{
   courses: SchoolImportCourse[]
-}> = ({ courses }) => {
+  registerDestinationNode?: (courseId: string, el: HTMLDivElement | null) => void
+  destinationGridRef?: React.MutableRefObject<HTMLDivElement | null>
+  completionCopyRef?: React.MutableRefObject<HTMLDivElement | null>
+  initialStaticCompleted?: boolean
+}> = ({
+  courses,
+  registerDestinationNode,
+  destinationGridRef,
+  completionCopyRef,
+  initialStaticCompleted = false,
+}) => {
   const courseByAppSlot = new Map<string, SchoolImportCourse>()
   courses.forEach((course) => {
     courseByAppSlot.set(`${course.dayCol}-${course.appTimeRow}`, course)
@@ -490,7 +507,7 @@ export const DestinationAppWeekStage: React.FC<{
         </div>
 
         {/* 3. Weekday Header Row + 5×4 Course Grid */}
-        <div className="relative mt-3">
+        <div ref={destinationGridRef} className="relative mt-3">
           {/* Weekday Headers: 周一 12 ~ 周五 16 */}
           <div className="flex items-end mb-1.5">
             <div className="w-7 sm:w-8 shrink-0" />
@@ -529,10 +546,15 @@ export const DestinationAppWeekStage: React.FC<{
                       >
                         {course && (
                           <div
+                            ref={(el) => registerDestinationNode?.(course.id, el)}
                             data-course-id={course.id}
                             data-stage-node="destination"
                             data-day-col={course.dayCol}
                             data-time-row={course.appTimeRow}
+                            style={{
+                              opacity: initialStaticCompleted ? 1 : 0,
+                              willChange: 'opacity',
+                            }}
                             className={`w-full h-full rounded-[11px] sm:rounded-[13px] p-1.5 overflow-hidden flex flex-col justify-start ${
                               course.appTheme === 'warm'
                                 ? 'bg-[#F3ECE1] text-[#5E3704]'
@@ -563,8 +585,17 @@ export const DestinationAppWeekStage: React.FC<{
         </div>
       </div>
 
-      {/* Completion Status Copy (Section 13) */}
-      <div className="mt-3.5 px-1 flex flex-col sm:flex-row sm:items-baseline justify-between gap-1">
+      {/* Completion Status Copy (Section 21 & 22) */}
+      <div
+        ref={completionCopyRef}
+        data-completion-status="true"
+        style={{
+          opacity: initialStaticCompleted ? 1 : 0,
+          transform: initialStaticCompleted ? 'translate3d(0, 0px, 0)' : 'translate3d(0, 6px, 0)',
+          willChange: 'opacity, transform',
+        }}
+        className="mt-3.5 px-1 flex flex-col sm:flex-row sm:items-baseline justify-between gap-1"
+      >
         <div className="text-[13.5px] sm:text-[14px] text-neutral-900 font-semibold tracking-tight">
           导入完成。
           <span className="ml-1.5 font-normal text-neutral-600">
@@ -580,7 +611,7 @@ export const DestinationAppWeekStage: React.FC<{
 }
 
 /**
- * Phase 05B: 学校课表导入 · SOURCE -> DATA STRIP -> PROCESS -> PREVIEW 连续 Morph
+ * Phase 05: 学校课表导入 · SOURCE -> DATA STRIP -> PROCESS -> PREVIEW -> DESTINATION 完整闭环
  */
 export const SchoolImportDemo: React.FC = () => {
   const [previewState, setPreviewState] = useState<Phase05PreviewState>(getInitialPhase05State)
@@ -588,10 +619,20 @@ export const SchoolImportDemo: React.FC = () => {
   const sectionRef = useRef<HTMLElement | null>(null)
   const stageWrapperRef = useRef<HTMLDivElement | null>(null)
   const previewPanelRef = useRef<HTMLDivElement | null>(null)
+  const previewCountBadgeRef = useRef<HTMLSpanElement | null>(null)
+  const destinationGridRef = useRef<HTMLDivElement | null>(null)
+  const completionCopyRef = useRef<HTMLDivElement | null>(null)
+
+  // Stage column wrapper refs for visual focus transfer (Section 19 & 20)
+  const sourceColRef = useRef<HTMLDivElement | null>(null)
+  const processColRef = useRef<HTMLDivElement | null>(null)
+  const previewWrapRef = useRef<HTMLDivElement | null>(null)
+  const destinationWrapRef = useRef<HTMLDivElement | null>(null)
 
   // Static stage node refs for geometry measurement & opacity handoff
   const staticSourceRefs = useRef<Record<string, HTMLDivElement | null>>({})
   const staticPreviewRefs = useRef<Record<string, HTMLDivElement | null>>({})
+  const staticDestinationRefs = useRef<Record<string, HTMLDivElement | null>>({})
   const stripLaneTopRef = useRef<HTMLDivElement | null>(null)
   const stripLaneBottomRef = useRef<HTMLDivElement | null>(null)
   const processBoxRef = useRef<HTMLDivElement | null>(null)
@@ -609,6 +650,8 @@ export const SchoolImportDemo: React.FC = () => {
   const morphProcessRowLabelRefs = useRef<Record<string, (HTMLSpanElement | null)[]>>({})
   const morphProcessRowValRefs = useRef<Record<string, (HTMLSpanElement | null)[]>>({})
   const morphPreviewLayerRefs = useRef<Record<string, HTMLDivElement | null>>({})
+  const morphCompactLayerRefs = useRef<Record<string, HTMLDivElement | null>>({})
+  const morphDestinationLayerRefs = useRef<Record<string, HTMLDivElement | null>>({})
 
   // Cached geometry & current scroll progress
   const currentProgressRef = useRef<number>(0)
@@ -619,6 +662,7 @@ export const SchoolImportDemo: React.FC = () => {
     stripLaneTopRect: { x: 420, y: 60, width: 260, height: 36 },
     stripLaneBottomRect: { x: 420, y: 104, width: 260, height: 36 },
     processBoxRect: { x: 420, y: 176, width: 260, height: 185 },
+    destinationGridTopY: 450,
     courses: {},
   })
 
@@ -654,6 +698,9 @@ export const SchoolImportDemo: React.FC = () => {
      * Never called inside ScrollTrigger.onUpdate.
      */
     const measureStageGeometry = () => {
+      if (sourceColRef.current) sourceColRef.current.style.transform = 'none'
+      if (processColRef.current) processColRef.current.style.transform = 'none'
+
       const rootBox = stageWrapper.getBoundingClientRect()
       if (rootBox.width === 0 || rootBox.height === 0) return
 
@@ -661,15 +708,18 @@ export const SchoolImportDemo: React.FC = () => {
       const topLane = toRelativeRect(stripLaneTopRef.current, rootBox)
       const bottomLane = toRelativeRect(stripLaneBottomRef.current, rootBox)
       const procBox = toRelativeRect(processBoxRef.current, rootBox)
+      const destGridRect = toRelativeRect(destinationGridRef.current, rootBox)
 
       const coursesMap: StageGeometryCache['courses'] = {}
       for (const course of SCHOOL_IMPORT_COURSES) {
         const srcEl = staticSourceRefs.current[course.id]
         const prevEl = staticPreviewRefs.current[course.id]
+        const destEl = staticDestinationRefs.current[course.id]
         coursesMap[course.id] = {
           sourceRect: toRelativeRect(srcEl, rootBox),
           stripRect: topLane,
           previewRect: toRelativeRect(prevEl, rootBox),
+          destinationRect: toRelativeRect(destEl, rootBox),
         }
       }
 
@@ -680,6 +730,7 @@ export const SchoolImportDemo: React.FC = () => {
         stripLaneTopRect: topLane,
         stripLaneBottomRect: bottomLane.width > 0 ? bottomLane : topLane,
         processBoxRect: procBox,
+        destinationGridTopY: destGridRect.y,
         courses: coursesMap,
       }
     }
@@ -691,13 +742,15 @@ export const SchoolImportDemo: React.FC = () => {
       const p = clamp(rawP, 0, 1)
       currentProgressRef.current = p
       const geom = geometryCacheRef.current
+      const macro = computePhase05MacroState(p, SCHOOL_IMPORT_COURSES)
+      const s2p = macro.sourceToPreviewP
 
       let anyCourseInProcessStageC = false
       let maxProcessOverlayInfluence = 0
 
       for (let i = 0; i < SCHOOL_IMPORT_COURSES.length; i++) {
         const course = SCHOOL_IMPORT_COURSES[i]
-        const state = computeCourseMorphState(p, course, i, geom)
+        const state = computeFullPhase05CourseState(p, course, i, geom)
 
         if (state.stage === 'stage-c-process') {
           anyCourseInProcessStageC = true
@@ -713,13 +766,19 @@ export const SchoolImportDemo: React.FC = () => {
           srcEl.style.opacity = state.staticSourceOpacity.toFixed(3)
         }
 
-        // 2. Static Preview Row opacity
+        // 2. Static Preview Row opacity (fixed height, never collapses)
         const prevEl = staticPreviewRefs.current[course.id]
         if (prevEl) {
           prevEl.style.opacity = state.staticPreviewOpacity.toFixed(3)
         }
 
-        // 3. Morph Overlay Card
+        // 3. Static Destination Course Block opacity
+        const destEl = staticDestinationRefs.current[course.id]
+        if (destEl) {
+          destEl.style.opacity = state.staticDestinationOpacity.toFixed(3)
+        }
+
+        // 4. Morph Overlay Card
         const cardEl = morphCardRefs.current[course.id]
         if (!cardEl) continue
 
@@ -749,14 +808,21 @@ export const SchoolImportDemo: React.FC = () => {
           cardEl.style.boxShadow = 'none'
         }
 
-        // 3a. Left Source Color Bar -> Preview Dot
+        // 4a. Left Source Color Bar -> Preview Dot -> Compact Record Dot -> Dissolve
         const barEl = morphBarRefs.current[course.id]
         if (barEl) {
           const dotT = state.leftBarToDotProgress
           const procT = state.processLayerOpacity
+          const isDestPhase =
+            state.stage === 'stage-e-detach-preview' ||
+            state.stage === 'stage-f-commit-destination'
+          const compactShift = isDestPhase
+            ? clamp(state.compactRecordTextOpacity + state.destinationTextOpacity, 0, 1)
+            : 0
           const w = lerp(2.5, 6, dotT)
           const h = lerp(14, 6, dotT)
-          const leftPx = lerp(lerp(10, 6, procT), 0, dotT)
+          const baseLeft = lerp(lerp(10, 6, procT), 0, dotT)
+          const leftPx = lerp(baseLeft, 9, compactShift)
           const topPct = lerp(50, 10, procT)
           barEl.style.opacity = state.leftBarOpacity.toFixed(3)
           barEl.style.width = `${w.toFixed(2)}px`
@@ -765,7 +831,7 @@ export const SchoolImportDemo: React.FC = () => {
           barEl.style.top = `${topPct.toFixed(1)}%`
         }
 
-        // 3b. Source Text Layer
+        // 4b. Layer 1: Source Text Layer
         const srcLayer = morphSourceLayerRefs.current[course.id]
         if (srcLayer) {
           srcLayer.style.opacity = state.sourceTextOpacity.toFixed(3)
@@ -773,7 +839,7 @@ export const SchoolImportDemo: React.FC = () => {
             state.sourceTextOpacity > 0.005 ? 'visible' : 'hidden'
         }
 
-        // 3c. Data Strip / Normalized Record Text Layer
+        // 4c. Layer 2: Data Strip / Normalized Record Text Layer
         const stripLayer = morphStripLayerRefs.current[course.id]
         if (stripLayer) {
           stripLayer.style.opacity = state.stripTextOpacity.toFixed(3)
@@ -785,7 +851,7 @@ export const SchoolImportDemo: React.FC = () => {
           badgeEl.style.display = state.isNormalizedStrip ? 'inline-flex' : 'none'
         }
 
-        // 3d. Process 5-Row Field Alignment Layer
+        // 4d. Layer 3: Process 5-Row Field Alignment Layer
         const procLayer = morphProcessLayerRefs.current[course.id]
         if (procLayer) {
           procLayer.style.opacity = state.processLayerOpacity.toFixed(3)
@@ -811,42 +877,92 @@ export const SchoolImportDemo: React.FC = () => {
           }
         }
 
-        // 3e. Preview Row Text Layer
+        // 4e. Layer 4: Preview Row Text Layer
         const prevLayer = morphPreviewLayerRefs.current[course.id]
         if (prevLayer) {
           prevLayer.style.opacity = state.previewTextOpacity.toFixed(3)
           prevLayer.style.visibility =
             state.previewTextOpacity > 0.005 ? 'visible' : 'hidden'
         }
+
+        // 4f. Layer 5: Compact Record Text Layer (Phase 05C Stage E2 -> F)
+        const compactLayer = morphCompactLayerRefs.current[course.id]
+        if (compactLayer) {
+          compactLayer.style.opacity = state.compactRecordTextOpacity.toFixed(3)
+          compactLayer.style.visibility =
+            state.compactRecordTextOpacity > 0.005 ? 'visible' : 'hidden'
+        }
+
+        // 4g. Layer 6: Destination Course Block Text Layer (Phase 05C Stage F -> G)
+        const destLayer = morphDestinationLayerRefs.current[course.id]
+        if (destLayer) {
+          destLayer.style.opacity = state.destinationTextOpacity.toFixed(3)
+          destLayer.style.visibility =
+            state.destinationTextOpacity > 0.005 ? 'visible' : 'hidden'
+        }
       }
 
-      // 4. Central Process Stage Static Placeholders (Idle vs Active vs Completed)
+      // 5. Central Process Stage Static Placeholders (Idle vs Active vs Completed)
       if (staticStripPlaceholderRef.current) {
-        // Hide static representative strips once pipeline begins so only live streaming Data Strips appear
-        const stripIdleOpacity = p <= 0.02 ? 1 - p / 0.02 : 0
+        const stripIdleOpacity = s2p <= 0.02 ? 1 - s2p / 0.02 : 0
         staticStripPlaceholderRef.current.style.opacity = stripIdleOpacity.toFixed(3)
       }
 
       if (staticProcessFieldsRef.current) {
-        // Fade down static background fields when an active course is expanding in Stage C,
-        // and restore to calm low-weight idle state when pipeline finishes (p >= 0.88)
         let bgFieldOpacity = 0.22
-        if (p <= 0.04) {
-          bgFieldOpacity = lerp(0.55, 0.18, p / 0.04)
+        if (s2p <= 0.04) {
+          bgFieldOpacity = lerp(0.55, 0.18, s2p / 0.04)
         } else if (anyCourseInProcessStageC) {
           bgFieldOpacity = lerp(0.18, 0.0, clamp(maxProcessOverlayInfluence * 1.4, 0, 1))
-        } else if (p >= 0.86) {
-          bgFieldOpacity = lerp(0.18, 0.36, clamp((p - 0.86) / 0.06, 0, 1))
+        } else if (s2p >= 0.86) {
+          bgFieldOpacity = lerp(0.18, 0.36, clamp((s2p - 0.86) / 0.06, 0, 1))
         }
         staticProcessFieldsRef.current.style.opacity = bgFieldOpacity.toFixed(3)
       }
 
       if (processStatusLabelRef.current) {
-        if (p >= 0.895) {
+        if (s2p >= 0.895) {
           processStatusLabelRef.current.textContent = '已完成 9 门课程字段对齐'
         } else {
           processStatusLabelRef.current.textContent = '字段对齐与清洗'
         }
+      }
+
+      // 6. Preview Header Count Badge (Phase 05C live write feedback)
+      if (previewCountBadgeRef.current) {
+        if (p < PHASE05C_GLOBAL_START || macro.settledDestinationCount === 0) {
+          previewCountBadgeRef.current.textContent = `共 ${SCHOOL_IMPORT_COURSES.length} 门课程`
+        } else if (macro.settledDestinationCount < SCHOOL_IMPORT_COURSES.length) {
+          previewCountBadgeRef.current.textContent = `已写入 ${macro.settledDestinationCount} / ${SCHOOL_IMPORT_COURSES.length} 门`
+        } else {
+          previewCountBadgeRef.current.textContent = `${SCHOOL_IMPORT_COURSES.length} 门已全部写入`
+        }
+      }
+
+      // 7. Visual Focus Transfer across SOURCE / PROCESS / PREVIEW / DESTINATION (Section 19 & 20)
+      const upstreamTransform =
+        p > PHASE05C_GLOBAL_START && macro.upstreamScale < 0.9999
+          ? `scale(${macro.upstreamScale.toFixed(4)})`
+          : 'none'
+      if (sourceColRef.current) {
+        sourceColRef.current.style.opacity = macro.upstreamOpacity.toFixed(3)
+        sourceColRef.current.style.transform = upstreamTransform
+      }
+      if (processColRef.current) {
+        processColRef.current.style.opacity = macro.upstreamOpacity.toFixed(3)
+        processColRef.current.style.transform = upstreamTransform
+      }
+      if (previewWrapRef.current) {
+        previewWrapRef.current.style.opacity = macro.previewContainerOpacity.toFixed(3)
+      }
+      if (destinationWrapRef.current) {
+        destinationWrapRef.current.style.opacity = macro.destinationContainerOpacity.toFixed(3)
+      }
+
+      // 8. Completion Status Copy fade-in & lift (Section 21 & 22)
+      if (completionCopyRef.current) {
+        completionCopyRef.current.style.opacity = macro.completionOpacity.toFixed(3)
+        completionCopyRef.current.style.transform = `translate3d(0, ${macro.completionY.toFixed(2)}px, 0)`
       }
     }
 
@@ -864,16 +980,8 @@ export const SchoolImportDemo: React.FC = () => {
     const ctx = gsap.context(() => {
       ScrollTrigger.create({
         trigger: stageWrapper,
-        start: () => (window.innerWidth < 1024 ? 'top 62%' : 'top 62%'),
-        end: () => {
-          if (window.innerWidth < 1024 && previewPanelRef.current) {
-            const rootTop = stageWrapper.getBoundingClientRect().top
-            const prevBottom = previewPanelRef.current.getBoundingClientRect().bottom
-            const offsetPx = Math.max(400, Math.round(prevBottom - rootTop))
-            return `top+=${offsetPx}px 78%`
-          }
-          return 'top 6%'
-        },
+        start: () => (window.innerWidth < 1024 ? 'top 62%' : 'top 58%'),
+        end: () => (window.innerWidth < 1024 ? 'bottom 86%' : 'bottom 95%'),
         scrub: true,
         invalidateOnRefresh: true,
         onRefresh: (self) => {
@@ -922,6 +1030,8 @@ export const SchoolImportDemo: React.FC = () => {
       id="school-import-demo"
       ref={sectionRef}
       data-phase05-state={previewState}
+      data-phase05b-end={PHASE05B_GLOBAL_END}
+      data-phase05c-start={PHASE05C_GLOBAL_START}
       className="relative w-full bg-[#FBFBFD] select-none overflow-x-clip -mt-[300px] sm:-mt-[340px] md:-mt-[380px] pt-8 sm:pt-12 md:pt-14 pb-[280px] sm:pb-[340px] md:pb-[420px]"
     >
       <div className="w-full px-4 sm:px-8 md:px-12 lg:px-16">
@@ -949,7 +1059,11 @@ export const SchoolImportDemo: React.FC = () => {
           >
             {/* Column 1 (Left on Desktop): SOURCE 山东商务职业学院“我的课表” */}
             {showSource && (
-              <div className="lg:col-span-4 flex flex-col gap-2.5">
+              <div
+                ref={sourceColRef}
+                style={{ transformOrigin: 'top center', willChange: 'opacity, transform' }}
+                className="lg:col-span-4 flex flex-col gap-2.5"
+              >
                 <div className="flex items-center justify-between px-1">
                   <span className="text-[11.5px] font-medium text-neutral-400 tracking-tight">
                     01 · 教务系统源课表
@@ -969,7 +1083,11 @@ export const SchoolImportDemo: React.FC = () => {
 
             {/* Column 2 (Center on Desktop): PROCESS 数据整理区 + DATA STRIP */}
             {showProcess && (
-              <div className="lg:col-span-3 lg:pt-8 flex flex-col gap-2.5">
+              <div
+                ref={processColRef}
+                style={{ transformOrigin: 'top center', willChange: 'opacity, transform' }}
+                className="lg:col-span-3 lg:pt-8 flex flex-col gap-2.5"
+              >
                 <div className="flex items-center justify-between px-1">
                   <span className="text-[11.5px] font-medium text-neutral-400 tracking-tight">
                     02 · 结构化抽取与对齐
@@ -996,7 +1114,11 @@ export const SchoolImportDemo: React.FC = () => {
             {(showPreview || showDestination) && (
               <div className="lg:col-span-5 flex flex-col gap-6">
                 {showPreview && (
-                  <div className="flex flex-col gap-2.5">
+                  <div
+                    ref={previewWrapRef}
+                    style={{ willChange: 'opacity' }}
+                    className="flex flex-col gap-2.5"
+                  >
                     <div className="flex items-center justify-between px-1">
                       <span className="text-[11.5px] font-medium text-neutral-400 tracking-tight">
                         03 · 导入预览确认
@@ -1008,6 +1130,7 @@ export const SchoolImportDemo: React.FC = () => {
                     <ImportPreviewStage
                       courses={SCHOOL_IMPORT_COURSES}
                       panelRef={previewPanelRef}
+                      countBadgeRef={previewCountBadgeRef}
                       registerPreviewNode={(id, el) => {
                         staticPreviewRefs.current[id] = el
                       }}
@@ -1016,7 +1139,11 @@ export const SchoolImportDemo: React.FC = () => {
                 )}
 
                 {showDestination && (
-                  <div className="flex flex-col gap-2.5">
+                  <div
+                    ref={destinationWrapRef}
+                    style={{ willChange: 'opacity' }}
+                    className="flex flex-col gap-2.5"
+                  >
                     <div className="flex items-center justify-between px-1">
                       <span className="text-[11.5px] font-medium text-neutral-400 tracking-tight">
                         04 · 课程表 App 本地周视图
@@ -1025,7 +1152,15 @@ export const SchoolImportDemo: React.FC = () => {
                         本地存储
                       </span>
                     </div>
-                    <DestinationAppWeekStage courses={SCHOOL_IMPORT_COURSES} />
+                    <DestinationAppWeekStage
+                      courses={SCHOOL_IMPORT_COURSES}
+                      destinationGridRef={destinationGridRef}
+                      completionCopyRef={completionCopyRef}
+                      initialStaticCompleted={previewState === 'DESTINATION'}
+                      registerDestinationNode={(id, el) => {
+                        staticDestinationRefs.current[id] = el
+                      }}
+                    />
                   </div>
                 )}
               </div>
@@ -1033,7 +1168,7 @@ export const SchoolImportDemo: React.FC = () => {
 
             {/* ===============================================================
                 CourseMorphOverlay: 9 Unified Morphing Course Entities
-                (SOURCE -> DATA STRIP -> PROCESS ORGANIZER -> PREVIEW ROW)
+                (SOURCE -> DATA STRIP -> PROCESS -> PREVIEW -> COMPACT RECORD -> DESTINATION)
                =============================================================== */}
             {previewState === 'ALL' && (
               <div
@@ -1073,7 +1208,7 @@ export const SchoolImportDemo: React.FC = () => {
                       }}
                       className="absolute overflow-hidden"
                     >
-                      {/* Continuous Left Color Identity Bar -> Preview Row Dot */}
+                      {/* Continuous Left Color Identity Bar -> Preview Row Dot -> Dissolve */}
                       <span
                         ref={(el) => {
                           morphBarRefs.current[course.id] = el
@@ -1192,6 +1327,47 @@ export const SchoolImportDemo: React.FC = () => {
                         <span className="text-neutral-500 font-normal shrink-0 tabular-nums">
                           {course.day} · 第{course.startPeriod}–{course.endPeriod}节
                         </span>
+                      </div>
+
+                      {/* Layer 5: Phase 05C COMPACT RECORD Content (Stage E2 -> Stage F) */}
+                      <div
+                        ref={(el) => {
+                          morphCompactLayerRefs.current[course.id] = el
+                        }}
+                        style={{ opacity: 0, visibility: 'hidden' }}
+                        className="absolute inset-0 pl-5 pr-2.5 flex items-center overflow-hidden"
+                      >
+                        <div className="text-[11px] sm:text-[11.5px] text-neutral-800 font-medium tracking-tight whitespace-nowrap overflow-hidden text-ellipsis">
+                          <span>{course.displayName}</span>
+                          <span className="mx-1 text-neutral-300">·</span>
+                          <span className="text-neutral-600 font-normal">{course.day}</span>
+                          <span className="mx-1 text-neutral-300">·</span>
+                          <span className="text-neutral-600 font-normal tabular-nums">
+                            {course.startPeriod}–{course.endPeriod}节
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Layer 6: Phase 05C DESTINATION App Week Course Block Content (Stage F -> Stage G) */}
+                      <div
+                        ref={(el) => {
+                          morphDestinationLayerRefs.current[course.id] = el
+                        }}
+                        style={{ opacity: 0, visibility: 'hidden' }}
+                        className={`absolute inset-0 p-1.5 overflow-hidden flex flex-col justify-start ${
+                          course.appTheme === 'warm' ? 'text-[#5E3704]' : 'text-[#2B1B54]'
+                        }`}
+                      >
+                        <div className="shrink-0 text-[10px] sm:text-[11px] font-semibold leading-[1.2] tracking-tight line-clamp-2 break-all">
+                          {course.name}
+                        </div>
+                        <div
+                          className={`overflow-hidden line-clamp-2 text-[8.5px] sm:text-[9.5px] font-normal leading-[1.18] mt-0.5 break-all ${
+                            course.appTheme === 'warm' ? 'text-[#6D440E]' : 'text-[#3D2C6E]'
+                          }`}
+                        >
+                          {course.appLocation}
+                        </div>
                       </div>
                     </div>
                   )

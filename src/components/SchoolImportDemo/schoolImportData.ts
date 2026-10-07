@@ -14,8 +14,13 @@ export interface SchoolImportCourse {
   sourceColor: string
   appTheme: 'warm' | 'lavender'
   weekLabel: string
+  // Phase 05B: SOURCE -> DATA STRIP -> PROCESS -> PREVIEW window (in sourceToPreviewP in [0, 1])
   startP: number
   endP: number
+  // Phase 05C: PREVIEW -> COMPACT RECORD -> DESTINATION window (in previewToDestinationP in [0, 1])
+  writeGroup: 1 | 2 | 3
+  destStartP: number
+  destEndP: number
 }
 
 export const SCHOOL_WEEKDAYS = [
@@ -37,12 +42,9 @@ export const APP_TIME_ROWS = ['08:00', '10:00', '14:00', '16:00'] as const
  * 2. DataStrip & ProcessFieldOrganizer (extracted data strip & field alignment)
  * 3. ImportPreviewRow (structured import preview list)
  * 4. DestinationCourseBlock (5x4 native App week view)
- *
- * Staggered pipeline windows (Δp = 0.072, duration = 0.270):
- * Ensures at most 1 course is expanded in Stage C (PROCESS) at any instant,
- * while 3–4 courses simultaneously occupy SOURCE->STRIP, STREAM, PROCESS, and STRIP->PREVIEW.
  */
 export const SCHOOL_IMPORT_COURSES: SchoolImportCourse[] = [
+  // === Group 1｜周一 (3 courses: 0.12 -> 0.44 in previewToDestinationP) ===
   {
     id: 'course-mon-1-2',
     order: 1,
@@ -61,6 +63,9 @@ export const SCHOOL_IMPORT_COURSES: SchoolImportCourse[] = [
     weekLabel: '第7周',
     startP: 0.05,
     endP: 0.32,
+    writeGroup: 1,
+    destStartP: 0.12,
+    destEndP: 0.38,
   },
   {
     id: 'course-mon-3-4',
@@ -80,6 +85,9 @@ export const SCHOOL_IMPORT_COURSES: SchoolImportCourse[] = [
     weekLabel: '第7周',
     startP: 0.122,
     endP: 0.392,
+    writeGroup: 1,
+    destStartP: 0.15,
+    destEndP: 0.41,
   },
   {
     id: 'course-mon-5-6',
@@ -99,7 +107,12 @@ export const SCHOOL_IMPORT_COURSES: SchoolImportCourse[] = [
     weekLabel: '第7周',
     startP: 0.194,
     endP: 0.464,
+    writeGroup: 1,
+    destStartP: 0.18,
+    destEndP: 0.44,
   },
+
+  // === Group 2｜周二～周四 (4 courses: 0.32 -> 0.70 in previewToDestinationP) ===
   {
     id: 'course-tue-3-4',
     order: 4,
@@ -118,6 +131,9 @@ export const SCHOOL_IMPORT_COURSES: SchoolImportCourse[] = [
     weekLabel: '第7周',
     startP: 0.266,
     endP: 0.536,
+    writeGroup: 2,
+    destStartP: 0.32,
+    destEndP: 0.58,
   },
   {
     id: 'course-wed-1-2',
@@ -137,6 +153,9 @@ export const SCHOOL_IMPORT_COURSES: SchoolImportCourse[] = [
     weekLabel: '第7周',
     startP: 0.338,
     endP: 0.608,
+    writeGroup: 2,
+    destStartP: 0.36,
+    destEndP: 0.62,
   },
   {
     id: 'course-wed-5-6',
@@ -156,6 +175,9 @@ export const SCHOOL_IMPORT_COURSES: SchoolImportCourse[] = [
     weekLabel: '第7周',
     startP: 0.41,
     endP: 0.68,
+    writeGroup: 2,
+    destStartP: 0.4,
+    destEndP: 0.66,
   },
   {
     id: 'course-thu-1-2',
@@ -175,7 +197,12 @@ export const SCHOOL_IMPORT_COURSES: SchoolImportCourse[] = [
     weekLabel: '第7周',
     startP: 0.482,
     endP: 0.752,
+    writeGroup: 2,
+    destStartP: 0.44,
+    destEndP: 0.7,
   },
+
+  // === Group 3｜周五 (2 courses: 0.62 -> 0.90 in previewToDestinationP) ===
   {
     id: 'course-fri-3-4',
     order: 8,
@@ -194,6 +221,9 @@ export const SCHOOL_IMPORT_COURSES: SchoolImportCourse[] = [
     weekLabel: '第7周',
     startP: 0.554,
     endP: 0.824,
+    writeGroup: 3,
+    destStartP: 0.62,
+    destEndP: 0.86,
   },
   {
     id: 'course-fri-7-8',
@@ -213,6 +243,9 @@ export const SCHOOL_IMPORT_COURSES: SchoolImportCourse[] = [
     weekLabel: '第7周',
     startP: 0.626,
     endP: 0.896,
+    writeGroup: 3,
+    destStartP: 0.66,
+    destEndP: 0.9,
   },
 ]
 
