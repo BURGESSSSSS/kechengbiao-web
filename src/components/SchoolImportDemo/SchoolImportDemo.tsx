@@ -285,9 +285,9 @@ export const ProcessOrganizerStage: React.FC<{
   ]
 
   return (
-    <div data-stage-panel="process" className="w-full flex flex-col gap-4 py-1">
+    <div data-stage-panel="process" className="w-full flex flex-col gap-4 lg:gap-2.5 py-1 lg:py-0">
       {/* Section A: Data Strip Stream Channel */}
-      <div className="flex flex-col gap-2">
+      <div className="flex flex-col gap-2 lg:gap-1.5">
         <div className="flex items-center justify-between px-0.5">
           <span className="text-[11px] font-medium tracking-[0.04em] text-neutral-400">
             抽取课程数据条
@@ -295,11 +295,11 @@ export const ProcessOrganizerStage: React.FC<{
           <span className="text-[11px] text-neutral-400 font-normal">DATA STRIP</span>
         </div>
 
-        <div className="relative flex flex-col gap-2">
+        <div className="relative flex flex-col gap-2 lg:gap-1.5">
           {/* Underlying subtle stream lane guides */}
           <div
             aria-hidden="true"
-            className="pointer-events-none absolute inset-0 flex flex-col gap-2"
+            className="pointer-events-none absolute inset-0 flex flex-col gap-2 lg:gap-1.5"
           >
             <div className="w-full h-[36px] rounded-[7px] border border-dashed border-slate-900/[0.06] bg-slate-900/[0.01]" />
             <div className="w-full h-[36px] rounded-[7px] border border-dashed border-slate-900/[0.06] bg-slate-900/[0.01]" />
@@ -309,7 +309,7 @@ export const ProcessOrganizerStage: React.FC<{
           <div
             ref={staticStripPlaceholderRef}
             style={{ willChange: 'opacity' }}
-            className="flex flex-col gap-2"
+            className="flex flex-col gap-2 lg:gap-1.5"
           >
             {representativeStrips.map((course, idx) => (
               <DataStripItem
@@ -364,7 +364,7 @@ export const ProcessOrganizerStage: React.FC<{
           {structuredFields.map((field) => (
             <div
               key={field.label}
-              className="py-2 px-1 flex items-baseline justify-between gap-4 text-[12.5px]"
+              className="py-2 lg:py-1 px-1 flex items-baseline justify-between gap-4 text-[12.5px] lg:text-[12px]"
             >
               <span className="text-neutral-400 font-normal shrink-0">
                 {field.label}
@@ -393,11 +393,11 @@ export const ImportPreviewStage: React.FC<{
     <div
       ref={panelRef}
       data-stage-panel="preview"
-      className="w-full rounded-[20px] bg-white/95 ring-1 ring-slate-900/[0.07] shadow-[0_10px_28px_-10px_rgba(15,23,42,0.06)] px-4 py-3.5"
+      className="w-full rounded-[20px] bg-white/95 ring-1 ring-slate-900/[0.07] shadow-[0_10px_28px_-10px_rgba(15,23,42,0.06)] px-4 py-3.5 lg:py-2"
     >
       {/* Preview Header */}
-      <div className="pb-2.5 border-b border-slate-900/[0.07] flex items-center justify-between">
-        <span className="text-[13.5px] font-semibold text-neutral-900 tracking-tight">
+      <div className="pb-2.5 lg:pb-1.5 border-b border-slate-900/[0.07] flex items-center justify-between">
+        <span className="text-[13.5px] lg:text-[13px] font-semibold text-neutral-900 tracking-tight">
           导入课表 · 第7周
         </span>
         <span
@@ -417,7 +417,7 @@ export const ImportPreviewStage: React.FC<{
             data-course-id={course.id}
             data-stage-node="preview"
             style={{ willChange: 'opacity' }}
-            className="py-2 flex items-center justify-between gap-3 text-[12px] sm:text-[12.5px]"
+            className="py-2 lg:py-1 flex items-center justify-between gap-3 text-[12px] sm:text-[12.5px] lg:text-[12px]"
           >
             <div className="flex items-center gap-2 min-w-0">
               <span
@@ -461,15 +461,15 @@ export const DestinationAppWeekStage: React.FC<{
   })
 
   return (
-    <div data-stage-panel="destination" className="w-full flex flex-col">
-      <div className="relative w-full bg-[#F6F6F6] rounded-[24px] sm:rounded-[28px] p-3.5 sm:p-4.5 ring-1 ring-black/[0.05] shadow-[0_12px_36px_-10px_rgba(15,23,42,0.06)]">
+    <div data-stage-panel="destination" className="w-full lg:max-w-[720px] flex flex-col">
+      <div className="relative w-full bg-[#F6F6F6] rounded-[24px] sm:rounded-[28px] p-3.5 sm:p-4.5 lg:px-5 lg:py-3.5 ring-1 ring-black/[0.05] shadow-[0_12px_36px_-10px_rgba(15,23,42,0.06)]">
         {/* 1. Top Bar: 第 7 周 + Date Range + 编辑 / 导入 */}
         <div className="flex items-start justify-between px-1">
           <div>
-            <div className="text-[21px] sm:text-[24px] font-bold text-neutral-900 leading-none tracking-tight">
+            <div className="text-[21px] sm:text-[24px] lg:text-[22px] font-bold text-neutral-900 leading-none tracking-tight">
               第 7 周
             </div>
-            <div className="text-[11px] sm:text-[12px] text-neutral-500 font-normal mt-1">
+            <div className="text-[11px] sm:text-[12px] lg:text-[11.5px] text-neutral-500 font-normal mt-1 lg:mt-0.5">
               10月12日 - 10月16日
             </div>
           </div>
@@ -485,7 +485,7 @@ export const DestinationAppWeekStage: React.FC<{
         </div>
 
         {/* 2. Week Navigation Row */}
-        <div className="flex items-center gap-1.5 mt-2.5 px-0.5">
+        <div className="flex items-center gap-1.5 mt-2.5 lg:mt-2 px-0.5">
           <span
             aria-hidden="true"
             className="w-6 h-5 rounded-full bg-white border border-neutral-200/80 flex items-center justify-center text-neutral-800 shadow-[0_1px_2px_rgba(0,0,0,0.02)]"
@@ -507,17 +507,17 @@ export const DestinationAppWeekStage: React.FC<{
         </div>
 
         {/* 3. Weekday Header Row + 5×4 Course Grid */}
-        <div ref={destinationGridRef} className="relative mt-3">
+        <div ref={destinationGridRef} className="relative mt-3 lg:mt-2">
           {/* Weekday Headers: 周一 12 ~ 周五 16 */}
-          <div className="flex items-end mb-1.5">
-            <div className="w-7 sm:w-8 shrink-0" />
-            <div className="flex-1 grid grid-cols-5 gap-1.5">
+          <div className="flex items-end mb-1.5 lg:mb-1">
+            <div className="w-7 sm:w-8 lg:w-9 shrink-0" />
+            <div className="flex-1 grid grid-cols-5 gap-1.5 lg:gap-2">
               {SCHOOL_WEEKDAYS.map((wd) => (
                 <div key={wd.day} className="flex flex-col items-center justify-center">
                   <span className="text-[10px] sm:text-[11px] text-neutral-500 font-normal leading-tight">
                     {wd.day}
                   </span>
-                  <span className="text-[12px] sm:text-[13px] text-neutral-900 font-medium leading-tight mt-0.5">
+                  <span className="text-[12px] sm:text-[13px] lg:text-[12.5px] text-neutral-900 font-medium leading-tight mt-0.5">
                     {wd.appDate}
                   </span>
                 </div>
@@ -526,14 +526,14 @@ export const DestinationAppWeekStage: React.FC<{
           </div>
 
           {/* 5 × 4 Slots */}
-          <div className="flex flex-col gap-1.5">
+          <div className="flex flex-col gap-1.5 lg:gap-1.5">
             {APP_TIME_ROWS.map((timeLabel, rowIdx) => (
               <div key={timeLabel} className="flex items-start">
-                <div className="w-7 sm:w-8 pt-1.5 text-[9.5px] sm:text-[10.5px] text-neutral-500 font-normal shrink-0 leading-none">
+                <div className="w-7 sm:w-8 lg:w-9 pt-1.5 text-[9.5px] sm:text-[10.5px] text-neutral-500 font-normal shrink-0 leading-none">
                   {timeLabel}
                 </div>
 
-                <div className="flex-1 grid grid-cols-5 gap-1.5">
+                <div className="flex-1 grid grid-cols-5 gap-1.5 lg:gap-2">
                   {SCHOOL_WEEKDAYS.map((_, colIdx) => {
                     const slotKey = `${colIdx}-${rowIdx}`
                     const course = courseByAppSlot.get(slotKey)
@@ -542,7 +542,7 @@ export const DestinationAppWeekStage: React.FC<{
                       <div
                         key={slotKey}
                         data-destination-cell={slotKey}
-                        className="relative h-[74px] sm:h-[80px] rounded-[11px] sm:rounded-[13px] bg-[#EAEAEA]"
+                        className="relative h-[74px] sm:h-[80px] lg:h-[75px] rounded-[11px] sm:rounded-[13px] lg:rounded-[13px] bg-[#EAEAEA]"
                       >
                         {course && (
                           <div
@@ -555,17 +555,17 @@ export const DestinationAppWeekStage: React.FC<{
                               opacity: initialStaticCompleted ? 1 : 0,
                               willChange: 'opacity',
                             }}
-                            className={`w-full h-full rounded-[11px] sm:rounded-[13px] p-1.5 overflow-hidden flex flex-col justify-start ${
+                            className={`w-full h-full rounded-[11px] sm:rounded-[13px] lg:rounded-[13px] p-1.5 lg:px-2 lg:py-1.5 overflow-hidden flex flex-col justify-start ${
                               course.appTheme === 'warm'
                                 ? 'bg-[#F3ECE1] text-[#5E3704]'
                                 : 'bg-[#E9E7F7] text-[#2B1B54]'
                             }`}
                           >
-                            <div className="shrink-0 text-[10px] sm:text-[11px] font-semibold leading-[1.2] tracking-tight line-clamp-2 break-all">
+                            <div className="shrink-0 text-[10px] sm:text-[11px] lg:text-[11px] font-semibold leading-[1.2] tracking-tight line-clamp-2 break-all">
                               {course.name}
                             </div>
                             <div
-                              className={`overflow-hidden line-clamp-2 text-[8.5px] sm:text-[9.5px] font-normal leading-[1.18] mt-0.5 break-all ${
+                              className={`overflow-hidden line-clamp-2 text-[8.5px] sm:text-[9.5px] lg:text-[9.5px] font-normal leading-[1.18] mt-0.5 break-all ${
                                 course.appTheme === 'warm'
                                   ? 'text-[#6D440E]'
                                   : 'text-[#3D2C6E]'
@@ -585,7 +585,7 @@ export const DestinationAppWeekStage: React.FC<{
         </div>
       </div>
 
-      {/* Completion Status Copy (Section 21 & 22) */}
+      {/* Completion Status Copy (Tightly grouped with Destination) */}
       <div
         ref={completionCopyRef}
         data-completion-status="true"
@@ -594,7 +594,7 @@ export const DestinationAppWeekStage: React.FC<{
           transform: initialStaticCompleted ? 'translate3d(0, 0px, 0)' : 'translate3d(0, 6px, 0)',
           willChange: 'opacity, transform',
         }}
-        className="mt-3.5 px-1 flex flex-col sm:flex-row sm:items-baseline justify-between gap-1"
+        className="mt-2.5 lg:mt-2 px-1.5 flex flex-col sm:flex-row sm:items-baseline justify-between gap-1"
       >
         <div className="text-[13.5px] sm:text-[14px] text-neutral-900 font-semibold tracking-tight">
           导入完成。
@@ -940,23 +940,48 @@ export const SchoolImportDemo: React.FC = () => {
       }
 
       // 7. Visual Focus Transfer across SOURCE / PROCESS / PREVIEW / DESTINATION (Section 19 & 20)
-      const upstreamTransform =
-        p > PHASE05C_GLOBAL_START && macro.upstreamScale < 0.9999
-          ? `scale(${macro.upstreamScale.toFixed(4)})`
-          : 'none'
+      let upstreamOpacity = 1
+      let previewOpacity = 1
+      let destinationOpacity = 0.94
+
+      if (p <= 0.65) {
+        // Active SOURCE -> DATA STRIP -> PROCESS -> PREVIEW arrival: Process & Source 100% clear
+        upstreamOpacity = 1
+        previewOpacity = 1
+        destinationOpacity = 0.94
+      } else if (p < PHASE05C_GLOBAL_START) {
+        // Entering Preview Hold (0.65 -> 0.70): upstream gently steps back so Preview + Destination lead
+        const holdT = clamp((p - 0.65) / (PHASE05C_GLOBAL_START - 0.65), 0, 1)
+        upstreamOpacity = lerp(1, 0.38, holdT)
+        previewOpacity = 1
+        destinationOpacity = lerp(0.94, 1, holdT)
+      } else {
+        // Phase 05C (0.70 -> 1.00): Preview writes into Destination
+        const writeT = clamp((p - PHASE05C_GLOBAL_START) / (0.945 - PHASE05C_GLOBAL_START), 0, 1)
+        upstreamOpacity = lerp(0.38, 0.17, writeT)
+        if (writeT < 0.62) {
+          // Mid-write: Preview remains clearly readable as the active source list
+          previewOpacity = lerp(1, 0.74, writeT / 0.62)
+        } else {
+          // Late-write to Complete: Preview recedes to low-weight historical confirmation state
+          previewOpacity = lerp(0.74, 0.26, (writeT - 0.62) / 0.38)
+        }
+        destinationOpacity = 1
+      }
+
       if (sourceColRef.current) {
-        sourceColRef.current.style.opacity = macro.upstreamOpacity.toFixed(3)
-        sourceColRef.current.style.transform = upstreamTransform
+        sourceColRef.current.style.opacity = upstreamOpacity.toFixed(3)
+        sourceColRef.current.style.transform = 'none'
       }
       if (processColRef.current) {
-        processColRef.current.style.opacity = macro.upstreamOpacity.toFixed(3)
-        processColRef.current.style.transform = upstreamTransform
+        processColRef.current.style.opacity = upstreamOpacity.toFixed(3)
+        processColRef.current.style.transform = 'none'
       }
       if (previewWrapRef.current) {
-        previewWrapRef.current.style.opacity = macro.previewContainerOpacity.toFixed(3)
+        previewWrapRef.current.style.opacity = previewOpacity.toFixed(3)
       }
       if (destinationWrapRef.current) {
-        destinationWrapRef.current.style.opacity = macro.destinationContainerOpacity.toFixed(3)
+        destinationWrapRef.current.style.opacity = destinationOpacity.toFixed(3)
       }
 
       // 8. Completion Status Copy fade-in & lift (Section 21 & 22)
@@ -980,8 +1005,8 @@ export const SchoolImportDemo: React.FC = () => {
     const ctx = gsap.context(() => {
       ScrollTrigger.create({
         trigger: stageWrapper,
-        start: () => (window.innerWidth < 1024 ? 'top 62%' : 'top 58%'),
-        end: () => (window.innerWidth < 1024 ? 'bottom 86%' : 'bottom 95%'),
+        start: () => (window.innerWidth < 1024 ? 'top 62%' : 'top 36%'),
+        end: () => (window.innerWidth < 1024 ? 'bottom 86%' : 'bottom 96%'),
         scrub: true,
         invalidateOnRefresh: true,
         onRefresh: (self) => {
@@ -1055,14 +1080,14 @@ export const SchoolImportDemo: React.FC = () => {
           {/* Wide Import Stage Wrapper (Relative root for CourseMorphOverlay) */}
           <div
             ref={stageWrapperRef}
-            className="relative mt-8 sm:mt-11 md:mt-12 grid grid-cols-1 lg:grid-cols-12 gap-7 lg:gap-6 items-start"
+            className="relative mt-8 sm:mt-11 md:mt-10 grid grid-cols-1 lg:grid-cols-12 gap-7 lg:gap-x-6 lg:gap-y-3 items-start"
           >
-            {/* Column 1 (Left on Desktop): SOURCE 山东商务职业学院“我的课表” */}
+            {/* 01 · SOURCE: Left Column on Desktop (Spans Row 1 & Row 2 so upstream context stays balanced in left viewport) */}
             {showSource && (
               <div
                 ref={sourceColRef}
-                style={{ transformOrigin: 'top center', willChange: 'opacity, transform' }}
-                className="lg:col-span-4 flex flex-col gap-2.5"
+                style={{ transformOrigin: 'top center', willChange: 'opacity' }}
+                className="lg:col-start-1 lg:col-span-4 lg:row-start-1 lg:row-span-2 lg:mt-14 flex flex-col gap-1.5"
               >
                 <div className="flex items-center justify-between px-1">
                   <span className="text-[11.5px] font-medium text-neutral-400 tracking-tight">
@@ -1081,12 +1106,12 @@ export const SchoolImportDemo: React.FC = () => {
               </div>
             )}
 
-            {/* Column 2 (Center on Desktop): PROCESS 数据整理区 + DATA STRIP */}
+            {/* 02 · PROCESS: Top-Center on Desktop (Row 1, Cols 5..7) */}
             {showProcess && (
               <div
                 ref={processColRef}
-                style={{ transformOrigin: 'top center', willChange: 'opacity, transform' }}
-                className="lg:col-span-3 lg:pt-8 flex flex-col gap-2.5"
+                style={{ transformOrigin: 'top center', willChange: 'opacity' }}
+                className="lg:col-start-5 lg:col-span-3 lg:row-start-1 flex flex-col gap-1.5"
               >
                 <div className="flex items-center justify-between px-1">
                   <span className="text-[11.5px] font-medium text-neutral-400 tracking-tight">
@@ -1110,59 +1135,56 @@ export const SchoolImportDemo: React.FC = () => {
               </div>
             )}
 
-            {/* Column 3 (Right on Desktop): PREVIEW 导入预览 + DESTINATION 本地课表周视图 */}
-            {(showPreview || showDestination) && (
-              <div className="lg:col-span-5 flex flex-col gap-6">
-                {showPreview && (
-                  <div
-                    ref={previewWrapRef}
-                    style={{ willChange: 'opacity' }}
-                    className="flex flex-col gap-2.5"
-                  >
-                    <div className="flex items-center justify-between px-1">
-                      <span className="text-[11.5px] font-medium text-neutral-400 tracking-tight">
-                        03 · 导入预览确认
-                      </span>
-                      <span className="text-[11px] text-neutral-400 font-normal">
-                        写入前预览
-                      </span>
-                    </div>
-                    <ImportPreviewStage
-                      courses={SCHOOL_IMPORT_COURSES}
-                      panelRef={previewPanelRef}
-                      countBadgeRef={previewCountBadgeRef}
-                      registerPreviewNode={(id, el) => {
-                        staticPreviewRefs.current[id] = el
-                      }}
-                    />
-                  </div>
-                )}
+            {/* 03 · PREVIEW: Top-Right on Desktop (Row 1, Cols 8..12) */}
+            {showPreview && (
+              <div
+                ref={previewWrapRef}
+                style={{ willChange: 'opacity' }}
+                className="lg:col-start-8 lg:col-span-5 lg:row-start-1 flex flex-col gap-1.5"
+              >
+                <div className="flex items-center justify-between px-1">
+                  <span className="text-[11.5px] font-medium text-neutral-400 tracking-tight">
+                    03 · 导入预览确认
+                  </span>
+                  <span className="text-[11px] text-neutral-400 font-normal">
+                    写入前预览
+                  </span>
+                </div>
+                <ImportPreviewStage
+                  courses={SCHOOL_IMPORT_COURSES}
+                  panelRef={previewPanelRef}
+                  countBadgeRef={previewCountBadgeRef}
+                  registerPreviewNode={(id, el) => {
+                    staticPreviewRefs.current[id] = el
+                  }}
+                />
+              </div>
+            )}
 
-                {showDestination && (
-                  <div
-                    ref={destinationWrapRef}
-                    style={{ willChange: 'opacity' }}
-                    className="flex flex-col gap-2.5"
-                  >
-                    <div className="flex items-center justify-between px-1">
-                      <span className="text-[11.5px] font-medium text-neutral-400 tracking-tight">
-                        04 · 课程表 App 本地周视图
-                      </span>
-                      <span className="text-[11px] text-neutral-400 font-normal">
-                        本地存储
-                      </span>
-                    </div>
-                    <DestinationAppWeekStage
-                      courses={SCHOOL_IMPORT_COURSES}
-                      destinationGridRef={destinationGridRef}
-                      completionCopyRef={completionCopyRef}
-                      initialStaticCompleted={previewState === 'DESTINATION'}
-                      registerDestinationNode={(id, el) => {
-                        staticDestinationRefs.current[id] = el
-                      }}
-                    />
-                  </div>
-                )}
+            {/* 04 · DESTINATION: Center-Right Protagonist on Desktop (Row 2, Cols 5..12, center ~58.8% X) */}
+            {showDestination && (
+              <div
+                ref={destinationWrapRef}
+                style={{ willChange: 'opacity' }}
+                className="lg:col-start-5 lg:col-span-8 lg:row-start-2 flex flex-col gap-1.5"
+              >
+                <div className="flex items-center justify-between px-1 lg:max-w-[720px]">
+                  <span className="text-[11.5px] font-medium text-neutral-400 tracking-tight">
+                    04 · 课程表 App 本地周视图
+                  </span>
+                  <span className="text-[11px] text-neutral-400 font-normal">
+                    本地存储
+                  </span>
+                </div>
+                <DestinationAppWeekStage
+                  courses={SCHOOL_IMPORT_COURSES}
+                  destinationGridRef={destinationGridRef}
+                  completionCopyRef={completionCopyRef}
+                  initialStaticCompleted={previewState === 'DESTINATION'}
+                  registerDestinationNode={(id, el) => {
+                    staticDestinationRefs.current[id] = el
+                  }}
+                />
               </div>
             )}
 
@@ -1354,15 +1376,15 @@ export const SchoolImportDemo: React.FC = () => {
                           morphDestinationLayerRefs.current[course.id] = el
                         }}
                         style={{ opacity: 0, visibility: 'hidden' }}
-                        className={`absolute inset-0 p-1.5 overflow-hidden flex flex-col justify-start ${
+                        className={`absolute inset-0 p-1.5 lg:px-2 lg:py-1.5 overflow-hidden flex flex-col justify-start ${
                           course.appTheme === 'warm' ? 'text-[#5E3704]' : 'text-[#2B1B54]'
                         }`}
                       >
-                        <div className="shrink-0 text-[10px] sm:text-[11px] font-semibold leading-[1.2] tracking-tight line-clamp-2 break-all">
+                        <div className="shrink-0 text-[10px] sm:text-[11px] lg:text-[11px] font-semibold leading-[1.2] tracking-tight line-clamp-2 break-all">
                           {course.name}
                         </div>
                         <div
-                          className={`overflow-hidden line-clamp-2 text-[8.5px] sm:text-[9.5px] font-normal leading-[1.18] mt-0.5 break-all ${
+                          className={`overflow-hidden line-clamp-2 text-[8.5px] sm:text-[9.5px] lg:text-[9.5px] font-normal leading-[1.18] mt-0.5 break-all ${
                             course.appTheme === 'warm' ? 'text-[#6D440E]' : 'text-[#3D2C6E]'
                           }`}
                         >
