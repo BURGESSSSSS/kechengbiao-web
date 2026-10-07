@@ -14,6 +14,8 @@ export interface SchoolImportCourse {
   sourceColor: string
   appTheme: 'warm' | 'lavender'
   weekLabel: string
+  startP: number
+  endP: number
 }
 
 export const SCHOOL_WEEKDAYS = [
@@ -35,6 +37,10 @@ export const APP_TIME_ROWS = ['08:00', '10:00', '14:00', '16:00'] as const
  * 2. DataStrip & ProcessFieldOrganizer (extracted data strip & field alignment)
  * 3. ImportPreviewRow (structured import preview list)
  * 4. DestinationCourseBlock (5x4 native App week view)
+ *
+ * Staggered pipeline windows (Δp = 0.072, duration = 0.270):
+ * Ensures at most 1 course is expanded in Stage C (PROCESS) at any instant,
+ * while 3–4 courses simultaneously occupy SOURCE->STRIP, STREAM, PROCESS, and STRIP->PREVIEW.
  */
 export const SCHOOL_IMPORT_COURSES: SchoolImportCourse[] = [
   {
@@ -53,6 +59,8 @@ export const SCHOOL_IMPORT_COURSES: SchoolImportCourse[] = [
     sourceColor: '#F06878',
     appTheme: 'warm',
     weekLabel: '第7周',
+    startP: 0.05,
+    endP: 0.32,
   },
   {
     id: 'course-mon-3-4',
@@ -70,6 +78,8 @@ export const SCHOOL_IMPORT_COURSES: SchoolImportCourse[] = [
     sourceColor: '#9A79D9',
     appTheme: 'lavender',
     weekLabel: '第7周',
+    startP: 0.122,
+    endP: 0.392,
   },
   {
     id: 'course-mon-5-6',
@@ -87,6 +97,8 @@ export const SCHOOL_IMPORT_COURSES: SchoolImportCourse[] = [
     sourceColor: '#2CC0CE',
     appTheme: 'lavender',
     weekLabel: '第7周',
+    startP: 0.194,
+    endP: 0.464,
   },
   {
     id: 'course-tue-3-4',
@@ -104,6 +116,8 @@ export const SCHOOL_IMPORT_COURSES: SchoolImportCourse[] = [
     sourceColor: '#F06E52',
     appTheme: 'warm',
     weekLabel: '第7周',
+    startP: 0.266,
+    endP: 0.536,
   },
   {
     id: 'course-wed-1-2',
@@ -121,6 +135,8 @@ export const SCHOOL_IMPORT_COURSES: SchoolImportCourse[] = [
     sourceColor: '#D98858',
     appTheme: 'warm',
     weekLabel: '第7周',
+    startP: 0.338,
+    endP: 0.608,
   },
   {
     id: 'course-wed-5-6',
@@ -138,6 +154,8 @@ export const SCHOOL_IMPORT_COURSES: SchoolImportCourse[] = [
     sourceColor: '#EA88CF',
     appTheme: 'lavender',
     weekLabel: '第7周',
+    startP: 0.41,
+    endP: 0.68,
   },
   {
     id: 'course-thu-1-2',
@@ -155,6 +173,8 @@ export const SCHOOL_IMPORT_COURSES: SchoolImportCourse[] = [
     sourceColor: '#D98858',
     appTheme: 'warm',
     weekLabel: '第7周',
+    startP: 0.482,
+    endP: 0.752,
   },
   {
     id: 'course-fri-3-4',
@@ -172,6 +192,8 @@ export const SCHOOL_IMPORT_COURSES: SchoolImportCourse[] = [
     sourceColor: '#F06878',
     appTheme: 'warm',
     weekLabel: '第7周',
+    startP: 0.554,
+    endP: 0.824,
   },
   {
     id: 'course-fri-7-8',
@@ -189,6 +211,8 @@ export const SCHOOL_IMPORT_COURSES: SchoolImportCourse[] = [
     sourceColor: '#2CC0CE',
     appTheme: 'lavender',
     weekLabel: '第7周',
+    startP: 0.626,
+    endP: 0.896,
   },
 ]
 
