@@ -78,14 +78,44 @@ export interface CourseMorphState {
   staticDestinationOpacity: number
 }
 
+export interface StageRailStepState {
+  index: number
+  activeWeight: number // 0..1 continuous current-step emphasis
+  doneWeight: number // 0..1 continuous completed-step emphasis
+  segmentFill: number // 0..1 continuous vertical segment fill
+  railWidthPx: number // 1px -> 3.5px (current) -> 2px (done)
+  railColor: string // continuous gray -> charcoal -> black
+  nodeSizePx: number // 6px -> 9.5px (current) -> 7px (done)
+  nodeColor: string
+  codeColor: string
+  titleColor: string
+  titleWeight: number
+  subtitleColor: string
+}
+
 export interface Phase05MacroState {
   globalP: number
   sourceToPreviewP: number
   previewToDestinationP: number
-  // Upstream historical stage softening during 05C
+  activeStepIndex: 0 | 1 | 2 | 3
+  railProgressPct: number
+  railSteps: StageRailStepState[]
+  // Desktop StageViewport container opacities & centering offsets
+  sourceStageOpacity: number
+  processStageOpacity: number
+  previewStageOpacity: number
+  destinationStageOpacity: number
+  sourceCenterOffsetFactor: number // 1 during Step 01 hold, 0 during morph
+  previewCenterOffsetFactor: number // 1 during Step 03 hold, 0 during morph
+  destinationCenterOffsetFactor: number // 1 during Step 04 complete hold, 0 during morph
+  // Mobile StageViewport container opacities
+  mobileSourceOpacity: number
+  mobileProcessOpacity: number
+  mobilePreviewOpacity: number
+  mobileDestinationOpacity: number
+  // Legacy / compatibility fields
   upstreamOpacity: number
   upstreamScale: number
-  // Preview vs Destination focus shift
   previewContainerOpacity: number
   destinationContainerOpacity: number
   // Completion caption (Section 21 & 22)
@@ -118,8 +148,15 @@ export function easeInOutCubic(t: number): number {
   return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2
 }
 
-function parseHex(hex: string): [number, number, number] {
-  const clean = hex.replace('#', '')
+function parseHex(colorStr: string): [number, number, number] {
+  const trimmed = colorStr.trim()
+  if (trimmed.startsWith('rgb')) {
+    const parts = trimmed.match(/\d+/g)
+    if (parts && parts.length >= 3) {
+      return [Number(parts[0]), Number(parts[1]), Number(parts[2])]
+    }
+  }
+  const clean = trimmed.replace('#', '')
   const num = parseInt(clean, 16)
   return [(num >> 16) & 255, (num >> 8) & 255, num & 255]
 }
@@ -135,29 +172,30 @@ export function interpolateHexColor(hexA: string, hexB: string, t: number): stri
 }
 
 // =============================================================================
-// Global Phase 05 Timeline Remap Constants (Section 4 & 5)
-// 0.00 -> 0.70 : Phase 05B (SOURCE -> DATA STRIP -> PROCESS -> PREVIEW)
-// 0.70 -> 0.76 : Full 9-Course PREVIEW Hold
-// 0.76 -> 0.94 : Phase 05C Active Write (PREVIEW -> COMPACT RECORD -> DESTINATION)
-// 0.94 -> 1.00 : Full Local Week View + "导入完成。" Hold
+// Phase 05 Narrative Redesign Timeline Constants (storyP in [0, 1])
+// Step 01 | SOURCE      : 0.00 -> 0.22 (Hold 0.00 -> 0.15, Transition 0.15 -> 0.22)
+// Step 02 | PROCESS     : 0.22 -> 0.52 (Pipeline 0.16 -> 0.50, Transition 0.50 -> 0.52)
+// Step 03 | PREVIEW     : 0.52 -> 0.74 (Hold 0.53 -> 0.68, Transition 0.68 -> 0.74)
+// Step 04 | DESTINATION : 0.74 -> 1.00 (Write 0.73 -> 0.91, Complete Hold 0.91 -> 1.00)
 // =============================================================================
-export const PHASE05B_GLOBAL_END = 0.70
-export const PHASE05C_GLOBAL_START = 0.74
-export const PHASE05C_GLOBAL_END = 0.945
+export const PHASE05B_GLOBAL_START = 0.16
+export const PHASE05B_GLOBAL_END = 0.50
+export const PHASE05C_GLOBAL_START = 0.73
+export const PHASE05C_GLOBAL_END = 0.91
 
-// Phase 05B local progress stage boundaries (unchanged)
-const STAGE_A_DETACH_END = 0.065
-const STAGE_A_END = 0.24
-const STAGE_B_END = 0.44
-const STAGE_C_EXPAND_END = 0.52
-const STAGE_C_ALIGN_END = 0.62
-const STAGE_C_END = 0.70
-const STAGE_D_STREAM_END = 0.80
+// Phase 05B local progress stage boundaries (widened STAGE_C Process field alignment hold)
+const STAGE_A_DETACH_END = 0.06
+const STAGE_A_END = 0.22
+const STAGE_B_END = 0.38
+const STAGE_C_EXPAND_END = 0.46
+const STAGE_C_ALIGN_END = 0.66
+const STAGE_C_END = 0.74
+const STAGE_D_STREAM_END = 0.83
 const STAGE_D_MORPH_END = 0.95
 
 // Phase 05C local progress stage boundaries
-const STAGE_E_DETACH_END = 0.14
-const STAGE_E_COMPACT_END = 0.34
+const STAGE_E_DETACH_END = 0.15
+const STAGE_E_COMPACT_END = 0.36
 const STAGE_F_COMMIT_END = 0.94
 
 /**
@@ -912,7 +950,7 @@ export function computeDestinationMorphState(
 }
 
 /**
- * Unified Phase 05 (05B + 05C) Course State Coordinator for globalP in [0, 1].
+ * Unified Phase 05 (05B + 05C) Course State Coordinator for globalP (storyP) in [0, 1].
  */
 export function computeFullPhase05CourseState(
   globalP: number,
@@ -922,7 +960,12 @@ export function computeFullPhase05CourseState(
 ): CourseMorphState {
   const clampedGlobal = clamp(globalP, 0, 1)
   if (clampedGlobal <= PHASE05C_GLOBAL_START) {
-    const sourceToPreviewP = clamp(clampedGlobal / PHASE05B_GLOBAL_END, 0, 1)
+    const sourceToPreviewP = clamp(
+      (clampedGlobal - PHASE05B_GLOBAL_START) /
+        (PHASE05B_GLOBAL_END - PHASE05B_GLOBAL_START),
+      0,
+      1
+    )
     return computeCourseMorphState(sourceToPreviewP, course, index, geometry)
   }
 
@@ -935,48 +978,219 @@ export function computeFullPhase05CourseState(
   return computeDestinationMorphState(previewToDestinationP, course, index, geometry)
 }
 
+const STEP_WINDOWS: readonly [number, number][] = [
+  [0.0, 0.22],
+  [0.22, 0.52],
+  [0.52, 0.74],
+  [0.74, 1.0],
+]
+
 /**
- * Macro Stage State for Phase 05 (Stage weights + completion status copy).
+ * Macro Stage State for Phase 05 (StageRail continuous interpolation + StageViewport protagonist weights + completion copy).
  */
 export function computePhase05MacroState(
   globalP: number,
   courses: SchoolImportCourse[]
 ): Phase05MacroState {
   const p = clamp(globalP, 0, 1)
-  const sourceToPreviewP = clamp(p / PHASE05B_GLOBAL_END, 0, 1)
+  const sourceToPreviewP = clamp(
+    (p - PHASE05B_GLOBAL_START) / (PHASE05B_GLOBAL_END - PHASE05B_GLOBAL_START),
+    0,
+    1
+  )
   const previewToDestinationP = clamp(
     (p - PHASE05C_GLOBAL_START) / (PHASE05C_GLOBAL_END - PHASE05C_GLOBAL_START),
     0,
     1
   )
 
-  // Section 20: Upstream SOURCE & PROCESS gently recede during 05C
-  const upstreamFadeT = easeInOutQuad(
-    clamp((previewToDestinationP - 0.08) / 0.65, 0, 1)
-  )
-  const upstreamOpacity = lerp(1.0, 0.56, upstreamFadeT)
-  const upstreamScale = lerp(1.0, 0.988, upstreamFadeT)
+  // 1. Active step index for mobile indicator & accessibility
+  let activeStepIndex: 0 | 1 | 2 | 3 = 0
+  if (p >= 0.74) activeStepIndex = 3
+  else if (p >= 0.52) activeStepIndex = 2
+  else if (p >= 0.22) activeStepIndex = 1
 
-  // Section 19: Preview frame softens after courses write into Destination
-  const previewFadeT = easeInOutQuad(
-    clamp((previewToDestinationP - 0.55) / 0.4, 0, 1)
-  )
-  const previewContainerOpacity = lerp(1.0, 0.62, previewFadeT)
+  // 2. Continuous Stage Rail interpolation (DONE / CURRENT / FUTURE)
+  const tau = 0.032
+  const railSteps: StageRailStepState[] = STEP_WINDOWS.map(([sStart, sEnd], idx) => {
+    const enterT =
+      idx === 0
+        ? 1
+        : easeInOutQuad(clamp((p - (sStart - tau)) / (2 * tau), 0, 1))
+    const exitT =
+      idx === 3
+        ? 0
+        : easeInOutQuad(clamp((p - (sEnd - tau)) / (2 * tau), 0, 1))
 
-  // Destination container rises from calm standby to primary visual protagonist
-  const destRiseT = easeOutQuad(clamp(previewToDestinationP / 0.25, 0, 1))
-  const destinationContainerOpacity = lerp(0.9, 1.0, destRiseT)
+    const activeWeight = clamp(enterT * (1 - exitT), 0, 1)
+    const doneWeight = exitT
+    const effectiveEnd = idx === 3 ? 0.92 : sEnd
+    const segmentFill = clamp((p - sStart) / (effectiveEnd - sStart), 0, 1)
 
-  // Count how many courses have started/completed writing to Destination
+    // Rail segment thickness: 1px (future) -> 3.5px (current) -> 2px (done)
+    const railWidthPx = lerp(lerp(1.0, 2.0, doneWeight), 3.5, activeWeight)
+    // Rail segment color: #D4D4D8 (future) -> #52525B (done) -> #111111 (current)
+    const doneRailHex = interpolateHexColor(
+      '#D4D4D8',
+      '#52525B',
+      clamp(doneWeight + segmentFill * 0.55, 0, 1)
+    )
+    const railColor = interpolateHexColor(doneRailHex, '#111111', activeWeight)
+
+    // Node diameter: 6px (future) -> 7.5px (done) -> 10px (current)
+    const nodeSizePx = lerp(lerp(6.0, 7.5, doneWeight), 10.0, activeWeight)
+    const doneNodeHex = interpolateHexColor('#D4D4D8', '#52525B', doneWeight)
+    const nodeColor = interpolateHexColor(doneNodeHex, '#111111', activeWeight)
+
+    // Typography colors & weights: FUTURE (#A1A1AA) -> DONE (#6E6E77) -> CURRENT (#111111)
+    const doneCodeHex = interpolateHexColor('#A1A1AA', '#6E6E77', doneWeight)
+    const codeColor = interpolateHexColor(doneCodeHex, '#111111', activeWeight)
+
+    const doneTitleHex = interpolateHexColor('#A1A1AA', '#52525B', doneWeight)
+    const titleColor = interpolateHexColor(doneTitleHex, '#111111', activeWeight)
+    const titleWeight = Math.round(lerp(lerp(450, 520, doneWeight), 680, activeWeight))
+
+    const doneSubHex = interpolateHexColor('#C4C4CC', '#8E8E96', doneWeight)
+    const subtitleColor = interpolateHexColor(doneSubHex, '#3F3F46', activeWeight)
+
+    return {
+      index: idx,
+      activeWeight,
+      doneWeight,
+      segmentFill,
+      railWidthPx,
+      railColor,
+      nodeSizePx,
+      nodeColor,
+      codeColor,
+      titleColor,
+      titleWeight,
+      subtitleColor,
+    }
+  })
+
+  // Continuous overall rail progress (0% -> 100%)
+  const totalRailFill =
+    (railSteps[0].segmentFill +
+      railSteps[1].segmentFill +
+      railSteps[2].segmentFill +
+      railSteps[3].segmentFill) *
+    25
+  const railProgressPct = clamp(totalRailFill, 0, 100)
+
+  // 3. Desktop StageViewport protagonist opacities (only 1 stage is main protagonist at a time)
+  // Step 01: SOURCE is protagonist (0.00 -> 0.22)
+  let sourceStageOpacity = 1
+  if (p <= 0.16) {
+    sourceStageOpacity = 1
+  } else if (p <= 0.25) {
+    sourceStageOpacity = lerp(1, 0.36, easeInOutQuad((p - 0.16) / 0.09))
+  } else if (p <= 0.47) {
+    sourceStageOpacity = 0.36
+  } else if (p <= 0.53) {
+    sourceStageOpacity = lerp(0.36, 0, easeInOutQuad((p - 0.47) / 0.06))
+  } else {
+    sourceStageOpacity = 0
+  }
+
+  // Step 02: PROCESS is protagonist (0.22 -> 0.52)
+  let processStageOpacity = 0
+  if (p <= 0.12) {
+    processStageOpacity = 0
+  } else if (p <= 0.19) {
+    processStageOpacity = easeInOutQuad((p - 0.12) / 0.07)
+  } else if (p <= 0.48) {
+    processStageOpacity = 1
+  } else if (p <= 0.54) {
+    processStageOpacity = 1 - easeInOutQuad((p - 0.48) / 0.06)
+  } else {
+    processStageOpacity = 0
+  }
+
+  // Step 03: PREVIEW is protagonist (0.52 -> 0.74), receives in Step 02, feeds in Step 04
+  let previewStageOpacity = 0
+  if (p <= 0.18) {
+    previewStageOpacity = 0
+  } else if (p <= 0.26) {
+    previewStageOpacity = lerp(0, 0.86, easeInOutQuad((p - 0.18) / 0.08))
+  } else if (p <= 0.48) {
+    previewStageOpacity = 0.86
+  } else if (p <= 0.53) {
+    previewStageOpacity = lerp(0.86, 1, easeInOutQuad((p - 0.48) / 0.05))
+  } else if (p <= 0.73) {
+    previewStageOpacity = 1
+  } else if (p <= 0.86) {
+    previewStageOpacity = lerp(1, 0.72, easeInOutQuad((p - 0.73) / 0.13))
+  } else if (p <= 0.92) {
+    previewStageOpacity = lerp(0.72, 0, easeInOutQuad((p - 0.86) / 0.06))
+  } else {
+    previewStageOpacity = 0
+  }
+
+  // Step 04: DESTINATION is protagonist (0.74 -> 1.00), 100% hidden during Steps 01-03
+  let destinationStageOpacity = 0
+  if (p <= 0.68) {
+    destinationStageOpacity = 0
+  } else if (p <= 0.74) {
+    destinationStageOpacity = easeInOutQuad((p - 0.68) / 0.06)
+  } else {
+    destinationStageOpacity = 1
+  }
+
+  // Safe centering factors when CourseMorphOverlay is completely idle (all courses settled in static DOM)
+  // - sourceCenterOffsetFactor: 1 during 0.00..0.10, smoothly 0 by 0.155 (before PHASE05B_GLOBAL_START = 0.16)
+  const sourceCenterOffsetFactor =
+    p <= 0.10 ? 1 : p < 0.155 ? 1 - easeInOutCubic((p - 0.10) / 0.055) : 0
+
+  // - previewCenterOffsetFactor: 0 at <=0.505, rises to 1 during 0.505..0.55, holds 1 during 0.55..0.66, returns to 0 by 0.725 (before PHASE05C_GLOBAL_START = 0.73)
+  let previewCenterOffsetFactor = 0
+  if (p > 0.505 && p <= 0.55) {
+    previewCenterOffsetFactor = easeInOutCubic((p - 0.505) / 0.045)
+  } else if (p > 0.55 && p <= 0.66) {
+    previewCenterOffsetFactor = 1
+  } else if (p > 0.66 && p < 0.725) {
+    previewCenterOffsetFactor = 1 - easeInOutCubic((p - 0.66) / 0.065)
+  }
+
+  // - destinationCenterOffsetFactor: 0 at <=0.905 (after PHASE05C_GLOBAL_END = 0.91 finishes last course at 0.903), rises to 1 by 0.94
+  const destinationCenterOffsetFactor =
+    p <= 0.906 ? 0 : p < 0.94 ? easeInOutCubic((p - 0.906) / 0.034) : 1
+
+  // 4. Mobile single-protagonist stage opacities
+  const mobileSourceOpacity =
+    p <= 0.16 ? 1 : p < 0.22 ? 1 - easeInOutQuad((p - 0.16) / 0.06) : 0
+  const mobileProcessOpacity =
+    p <= 0.16
+      ? 0
+      : p < 0.22
+        ? easeInOutQuad((p - 0.16) / 0.06)
+        : p <= 0.47
+          ? 1
+          : p < 0.52
+            ? 1 - easeInOutQuad((p - 0.47) / 0.05)
+            : 0
+  const mobilePreviewOpacity =
+    p <= 0.47
+      ? 0
+      : p < 0.52
+        ? easeInOutQuad((p - 0.47) / 0.05)
+        : p <= 0.69
+          ? 1
+          : p < 0.74
+            ? 1 - easeInOutQuad((p - 0.69) / 0.05)
+            : 0
+  const mobileDestinationOpacity =
+    p <= 0.69 ? 0 : p < 0.74 ? easeInOutQuad((p - 0.69) / 0.05) : 1
+
+  // Count how many courses have settled into Destination
   let settledDestinationCount = 0
   for (const c of courses) {
     const wP = (previewToDestinationP - c.destStartP) / (c.destEndP - c.destStartP)
     if (wP >= 0.85) settledDestinationCount++
   }
 
-  // Section 21 & 22: Completion caption fades in (opacity 0->1, y 6px->0) after 9th course settles
-  // 9th course settles at previewToDestinationP = 0.90 -> globalP ≈ 0.9245
-  const compT = easeOutQuad(clamp((p - 0.922) / (0.962 - 0.922), 0, 1))
+  // Completion caption fades in (opacity 0->1, y 6px->0) after 9th course settles (storyP ~ 0.903)
+  const compT = easeOutQuad(clamp((p - 0.90) / (0.935 - 0.90), 0, 1))
   const completionOpacity = compT
   const completionY = lerp(6, 0, compT)
 
@@ -984,10 +1198,24 @@ export function computePhase05MacroState(
     globalP: p,
     sourceToPreviewP,
     previewToDestinationP,
-    upstreamOpacity,
-    upstreamScale,
-    previewContainerOpacity,
-    destinationContainerOpacity,
+    activeStepIndex,
+    railProgressPct,
+    railSteps,
+    sourceStageOpacity,
+    processStageOpacity,
+    previewStageOpacity,
+    destinationStageOpacity,
+    sourceCenterOffsetFactor,
+    previewCenterOffsetFactor,
+    destinationCenterOffsetFactor,
+    mobileSourceOpacity,
+    mobileProcessOpacity,
+    mobilePreviewOpacity,
+    mobileDestinationOpacity,
+    upstreamOpacity: sourceStageOpacity,
+    upstreamScale: 1,
+    previewContainerOpacity: previewStageOpacity,
+    destinationContainerOpacity: destinationStageOpacity,
     completionOpacity,
     completionY,
     settledDestinationCount,

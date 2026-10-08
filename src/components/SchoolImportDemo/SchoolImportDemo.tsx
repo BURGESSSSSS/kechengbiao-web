@@ -5,6 +5,7 @@ import { ChevronLeft, ChevronRight, MoreHorizontal, X } from 'lucide-react'
 import {
   APP_TIME_ROWS,
   FEATURED_PROCESS_COURSE,
+  PHASE05_STAGE_STEPS,
   SAMPLE_DATA_STRIP_COURSES,
   SCHOOL_IMPORT_COURSES,
   SCHOOL_PERIODS,
@@ -17,10 +18,17 @@ import {
   computePhase05MacroState,
   lerp,
   PHASE05B_GLOBAL_END,
+  PHASE05B_GLOBAL_START,
+  PHASE05C_GLOBAL_END,
   PHASE05C_GLOBAL_START,
   type MorphRect,
   type StageGeometryCache,
 } from './courseMorphEngine'
+import {
+  ImportStageRail,
+  MobileStageHeader,
+  type StageRailDomRefs,
+} from './ImportStageRail'
 
 gsap.registerPlugin(ScrollTrigger)
 
@@ -224,7 +232,7 @@ export const DataStripItem: React.FC<{
       style={{ willChange: 'opacity' }}
       className={`${
         hiddenInStatic ? 'hidden' : 'flex'
-      } relative items-center w-full h-[36px] rounded-[7px] bg-[#FAFAFC] ring-1 ring-slate-900/[0.08] shadow-[0_2px_6px_rgba(15,23,42,0.03)] px-2.5 py-2 overflow-hidden`}
+      } relative items-center w-full h-[38px] rounded-[8px] bg-[#FAFAFC] ring-1 ring-slate-900/[0.08] shadow-[0_2px_6px_rgba(15,23,42,0.03)] px-3 py-2 overflow-hidden`}
     >
       {/* Left 2.5px Source Color Indicator Bar */}
       <span
@@ -232,7 +240,7 @@ export const DataStripItem: React.FC<{
         style={{ backgroundColor: course.sourceColor }}
         className="w-[2.5px] h-3.5 rounded-full shrink-0 mr-2"
       />
-      <div className="text-[11.5px] sm:text-[12px] lg:text-[11.5px] xl:text-[12px] text-neutral-800 font-medium tracking-tight whitespace-nowrap overflow-hidden text-ellipsis">
+      <div className="text-[12px] sm:text-[12.5px] text-neutral-800 font-medium tracking-tight whitespace-nowrap overflow-hidden text-ellipsis">
         <span>{course.name}</span>
         <span className="mx-1 text-neutral-300">·</span>
         <span className="text-neutral-600 font-normal">{course.day}</span>
@@ -248,7 +256,7 @@ export const DataStripItem: React.FC<{
 }
 
 /**
- * 3. PROCESS: 中央数据整理区（极简细线结构 + Data Strip 通道 + 字段对齐）
+ * 3. PROCESS: 中央数据整理区（清晰卡片容器 + Data Strip 通道 + 5 行高对比字段对齐）
  */
 export const ProcessOrganizerStage: React.FC<{
   courses: SchoolImportCourse[]
@@ -285,31 +293,40 @@ export const ProcessOrganizerStage: React.FC<{
   ]
 
   return (
-    <div data-stage-panel="process" className="w-full flex flex-col gap-4 lg:gap-2.5 py-1 lg:py-0">
-      {/* Section A: Data Strip Stream Channel */}
-      <div className="flex flex-col gap-2 lg:gap-1.5">
-        <div className="flex items-center justify-between px-0.5">
-          <span className="text-[11px] font-medium tracking-[0.04em] text-neutral-400">
-            抽取课程数据条
-          </span>
-          <span className="text-[11px] text-neutral-400 font-normal">DATA STRIP</span>
-        </div>
+    <div
+      data-stage-panel="process"
+      className="w-full rounded-[22px] bg-white ring-1 ring-slate-900/[0.07] shadow-[0_14px_38px_-12px_rgba(15,23,42,0.07)] p-4 sm:p-5 flex flex-col gap-3.5"
+    >
+      {/* Card Header */}
+      <div className="pb-2.5 border-b border-slate-900/[0.07] flex items-center justify-between">
+        <span className="text-[14px] font-semibold text-neutral-950 tracking-tight">
+          结构化抽取
+        </span>
+        <span
+          ref={processStatusLabelRef}
+          className="text-[12px] text-neutral-500 font-medium transition-colors"
+        >
+          提取课程字段
+        </span>
+      </div>
 
-        <div className="relative flex flex-col gap-2 lg:gap-1.5">
+      {/* Section A: Data Strip Stream Channel */}
+      <div className="flex flex-col gap-2">
+        <div className="relative flex flex-col gap-2">
           {/* Underlying subtle stream lane guides */}
           <div
             aria-hidden="true"
-            className="pointer-events-none absolute inset-0 flex flex-col gap-2 lg:gap-1.5"
+            className="pointer-events-none absolute inset-0 flex flex-col gap-2"
           >
-            <div className="w-full h-[36px] rounded-[7px] border border-dashed border-slate-900/[0.06] bg-slate-900/[0.01]" />
-            <div className="w-full h-[36px] rounded-[7px] border border-dashed border-slate-900/[0.06] bg-slate-900/[0.01]" />
+            <div className="w-full h-[38px] rounded-[8px] border border-dashed border-slate-900/[0.07] bg-slate-900/[0.012]" />
+            <div className="w-full h-[38px] rounded-[8px] border border-dashed border-slate-900/[0.07] bg-slate-900/[0.012]" />
           </div>
 
           {/* Static representative strips (measured for stripLaneTopRect / stripLaneBottomRect) */}
           <div
             ref={staticStripPlaceholderRef}
             style={{ willChange: 'opacity' }}
-            className="flex flex-col gap-2 lg:gap-1.5"
+            className="flex flex-col gap-2"
           >
             {representativeStrips.map((course, idx) => (
               <DataStripItem
@@ -336,25 +353,13 @@ export const ProcessOrganizerStage: React.FC<{
         </div>
       </div>
 
-      {/* Hairline Connector */}
-      <div className="flex items-center gap-2 px-1">
-        <div className="h-px flex-1 bg-slate-900/[0.08]" />
-        <span
-          ref={processStatusLabelRef}
-          className="text-[10.5px] text-neutral-400 font-normal transition-colors"
-        >
-          字段对齐与清洗
-        </span>
-        <div className="h-px flex-1 bg-slate-900/[0.08]" />
-      </div>
-
-      {/* Section B: Minimal Hairline Field Alignment Structure */}
+      {/* Section B: 5-Row Field Alignment Structure */}
       <div
         ref={processBoxRef}
         data-course-id={featuredCourse.id}
         data-stage-node="process"
         data-process-anchor="field-table"
-        className="relative w-full border-t border-b border-slate-900/[0.08] divide-y divide-slate-900/[0.06]"
+        className="relative w-full rounded-[12px] bg-[#FAFAFC] ring-1 ring-slate-900/[0.06] px-3.5 py-1 divide-y divide-slate-900/[0.06]"
       >
         <div
           ref={staticProcessFieldsRef}
@@ -364,12 +369,12 @@ export const ProcessOrganizerStage: React.FC<{
           {structuredFields.map((field) => (
             <div
               key={field.label}
-              className="py-2 lg:py-1 px-1 flex items-baseline justify-between gap-4 text-[12.5px] lg:text-[12px]"
+              className="py-2 flex items-baseline justify-between gap-4 text-[13px]"
             >
-              <span className="text-neutral-400 font-normal shrink-0">
+              <span className="text-neutral-500 font-medium shrink-0">
                 {field.label}
               </span>
-              <span className="text-neutral-900 font-medium text-right truncate">
+              <span className="text-neutral-950 font-semibold text-right truncate">
                 {field.value}
               </span>
             </div>
@@ -393,23 +398,23 @@ export const ImportPreviewStage: React.FC<{
     <div
       ref={panelRef}
       data-stage-panel="preview"
-      className="w-full rounded-[20px] bg-white/95 ring-1 ring-slate-900/[0.07] shadow-[0_10px_28px_-10px_rgba(15,23,42,0.06)] px-4 py-3.5 lg:py-2"
+      className="w-full rounded-[22px] bg-white ring-1 ring-slate-900/[0.07] shadow-[0_14px_38px_-12px_rgba(15,23,42,0.07)] px-5 py-4"
     >
       {/* Preview Header */}
-      <div className="pb-2.5 lg:pb-1.5 border-b border-slate-900/[0.07] flex items-center justify-between">
-        <span className="text-[13.5px] lg:text-[13px] font-semibold text-neutral-900 tracking-tight">
-          导入课表 · 第7周
+      <div className="pb-2.5 border-b border-slate-900/[0.07] flex items-center justify-between">
+        <span className="text-[14px] font-semibold text-neutral-950 tracking-tight">
+          导入预览 · 第7周
         </span>
         <span
           ref={countBadgeRef}
-          className="text-[11.5px] text-neutral-400 font-normal tabular-nums"
+          className="text-[12px] text-neutral-500 font-medium tabular-nums"
         >
           共 {courses.length} 门课程
         </span>
       </div>
 
       {/* Structured Course Rows */}
-      <div className="divide-y divide-slate-900/[0.05]">
+      <div className="divide-y divide-slate-900/[0.055]">
         {courses.map((course) => (
           <div
             key={course.id}
@@ -417,19 +422,19 @@ export const ImportPreviewStage: React.FC<{
             data-course-id={course.id}
             data-stage-node="preview"
             style={{ willChange: 'opacity' }}
-            className="py-2 lg:py-1 flex items-center justify-between gap-3 text-[12px] sm:text-[12.5px] lg:text-[12px]"
+            className="py-2 flex items-center justify-between gap-3 text-[12.5px] sm:text-[13px]"
           >
             <div className="flex items-center gap-2 min-w-0">
               <span
                 aria-hidden="true"
                 style={{ backgroundColor: course.sourceColor }}
-                className="w-1.5 h-1.5 rounded-full shrink-0 opacity-75"
+                className="w-1.5 h-1.5 rounded-full shrink-0 opacity-85"
               />
               <span className="text-neutral-900 font-medium truncate">
                 {course.displayName}
               </span>
             </div>
-            <span className="text-neutral-500 font-normal shrink-0 tabular-nums">
+            <span className="text-neutral-600 font-normal shrink-0 tabular-nums">
               {course.day} · 第{course.startPeriod}–{course.endPeriod}节
             </span>
           </div>
@@ -462,7 +467,7 @@ export const DestinationAppWeekStage: React.FC<{
 
   return (
     <div data-stage-panel="destination" className="w-full lg:max-w-[720px] flex flex-col">
-      <div className="relative w-full bg-[#F6F6F6] rounded-[24px] sm:rounded-[28px] p-3.5 sm:p-4.5 lg:px-5 lg:py-3.5 ring-1 ring-black/[0.05] shadow-[0_12px_36px_-10px_rgba(15,23,42,0.06)]">
+      <div className="relative w-full bg-[#F6F6F6] rounded-[24px] sm:rounded-[28px] p-3.5 sm:p-5 lg:px-5 lg:py-3.5 ring-1 ring-black/[0.05] shadow-[0_12px_36px_-10px_rgba(15,23,42,0.06)]">
         {/* 1. Top Bar: 第 7 周 + Date Range + 编辑 / 导入 */}
         <div className="flex items-start justify-between px-1">
           <div>
@@ -611,23 +616,38 @@ export const DestinationAppWeekStage: React.FC<{
 }
 
 /**
- * Phase 05: 学校课表导入 · SOURCE -> DATA STRIP -> PROCESS -> PREVIEW -> DESTINATION 完整闭环
+ * Phase 05: 学校课表导入 · 左侧四阶段 StageRail + 右侧单主角 StageViewport + 长节奏 Scroll Pacing
  */
 export const SchoolImportDemo: React.FC = () => {
   const [previewState, setPreviewState] = useState<Phase05PreviewState>(getInitialPhase05State)
 
   const sectionRef = useRef<HTMLElement | null>(null)
+  const storyTrackRef = useRef<HTMLDivElement | null>(null)
   const stageWrapperRef = useRef<HTMLDivElement | null>(null)
   const previewPanelRef = useRef<HTMLDivElement | null>(null)
   const previewCountBadgeRef = useRef<HTMLSpanElement | null>(null)
   const destinationGridRef = useRef<HTMLDivElement | null>(null)
   const completionCopyRef = useRef<HTMLDivElement | null>(null)
 
-  // Stage column wrapper refs for visual focus transfer (Section 19 & 20)
+  // Stage column wrapper refs for single-protagonist StageViewport transitions
   const sourceColRef = useRef<HTMLDivElement | null>(null)
   const processColRef = useRef<HTMLDivElement | null>(null)
   const previewWrapRef = useRef<HTMLDivElement | null>(null)
   const destinationWrapRef = useRef<HTMLDivElement | null>(null)
+
+  // StageRail & MobileStageHeader DOM refs (updated directly in applyGlobalProgress)
+  const railRefs = useRef<StageRailDomRefs>({
+    masterFillBar: null,
+    stepNodes: [],
+    stepSegmentFills: [],
+    stepCodes: [],
+    stepTitles: [],
+    stepSubtitles: [],
+    mobileStepCode: null,
+    mobileStepTitle: null,
+    mobileStepSubtitle: null,
+    mobileProgressBar: null,
+  })
 
   // Static stage node refs for geometry measurement & opacity handoff
   const staticSourceRefs = useRef<Record<string, HTMLDivElement | null>>({})
@@ -657,12 +677,12 @@ export const SchoolImportDemo: React.FC = () => {
   const currentProgressRef = useRef<number>(0)
   const geometryCacheRef = useRef<StageGeometryCache>({
     isMobile: false,
-    stageWidth: 1200,
-    stageHeight: 800,
-    stripLaneTopRect: { x: 420, y: 60, width: 260, height: 36 },
-    stripLaneBottomRect: { x: 420, y: 104, width: 260, height: 36 },
-    processBoxRect: { x: 420, y: 176, width: 260, height: 185 },
-    destinationGridTopY: 450,
+    stageWidth: 1000,
+    stageHeight: 500,
+    stripLaneTopRect: { x: 340, y: 60, width: 280, height: 38 },
+    stripLaneBottomRect: { x: 340, y: 106, width: 280, height: 38 },
+    processBoxRect: { x: 340, y: 170, width: 280, height: 195 },
+    destinationGridTopY: 110,
     courses: {},
   })
 
@@ -679,8 +699,9 @@ export const SchoolImportDemo: React.FC = () => {
     if (previewState !== 'ALL') return
 
     const section = sectionRef.current
+    const storyTrack = storyTrackRef.current
     const stageWrapper = stageWrapperRef.current
-    if (!section || !stageWrapper) return
+    if (!section || !storyTrack || !stageWrapper) return
 
     const toRelativeRect = (el: HTMLElement | null, rootBox: DOMRect): MorphRect => {
       if (!el) return { x: 0, y: 0, width: 0, height: 0 }
@@ -695,11 +716,13 @@ export const SchoolImportDemo: React.FC = () => {
 
     /**
      * Measure and cache all stage geometry in stageWrapper root coordinates.
-     * Never called inside ScrollTrigger.onUpdate.
+     * Temporarily clears centering transforms so base grid coordinates are exact.
      */
     const measureStageGeometry = () => {
       if (sourceColRef.current) sourceColRef.current.style.transform = 'none'
       if (processColRef.current) processColRef.current.style.transform = 'none'
+      if (previewWrapRef.current) previewWrapRef.current.style.transform = 'none'
+      if (destinationWrapRef.current) destinationWrapRef.current.style.transform = 'none'
 
       const rootBox = stageWrapper.getBoundingClientRect()
       if (rootBox.width === 0 || rootBox.height === 0) return
@@ -736,7 +759,7 @@ export const SchoolImportDemo: React.FC = () => {
     }
 
     /**
-     * Pure DOM state application for global progress p in [0, 1].
+     * Pure DOM state application for global narrative progress p in [0, 1].
      */
     const applyGlobalProgress = (rawP: number) => {
       const p = clamp(rawP, 0, 1)
@@ -744,6 +767,52 @@ export const SchoolImportDemo: React.FC = () => {
       const geom = geometryCacheRef.current
       const macro = computePhase05MacroState(p, SCHOOL_IMPORT_COURSES)
       const s2p = macro.sourceToPreviewP
+
+      // 0. Update Desktop ImportStageRail & MobileStageHeader continuously
+      const rRefs = railRefs.current
+      for (let idx = 0; idx < macro.railSteps.length; idx++) {
+        const stepState = macro.railSteps[idx]
+        const segEl = rRefs.stepSegmentFills[idx]
+        if (segEl) {
+          segEl.style.height = `${(stepState.segmentFill * 100).toFixed(1)}%`
+          segEl.style.width = `${stepState.railWidthPx.toFixed(2)}px`
+          segEl.style.backgroundColor = stepState.railColor
+        }
+        const nodeEl = rRefs.stepNodes[idx]
+        if (nodeEl) {
+          nodeEl.style.width = `${stepState.nodeSizePx.toFixed(2)}px`
+          nodeEl.style.height = `${stepState.nodeSizePx.toFixed(2)}px`
+          nodeEl.style.backgroundColor = stepState.nodeColor
+        }
+        const codeEl = rRefs.stepCodes[idx]
+        if (codeEl) {
+          codeEl.style.color = stepState.codeColor
+          codeEl.style.fontWeight = String(stepState.titleWeight)
+        }
+        const titleEl = rRefs.stepTitles[idx]
+        if (titleEl) {
+          titleEl.style.color = stepState.titleColor
+          titleEl.style.fontWeight = String(stepState.titleWeight)
+        }
+        const subEl = rRefs.stepSubtitles[idx]
+        if (subEl) {
+          subEl.style.color = stepState.subtitleColor
+        }
+      }
+
+      const activeMeta = PHASE05_STAGE_STEPS[macro.activeStepIndex]
+      if (rRefs.mobileStepCode) {
+        rRefs.mobileStepCode.textContent = `${activeMeta.code} / 04`
+      }
+      if (rRefs.mobileStepTitle) {
+        rRefs.mobileStepTitle.textContent = activeMeta.title
+      }
+      if (rRefs.mobileStepSubtitle) {
+        rRefs.mobileStepSubtitle.textContent = activeMeta.subtitle
+      }
+      if (rRefs.mobileProgressBar) {
+        rRefs.mobileProgressBar.style.width = `${clamp(macro.railProgressPct, 4, 100).toFixed(1)}%`
+      }
 
       let anyCourseInProcessStageC = false
       let maxProcessOverlayInfluence = 0
@@ -782,14 +851,36 @@ export const SchoolImportDemo: React.FC = () => {
         const cardEl = morphCardRefs.current[course.id]
         if (!cardEl) continue
 
-        if (!state.visible || state.overlayOpacity <= 0.001) {
+        let effectiveOverlayOpacity = state.overlayOpacity
+        if (geom.isMobile && state.visible) {
+          // On single-stage mobile viewport, fade out in-flight cards when their stage is not active
+          if (
+            state.stage === 'stage-a-extract' ||
+            state.stage === 'stage-b-stream' ||
+            state.stage === 'stage-c-process' ||
+            state.stage === 'stage-d-preview'
+          ) {
+            effectiveOverlayOpacity *= clamp(
+              Math.max(macro.mobileProcessOpacity, macro.mobilePreviewOpacity * 0.85),
+              0,
+              1
+            )
+          } else if (
+            state.stage === 'stage-e-detach-preview' ||
+            state.stage === 'stage-f-commit-destination'
+          ) {
+            effectiveOverlayOpacity *= clamp(macro.mobileDestinationOpacity, 0, 1)
+          }
+        }
+
+        if (!state.visible || effectiveOverlayOpacity <= 0.001) {
           cardEl.style.opacity = '0'
           cardEl.style.visibility = 'hidden'
           continue
         }
 
         cardEl.style.visibility = 'visible'
-        cardEl.style.opacity = state.overlayOpacity.toFixed(3)
+        cardEl.style.opacity = effectiveOverlayOpacity.toFixed(3)
         cardEl.style.zIndex = String(state.zIndex)
         cardEl.style.transform = `translate3d(${state.x.toFixed(2)}px, ${state.y.toFixed(2)}px, 0) scale(${state.scale.toFixed(4)})`
         cardEl.style.width = `${state.width.toFixed(2)}px`
@@ -909,13 +1000,13 @@ export const SchoolImportDemo: React.FC = () => {
       }
 
       if (staticProcessFieldsRef.current) {
-        let bgFieldOpacity = 0.22
+        let bgFieldOpacity = 0.25
         if (s2p <= 0.04) {
-          bgFieldOpacity = lerp(0.55, 0.18, s2p / 0.04)
+          bgFieldOpacity = lerp(0.75, 0.22, s2p / 0.04)
         } else if (anyCourseInProcessStageC) {
-          bgFieldOpacity = lerp(0.18, 0.0, clamp(maxProcessOverlayInfluence * 1.4, 0, 1))
+          bgFieldOpacity = lerp(0.22, 0.0, clamp(maxProcessOverlayInfluence * 1.4, 0, 1))
         } else if (s2p >= 0.86) {
-          bgFieldOpacity = lerp(0.18, 0.36, clamp((s2p - 0.86) / 0.06, 0, 1))
+          bgFieldOpacity = lerp(0.22, 0.55, clamp((s2p - 0.86) / 0.06, 0, 1))
         }
         staticProcessFieldsRef.current.style.opacity = bgFieldOpacity.toFixed(3)
       }
@@ -924,7 +1015,7 @@ export const SchoolImportDemo: React.FC = () => {
         if (s2p >= 0.895) {
           processStatusLabelRef.current.textContent = '已完成 9 门课程字段对齐'
         } else {
-          processStatusLabelRef.current.textContent = '字段对齐与清洗'
+          processStatusLabelRef.current.textContent = '提取课程字段'
         }
       }
 
@@ -939,52 +1030,50 @@ export const SchoolImportDemo: React.FC = () => {
         }
       }
 
-      // 7. Visual Focus Transfer across SOURCE / PROCESS / PREVIEW / DESTINATION (Section 19 & 20)
-      let upstreamOpacity = 1
-      let previewOpacity = 1
-      let destinationOpacity = 0.94
+      // 7. Single-Protagonist StageViewport Opacity & Safe Hold Centering (Sections 2, 11–18, 22)
+      const isMobile = geom.isMobile
+      const srcOp = isMobile ? macro.mobileSourceOpacity : macro.sourceStageOpacity
+      const procOp = isMobile ? macro.mobileProcessOpacity : macro.processStageOpacity
+      const prevOp = isMobile ? macro.mobilePreviewOpacity : macro.previewStageOpacity
+      const destOp = isMobile ? macro.mobileDestinationOpacity : macro.destinationStageOpacity
 
-      if (p <= 0.65) {
-        // Active SOURCE -> DATA STRIP -> PROCESS -> PREVIEW arrival: Process & Source 100% clear
-        upstreamOpacity = 1
-        previewOpacity = 1
-        destinationOpacity = 0.94
-      } else if (p < PHASE05C_GLOBAL_START) {
-        // Entering Preview Hold (0.65 -> 0.70): upstream gently steps back so Preview + Destination lead
-        const holdT = clamp((p - 0.65) / (PHASE05C_GLOBAL_START - 0.65), 0, 1)
-        upstreamOpacity = lerp(1, 0.38, holdT)
-        previewOpacity = 1
-        destinationOpacity = lerp(0.94, 1, holdT)
-      } else {
-        // Phase 05C (0.70 -> 1.00): Preview writes into Destination
-        const writeT = clamp((p - PHASE05C_GLOBAL_START) / (0.945 - PHASE05C_GLOBAL_START), 0, 1)
-        upstreamOpacity = lerp(0.38, 0.17, writeT)
-        if (writeT < 0.62) {
-          // Mid-write: Preview remains clearly readable as the active source list
-          previewOpacity = lerp(1, 0.74, writeT / 0.62)
-        } else {
-          // Late-write to Complete: Preview recedes to low-weight historical confirmation state
-          previewOpacity = lerp(0.74, 0.26, (writeT - 0.62) / 0.38)
-        }
-        destinationOpacity = 1
-      }
+      // Safe centering shift amounts (only non-zero when all 9 courses are settled in static DOM)
+      const maxShiftSource = Math.min(220, geom.stageWidth * 0.21)
+      const maxShiftPreview = Math.min(240, geom.stageWidth * 0.23)
+      const maxShiftDest = Math.min(130, geom.stageWidth * 0.12)
 
       if (sourceColRef.current) {
-        sourceColRef.current.style.opacity = upstreamOpacity.toFixed(3)
-        sourceColRef.current.style.transform = 'none'
-      }
-      if (processColRef.current) {
-        processColRef.current.style.opacity = upstreamOpacity.toFixed(3)
-        processColRef.current.style.transform = 'none'
-      }
-      if (previewWrapRef.current) {
-        previewWrapRef.current.style.opacity = previewOpacity.toFixed(3)
-      }
-      if (destinationWrapRef.current) {
-        destinationWrapRef.current.style.opacity = destinationOpacity.toFixed(3)
+        sourceColRef.current.style.opacity = srcOp.toFixed(3)
+        sourceColRef.current.style.visibility = srcOp > 0.005 ? 'visible' : 'hidden'
+        sourceColRef.current.style.pointerEvents = srcOp > 0.4 ? 'auto' : 'none'
+        const shiftX = isMobile ? 0 : macro.sourceCenterOffsetFactor * maxShiftSource
+        sourceColRef.current.style.transform = `translate3d(${shiftX.toFixed(1)}px, 0, 0)`
       }
 
-      // 8. Completion Status Copy fade-in & lift (Section 21 & 22)
+      if (processColRef.current) {
+        processColRef.current.style.opacity = procOp.toFixed(3)
+        processColRef.current.style.visibility = procOp > 0.005 ? 'visible' : 'hidden'
+        processColRef.current.style.pointerEvents = procOp > 0.4 ? 'auto' : 'none'
+        processColRef.current.style.transform = 'none'
+      }
+
+      if (previewWrapRef.current) {
+        previewWrapRef.current.style.opacity = prevOp.toFixed(3)
+        previewWrapRef.current.style.visibility = prevOp > 0.005 ? 'visible' : 'hidden'
+        previewWrapRef.current.style.pointerEvents = prevOp > 0.4 ? 'auto' : 'none'
+        const shiftX = isMobile ? 0 : -macro.previewCenterOffsetFactor * maxShiftPreview
+        previewWrapRef.current.style.transform = `translate3d(${shiftX.toFixed(1)}px, 0, 0)`
+      }
+
+      if (destinationWrapRef.current) {
+        destinationWrapRef.current.style.opacity = destOp.toFixed(3)
+        destinationWrapRef.current.style.visibility = destOp > 0.005 ? 'visible' : 'hidden'
+        destinationWrapRef.current.style.pointerEvents = destOp > 0.4 ? 'auto' : 'none'
+        const shiftX = isMobile ? 0 : macro.destinationCenterOffsetFactor * maxShiftDest
+        destinationWrapRef.current.style.transform = `translate3d(${shiftX.toFixed(1)}px, 0, 0)`
+      }
+
+      // 8. Completion Status Copy fade-in & lift
       if (completionCopyRef.current) {
         completionCopyRef.current.style.opacity = macro.completionOpacity.toFixed(3)
         completionCopyRef.current.style.transform = `translate3d(0, ${macro.completionY.toFixed(2)}px, 0)`
@@ -1004,9 +1093,9 @@ export const SchoolImportDemo: React.FC = () => {
 
     const ctx = gsap.context(() => {
       ScrollTrigger.create({
-        trigger: stageWrapper,
-        start: () => (window.innerWidth < 1024 ? 'top 62%' : 'top 36%'),
-        end: () => (window.innerWidth < 1024 ? 'bottom 86%' : 'bottom 96%'),
+        trigger: storyTrack,
+        start: () => (window.innerWidth < 1024 ? 'top top+=58' : 'top top+=72'),
+        end: 'bottom bottom',
         scrub: true,
         invalidateOnRefresh: true,
         onRefresh: (self) => {
@@ -1055,347 +1144,355 @@ export const SchoolImportDemo: React.FC = () => {
       id="school-import-demo"
       ref={sectionRef}
       data-phase05-state={previewState}
+      data-phase05b-start={PHASE05B_GLOBAL_START}
       data-phase05b-end={PHASE05B_GLOBAL_END}
       data-phase05c-start={PHASE05C_GLOBAL_START}
-      className="relative w-full bg-[#FBFBFD] select-none overflow-x-clip -mt-[300px] sm:-mt-[340px] md:-mt-[380px] pt-8 sm:pt-12 md:pt-14 pb-[280px] sm:pb-[340px] md:pb-[420px]"
+      data-phase05c-end={PHASE05C_GLOBAL_END}
+      className="relative w-full bg-[#FBFBFD] select-none overflow-x-clip -mt-[300px] sm:-mt-[340px] md:-mt-[380px] pt-8 sm:pt-12 md:pt-14 pb-[180px] sm:pb-[220px] md:pb-[260px]"
     >
       <div className="w-full px-4 sm:px-8 md:px-12 lg:px-16">
         <div className="w-full max-w-7xl mx-auto">
-          {/* Top Narrative Copy (Section 4) */}
+          {/* Top Narrative Copy (Upgraded contrast per Section 30–34) */}
           <div className="max-w-2xl">
             <h2
-              style={{ lineHeight: 1.18 }}
+              style={{ lineHeight: 1.16 }}
               className="text-2xl sm:text-4xl md:text-[42px] lg:text-[44px] font-bold tracking-[-0.03em] text-neutral-950"
             >
               把学校里的课表带进来。
             </h2>
-            <p className="mt-3.5 sm:mt-4 text-[15px] sm:text-[17px] text-neutral-500 font-normal leading-relaxed">
+            <p className="mt-3.5 sm:mt-4 text-[16px] sm:text-[18px] text-neutral-700 font-normal leading-relaxed">
               在企业微信打开“我的课表”，完成采集后直接导入。课程写入本地，之后查课不再依赖教务系统。
             </p>
-            <p className="mt-2.5 text-[12.5px] sm:text-[13.5px] text-neutral-400 font-normal tracking-tight">
+            <p className="mt-2.5 text-[13.5px] sm:text-[14px] text-neutral-600 font-medium tracking-tight">
               无需输入教务密码 · 导入后离线可用
             </p>
           </div>
 
-          {/* Wide Import Stage Wrapper (Relative root for CourseMorphOverlay) */}
+          {/* Long-Pacing Narrative Scroll Track (Native CSS Sticky, Zero ScrollTrigger Pin) */}
           <div
-            ref={stageWrapperRef}
-            className="relative mt-8 sm:mt-11 md:mt-10 grid grid-cols-1 lg:grid-cols-12 gap-7 lg:gap-x-6 lg:gap-y-3 items-start"
+            ref={storyTrackRef}
+            data-story-track="phase05"
+            className={
+              previewState === 'ALL'
+                ? 'relative mt-6 sm:mt-8 lg:mt-7 min-h-[330svh] lg:min-h-[360svh]'
+                : 'relative mt-8 sm:mt-10'
+            }
           >
-            {/* 01 · SOURCE: Left Column on Desktop (Spans Row 1 & Row 2 so upstream context stays balanced in left viewport) */}
-            {showSource && (
-              <div
-                ref={sourceColRef}
-                style={{ transformOrigin: 'top center', willChange: 'opacity' }}
-                className="lg:col-start-1 lg:col-span-4 lg:row-start-1 lg:row-span-2 lg:mt-14 flex flex-col gap-1.5"
-              >
-                <div className="flex items-center justify-between px-1">
-                  <span className="text-[11.5px] font-medium text-neutral-400 tracking-tight">
-                    01 · 教务系统源课表
-                  </span>
-                  <span className="text-[11px] text-neutral-400 font-normal">
-                    山东商务职业学院
-                  </span>
-                </div>
-                <SourceScheduleStage
-                  courses={SCHOOL_IMPORT_COURSES}
-                  registerSourceNode={(id, el) => {
-                    staticSourceRefs.current[id] = el
-                  }}
-                />
-              </div>
-            )}
+            <div
+              className={
+                previewState === 'ALL'
+                  ? 'sticky top-[58px] lg:top-[72px] w-full flex flex-col lg:flex-row lg:items-center gap-3 lg:gap-7 py-2 lg:py-3'
+                  : 'w-full'
+              }
+            >
+              {/* Mobile Top Compact Stage Indicator + Horizontal Progress Rail */}
+              {previewState === 'ALL' && <MobileStageHeader railRefs={railRefs} />}
 
-            {/* 02 · PROCESS: Top-Center on Desktop (Row 1, Cols 5..7) */}
-            {showProcess && (
-              <div
-                ref={processColRef}
-                style={{ transformOrigin: 'top center', willChange: 'opacity' }}
-                className="lg:col-start-5 lg:col-span-3 lg:row-start-1 flex flex-col gap-1.5"
-              >
-                <div className="flex items-center justify-between px-1">
-                  <span className="text-[11.5px] font-medium text-neutral-400 tracking-tight">
-                    02 · 结构化抽取与对齐
-                  </span>
-                  <span className="text-[11px] text-neutral-400 font-normal">
-                    自动解析
-                  </span>
-                </div>
-                <ProcessOrganizerStage
-                  courses={SCHOOL_IMPORT_COURSES}
-                  featuredCourse={FEATURED_PROCESS_COURSE}
-                  representativeStrips={SAMPLE_DATA_STRIP_COURSES}
-                  stripLaneTopRef={stripLaneTopRef}
-                  stripLaneBottomRef={stripLaneBottomRef}
-                  processBoxRef={processBoxRef}
-                  staticStripPlaceholderRef={staticStripPlaceholderRef}
-                  staticProcessFieldsRef={staticProcessFieldsRef}
-                  processStatusLabelRef={processStatusLabelRef}
-                />
-              </div>
-            )}
+              {/* Desktop Left 4-Stage Narrative Rail */}
+              {previewState === 'ALL' && <ImportStageRail railRefs={railRefs} />}
 
-            {/* 03 · PREVIEW: Top-Right on Desktop (Row 1, Cols 8..12) */}
-            {showPreview && (
+              {/* Right Single-Protagonist StageViewport (Relative coordinate root for CourseMorphOverlay) */}
               <div
-                ref={previewWrapRef}
-                style={{ willChange: 'opacity' }}
-                className="lg:col-start-8 lg:col-span-5 lg:row-start-1 flex flex-col gap-1.5"
+                ref={stageWrapperRef}
+                data-stage-viewport="true"
+                className="relative flex-1 min-w-0 grid grid-cols-1 lg:grid-cols-12 gap-5 lg:gap-5 items-center"
               >
-                <div className="flex items-center justify-between px-1">
-                  <span className="text-[11.5px] font-medium text-neutral-400 tracking-tight">
-                    03 · 导入预览确认
-                  </span>
-                  <span className="text-[11px] text-neutral-400 font-normal">
-                    写入前预览
-                  </span>
-                </div>
-                <ImportPreviewStage
-                  courses={SCHOOL_IMPORT_COURSES}
-                  panelRef={previewPanelRef}
-                  countBadgeRef={previewCountBadgeRef}
-                  registerPreviewNode={(id, el) => {
-                    staticPreviewRefs.current[id] = el
-                  }}
-                />
-              </div>
-            )}
-
-            {/* 04 · DESTINATION: Center-Right Protagonist on Desktop (Row 2, Cols 5..12, center ~58.8% X) */}
-            {showDestination && (
-              <div
-                ref={destinationWrapRef}
-                style={{ willChange: 'opacity' }}
-                className="lg:col-start-5 lg:col-span-8 lg:row-start-2 flex flex-col gap-1.5"
-              >
-                <div className="flex items-center justify-between px-1 lg:max-w-[720px]">
-                  <span className="text-[11.5px] font-medium text-neutral-400 tracking-tight">
-                    04 · 课程表 App 本地周视图
-                  </span>
-                  <span className="text-[11px] text-neutral-400 font-normal">
-                    本地存储
-                  </span>
-                </div>
-                <DestinationAppWeekStage
-                  courses={SCHOOL_IMPORT_COURSES}
-                  destinationGridRef={destinationGridRef}
-                  completionCopyRef={completionCopyRef}
-                  initialStaticCompleted={previewState === 'DESTINATION'}
-                  registerDestinationNode={(id, el) => {
-                    staticDestinationRefs.current[id] = el
-                  }}
-                />
-              </div>
-            )}
-
-            {/* ===============================================================
-                CourseMorphOverlay: 9 Unified Morphing Course Entities
-                (SOURCE -> DATA STRIP -> PROCESS -> PREVIEW -> COMPACT RECORD -> DESTINATION)
-               =============================================================== */}
-            {previewState === 'ALL' && (
-              <div
-                data-course-morph-overlay="true"
-                className="pointer-events-none absolute inset-0 z-30"
-              >
-                {SCHOOL_IMPORT_COURSES.map((course) => {
-                  const processFields = [
-                    { label: '课程', value: course.displayName },
-                    { label: '星期', value: course.day },
-                    {
-                      label: '节次',
-                      value: `第 ${course.startPeriod}–${course.endPeriod} 节`,
-                    },
-                    { label: '地点', value: course.shortLocation },
-                    { label: '周次', value: course.weekLabel },
-                  ]
-
-                  return (
-                    <div
-                      key={course.id}
-                      ref={(el) => {
-                        morphCardRefs.current[course.id] = el
+                {/* Stage 01 · SOURCE (Cols 1..4 on Desktop, centered during Step 01 hold) */}
+                {showSource && (
+                  <div
+                    ref={sourceColRef}
+                    style={{
+                      transformOrigin: 'center center',
+                      willChange: 'opacity, transform',
+                    }}
+                    className="col-start-1 row-start-1 lg:col-start-1 lg:col-span-4 lg:row-start-1"
+                  >
+                    <SourceScheduleStage
+                      courses={SCHOOL_IMPORT_COURSES}
+                      registerSourceNode={(id, el) => {
+                        staticSourceRefs.current[id] = el
                       }}
-                      data-morph-course-id={course.id}
-                      style={{
-                        left: 0,
-                        top: 0,
-                        opacity: 0,
-                        visibility: 'hidden',
-                        transformOrigin: '50% 50%',
-                        borderWidth: '1px',
-                        borderStyle: 'solid',
-                        borderColor: 'rgba(15, 23, 42, 0)',
-                        willChange:
-                          'transform, width, height, border-radius, background-color, opacity, box-shadow',
+                    />
+                  </div>
+                )}
+
+                {/* Stage 02 · PROCESS (Cols 5..8 on Desktop, central protagonist during Step 02) */}
+                {showProcess && (
+                  <div
+                    ref={processColRef}
+                    style={{
+                      transformOrigin: 'center center',
+                      willChange: 'opacity, transform',
+                    }}
+                    className="col-start-1 row-start-1 lg:col-start-5 lg:col-span-4 lg:row-start-1"
+                  >
+                    <ProcessOrganizerStage
+                      courses={SCHOOL_IMPORT_COURSES}
+                      featuredCourse={FEATURED_PROCESS_COURSE}
+                      representativeStrips={SAMPLE_DATA_STRIP_COURSES}
+                      stripLaneTopRef={stripLaneTopRef}
+                      stripLaneBottomRef={stripLaneBottomRef}
+                      processBoxRef={processBoxRef}
+                      staticStripPlaceholderRef={staticStripPlaceholderRef}
+                      staticProcessFieldsRef={staticProcessFieldsRef}
+                      processStatusLabelRef={processStatusLabelRef}
+                    />
+                  </div>
+                )}
+
+                {/* Stage 03 · PREVIEW (Cols 9..12 on Desktop, centered during Step 03 hold) */}
+                {showPreview && (
+                  <div
+                    ref={previewWrapRef}
+                    style={{
+                      transformOrigin: 'center center',
+                      willChange: 'opacity, transform',
+                    }}
+                    className="col-start-1 row-start-1 lg:col-start-9 lg:col-span-4 lg:row-start-1"
+                  >
+                    <ImportPreviewStage
+                      courses={SCHOOL_IMPORT_COURSES}
+                      panelRef={previewPanelRef}
+                      countBadgeRef={previewCountBadgeRef}
+                      registerPreviewNode={(id, el) => {
+                        staticPreviewRefs.current[id] = el
                       }}
-                      className="absolute overflow-hidden"
-                    >
-                      {/* Continuous Left Color Identity Bar -> Preview Row Dot -> Dissolve */}
-                      <span
-                        ref={(el) => {
-                          morphBarRefs.current[course.id] = el
-                        }}
-                        aria-hidden="true"
-                        style={{
-                          backgroundColor: course.sourceColor,
-                          left: 10,
-                          top: '50%',
-                          width: 2.5,
-                          height: 14,
-                          opacity: 0,
-                          transform: 'translateY(-50%)',
-                        }}
-                        className="absolute rounded-full z-20"
-                      />
+                    />
+                  </div>
+                )}
 
-                      {/* Layer 1: High-Saturation SOURCE Block Content */}
-                      <div
-                        ref={(el) => {
-                          morphSourceLayerRefs.current[course.id] = el
-                        }}
-                        className="absolute inset-0 px-1.5 py-1 text-white flex flex-col justify-start overflow-hidden"
-                      >
-                        <div className="text-[10.5px] font-semibold leading-[1.2] tracking-tight break-all line-clamp-3">
-                          {course.name}
-                        </div>
-                        <div className="text-[9px] text-white/92 font-normal leading-[1.18] mt-0.5 break-all line-clamp-3">
-                          {course.sourceRawLocation}
-                        </div>
-                      </div>
+                {/* Stage 04 · DESTINATION (Cols 1..8 on Desktop Row 1, prime protagonist during Step 04) */}
+                {showDestination && (
+                  <div
+                    ref={destinationWrapRef}
+                    style={{
+                      transformOrigin: 'center center',
+                      willChange: 'opacity, transform',
+                    }}
+                    className="col-start-1 row-start-1 lg:col-start-1 lg:col-span-8 lg:row-start-1 z-10"
+                  >
+                    <DestinationAppWeekStage
+                      courses={SCHOOL_IMPORT_COURSES}
+                      destinationGridRef={destinationGridRef}
+                      completionCopyRef={completionCopyRef}
+                      initialStaticCompleted={previewState === 'DESTINATION'}
+                      registerDestinationNode={(id, el) => {
+                        staticDestinationRefs.current[id] = el
+                      }}
+                    />
+                  </div>
+                )}
 
-                      {/* Layer 2: Slender DATA STRIP / Normalized Record Content */}
-                      <div
-                        ref={(el) => {
-                          morphStripLayerRefs.current[course.id] = el
-                        }}
-                        style={{ opacity: 0, visibility: 'hidden' }}
-                        className="absolute inset-0 pl-5 pr-2.5 flex items-center justify-between gap-1.5 overflow-hidden"
-                      >
-                        <div className="text-[11.5px] sm:text-[12px] text-neutral-800 font-medium tracking-tight whitespace-nowrap overflow-hidden text-ellipsis">
-                          <span>{course.displayName}</span>
-                          <span className="mx-1 text-neutral-300">·</span>
-                          <span className="text-neutral-600 font-normal">{course.day}</span>
-                          <span className="mx-1 text-neutral-300">·</span>
-                          <span className="text-neutral-600 font-normal">
-                            {course.startPeriod}–{course.endPeriod}节
-                          </span>
-                          <span className="mx-1 text-neutral-300">·</span>
-                          <span className="text-neutral-600 font-normal">
-                            {course.shortLocation}
-                          </span>
-                        </div>
-                        <span
+                {/* ===============================================================
+                    CourseMorphOverlay: 9 Unified Morphing Course Entities
+                    (SOURCE -> DATA STRIP -> PROCESS -> PREVIEW -> COMPACT RECORD -> DESTINATION)
+                   =============================================================== */}
+                {previewState === 'ALL' && (
+                  <div
+                    data-course-morph-overlay="true"
+                    className="pointer-events-none absolute inset-0 z-30"
+                  >
+                    {SCHOOL_IMPORT_COURSES.map((course) => {
+                      const processFields = [
+                        { label: '课程', value: course.displayName },
+                        { label: '星期', value: course.day },
+                        {
+                          label: '节次',
+                          value: `第 ${course.startPeriod}–${course.endPeriod} 节`,
+                        },
+                        { label: '地点', value: course.shortLocation },
+                        { label: '周次', value: course.weekLabel },
+                      ]
+
+                      return (
+                        <div
+                          key={course.id}
                           ref={(el) => {
-                            morphNormBadgeRefs.current[course.id] = el
+                            morphCardRefs.current[course.id] = el
                           }}
-                          style={{ display: 'none' }}
-                          className="shrink-0 px-1.5 py-0.5 rounded bg-slate-900/[0.04] text-[10px] text-neutral-500 font-normal tabular-nums"
+                          data-morph-course-id={course.id}
+                          style={{
+                            left: 0,
+                            top: 0,
+                            opacity: 0,
+                            visibility: 'hidden',
+                            transformOrigin: '50% 50%',
+                            borderWidth: '1px',
+                            borderStyle: 'solid',
+                            borderColor: 'rgba(15, 23, 42, 0)',
+                            willChange:
+                              'transform, width, height, border-radius, background-color, opacity, box-shadow',
+                          }}
+                          className="absolute overflow-hidden"
                         >
-                          {course.weekLabel}
-                        </span>
-                      </div>
+                          {/* Continuous Left Color Identity Bar -> Preview Row Dot -> Dissolve */}
+                          <span
+                            ref={(el) => {
+                              morphBarRefs.current[course.id] = el
+                            }}
+                            aria-hidden="true"
+                            style={{
+                              backgroundColor: course.sourceColor,
+                              left: 10,
+                              top: '50%',
+                              width: 2.5,
+                              height: 14,
+                              opacity: 0,
+                              transform: 'translateY(-50%)',
+                            }}
+                            className="absolute rounded-full z-20"
+                          />
 
-                      {/* Layer 3: PROCESS 5-Row Hairline Field Alignment Content */}
-                      <div
-                        ref={(el) => {
-                          morphProcessLayerRefs.current[course.id] = el
-                        }}
-                        style={{ opacity: 0, visibility: 'hidden' }}
-                        className="absolute inset-0 pl-4 pr-2.5 flex flex-col justify-between divide-y divide-slate-900/[0.06] bg-white"
-                      >
-                        {processFields.map((field, rIdx) => (
+                          {/* Layer 1: High-Saturation SOURCE Block Content */}
                           <div
-                            key={field.label}
-                            className="flex-1 flex items-center justify-between gap-3 text-[12px] sm:text-[12.5px] overflow-hidden"
+                            ref={(el) => {
+                              morphSourceLayerRefs.current[course.id] = el
+                            }}
+                            className="absolute inset-0 px-1.5 py-1 text-white flex flex-col justify-start overflow-hidden"
                           >
+                            <div className="text-[10.5px] font-semibold leading-[1.2] tracking-tight break-all line-clamp-3">
+                              {course.name}
+                            </div>
+                            <div className="text-[9px] text-white/92 font-normal leading-[1.18] mt-0.5 break-all line-clamp-3">
+                              {course.sourceRawLocation}
+                            </div>
+                          </div>
+
+                          {/* Layer 2: Slender DATA STRIP / Normalized Record Content */}
+                          <div
+                            ref={(el) => {
+                              morphStripLayerRefs.current[course.id] = el
+                            }}
+                            style={{ opacity: 0, visibility: 'hidden' }}
+                            className="absolute inset-0 pl-5 pr-2.5 flex items-center justify-between gap-1.5 overflow-hidden"
+                          >
+                            <div className="text-[12px] sm:text-[12.5px] text-neutral-800 font-medium tracking-tight whitespace-nowrap overflow-hidden text-ellipsis">
+                              <span>{course.displayName}</span>
+                              <span className="mx-1 text-neutral-300">·</span>
+                              <span className="text-neutral-600 font-normal">{course.day}</span>
+                              <span className="mx-1 text-neutral-300">·</span>
+                              <span className="text-neutral-600 font-normal">
+                                {course.startPeriod}–{course.endPeriod}节
+                              </span>
+                              <span className="mx-1 text-neutral-300">·</span>
+                              <span className="text-neutral-600 font-normal">
+                                {course.shortLocation}
+                              </span>
+                            </div>
                             <span
                               ref={(el) => {
-                                if (!morphProcessRowLabelRefs.current[course.id]) {
-                                  morphProcessRowLabelRefs.current[course.id] = []
-                                }
-                                morphProcessRowLabelRefs.current[course.id][rIdx] = el
+                                morphNormBadgeRefs.current[course.id] = el
                               }}
-                              className="text-neutral-400 font-normal shrink-0"
+                              style={{ display: 'none' }}
+                              className="shrink-0 px-1.5 py-0.5 rounded bg-slate-900/[0.05] text-[10.5px] text-neutral-600 font-medium tabular-nums"
                             >
-                              {field.label}
-                            </span>
-                            <span
-                              ref={(el) => {
-                                if (!morphProcessRowValRefs.current[course.id]) {
-                                  morphProcessRowValRefs.current[course.id] = []
-                                }
-                                morphProcessRowValRefs.current[course.id][rIdx] = el
-                              }}
-                              style={{ willChange: 'transform' }}
-                              className="text-neutral-900 font-medium text-right truncate"
-                            >
-                              {field.value}
+                              {course.weekLabel}
                             </span>
                           </div>
-                        ))}
-                      </div>
 
-                      {/* Layer 4: Final PREVIEW Row Content */}
-                      <div
-                        ref={(el) => {
-                          morphPreviewLayerRefs.current[course.id] = el
-                        }}
-                        style={{ opacity: 0, visibility: 'hidden' }}
-                        className="absolute inset-0 pl-3.5 flex items-center justify-between gap-3 text-[12px] sm:text-[12.5px]"
-                      >
-                        <span className="text-neutral-900 font-medium truncate">
-                          {course.displayName}
-                        </span>
-                        <span className="text-neutral-500 font-normal shrink-0 tabular-nums">
-                          {course.day} · 第{course.startPeriod}–{course.endPeriod}节
-                        </span>
-                      </div>
+                          {/* Layer 3: PROCESS 5-Row Field Alignment Content */}
+                          <div
+                            ref={(el) => {
+                              morphProcessLayerRefs.current[course.id] = el
+                            }}
+                            style={{ opacity: 0, visibility: 'hidden' }}
+                            className="absolute inset-0 pl-4 pr-3 flex flex-col justify-between divide-y divide-slate-900/[0.06] bg-white"
+                          >
+                            {processFields.map((field, rIdx) => (
+                              <div
+                                key={field.label}
+                                className="flex-1 flex items-center justify-between gap-3 text-[12.5px] sm:text-[13px] overflow-hidden"
+                              >
+                                <span
+                                  ref={(el) => {
+                                    if (!morphProcessRowLabelRefs.current[course.id]) {
+                                      morphProcessRowLabelRefs.current[course.id] = []
+                                    }
+                                    morphProcessRowLabelRefs.current[course.id][rIdx] = el
+                                  }}
+                                  className="text-neutral-500 font-medium shrink-0"
+                                >
+                                  {field.label}
+                                </span>
+                                <span
+                                  ref={(el) => {
+                                    if (!morphProcessRowValRefs.current[course.id]) {
+                                      morphProcessRowValRefs.current[course.id] = []
+                                    }
+                                    morphProcessRowValRefs.current[course.id][rIdx] = el
+                                  }}
+                                  style={{ willChange: 'transform' }}
+                                  className="text-neutral-950 font-semibold text-right truncate"
+                                >
+                                  {field.value}
+                                </span>
+                              </div>
+                            ))}
+                          </div>
 
-                      {/* Layer 5: Phase 05C COMPACT RECORD Content (Stage E2 -> Stage F) */}
-                      <div
-                        ref={(el) => {
-                          morphCompactLayerRefs.current[course.id] = el
-                        }}
-                        style={{ opacity: 0, visibility: 'hidden' }}
-                        className="absolute inset-0 pl-5 pr-2.5 flex items-center overflow-hidden"
-                      >
-                        <div className="text-[11px] sm:text-[11.5px] text-neutral-800 font-medium tracking-tight whitespace-nowrap overflow-hidden text-ellipsis">
-                          <span>{course.displayName}</span>
-                          <span className="mx-1 text-neutral-300">·</span>
-                          <span className="text-neutral-600 font-normal">{course.day}</span>
-                          <span className="mx-1 text-neutral-300">·</span>
-                          <span className="text-neutral-600 font-normal tabular-nums">
-                            {course.startPeriod}–{course.endPeriod}节
-                          </span>
-                        </div>
-                      </div>
+                          {/* Layer 4: Final PREVIEW Row Content */}
+                          <div
+                            ref={(el) => {
+                              morphPreviewLayerRefs.current[course.id] = el
+                            }}
+                            style={{ opacity: 0, visibility: 'hidden' }}
+                            className="absolute inset-0 pl-3.5 flex items-center justify-between gap-3 text-[12.5px] sm:text-[13px]"
+                          >
+                            <span className="text-neutral-900 font-medium truncate">
+                              {course.displayName}
+                            </span>
+                            <span className="text-neutral-600 font-normal shrink-0 tabular-nums">
+                              {course.day} · 第{course.startPeriod}–{course.endPeriod}节
+                            </span>
+                          </div>
 
-                      {/* Layer 6: Phase 05C DESTINATION App Week Course Block Content (Stage F -> Stage G) */}
-                      <div
-                        ref={(el) => {
-                          morphDestinationLayerRefs.current[course.id] = el
-                        }}
-                        style={{ opacity: 0, visibility: 'hidden' }}
-                        className={`absolute inset-0 p-1.5 lg:px-2 lg:py-1.5 overflow-hidden flex flex-col justify-start ${
-                          course.appTheme === 'warm' ? 'text-[#5E3704]' : 'text-[#2B1B54]'
-                        }`}
-                      >
-                        <div className="shrink-0 text-[10px] sm:text-[11px] lg:text-[11px] font-semibold leading-[1.2] tracking-tight line-clamp-2 break-all">
-                          {course.name}
+                          {/* Layer 5: Phase 05C COMPACT RECORD Content (Stage E2 -> Stage F) */}
+                          <div
+                            ref={(el) => {
+                              morphCompactLayerRefs.current[course.id] = el
+                            }}
+                            style={{ opacity: 0, visibility: 'hidden' }}
+                            className="absolute inset-0 pl-5 pr-2.5 flex items-center overflow-hidden"
+                          >
+                            <div className="text-[11.5px] sm:text-[12px] text-neutral-800 font-medium tracking-tight whitespace-nowrap overflow-hidden text-ellipsis">
+                              <span>{course.displayName}</span>
+                              <span className="mx-1 text-neutral-300">·</span>
+                              <span className="text-neutral-600 font-normal">{course.day}</span>
+                              <span className="mx-1 text-neutral-300">·</span>
+                              <span className="text-neutral-600 font-normal tabular-nums">
+                                {course.startPeriod}–{course.endPeriod}节
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* Layer 6: Phase 05C DESTINATION App Week Course Block Content (Stage F -> Stage G) */}
+                          <div
+                            ref={(el) => {
+                              morphDestinationLayerRefs.current[course.id] = el
+                            }}
+                            style={{ opacity: 0, visibility: 'hidden' }}
+                            className={`absolute inset-0 p-1.5 lg:px-2 lg:py-1.5 overflow-hidden flex flex-col justify-start ${
+                              course.appTheme === 'warm' ? 'text-[#5E3704]' : 'text-[#2B1B54]'
+                            }`}
+                          >
+                            <div className="shrink-0 text-[10px] sm:text-[11px] lg:text-[11px] font-semibold leading-[1.2] tracking-tight line-clamp-2 break-all">
+                              {course.name}
+                            </div>
+                            <div
+                              className={`overflow-hidden line-clamp-2 text-[8.5px] sm:text-[9.5px] lg:text-[9.5px] font-normal leading-[1.18] mt-0.5 break-all ${
+                                course.appTheme === 'warm' ? 'text-[#6D440E]' : 'text-[#3D2C6E]'
+                              }`}
+                            >
+                              {course.appLocation}
+                            </div>
+                          </div>
                         </div>
-                        <div
-                          className={`overflow-hidden line-clamp-2 text-[8.5px] sm:text-[9.5px] lg:text-[9.5px] font-normal leading-[1.18] mt-0.5 break-all ${
-                            course.appTheme === 'warm' ? 'text-[#6D440E]' : 'text-[#3D2C6E]'
-                          }`}
-                        >
-                          {course.appLocation}
-                        </div>
-                      </div>
-                    </div>
-                  )
-                })}
+                      )
+                    })}
+                  </div>
+                )}
               </div>
-            )}
+            </div>
           </div>
         </div>
       </div>

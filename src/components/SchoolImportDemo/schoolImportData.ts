@@ -35,6 +35,50 @@ export const SCHOOL_PERIODS = [1, 2, 3, 4, 5, 6, 7, 8] as const
 
 export const APP_TIME_ROWS = ['08:00', '10:00', '14:00', '16:00'] as const
 
+export interface Phase05StageStepMeta {
+  index: number
+  code: '01' | '02' | '03' | '04'
+  title: string
+  subtitle: string
+  startP: number
+  endP: number
+}
+
+export const PHASE05_STAGE_STEPS: readonly Phase05StageStepMeta[] = [
+  {
+    index: 0,
+    code: '01',
+    title: '教务系统源课表',
+    subtitle: '企业微信内打开',
+    startP: 0.0,
+    endP: 0.22,
+  },
+  {
+    index: 1,
+    code: '02',
+    title: '结构化抽取',
+    subtitle: '提取课程字段',
+    startP: 0.22,
+    endP: 0.52,
+  },
+  {
+    index: 2,
+    code: '03',
+    title: '导入预览',
+    subtitle: '写入前确认',
+    startP: 0.52,
+    endP: 0.74,
+  },
+  {
+    index: 3,
+    code: '04',
+    title: '写入本地',
+    subtitle: '离线保存可查',
+    startP: 0.74,
+    endP: 1.0,
+  },
+] as const
+
 /**
  * Single Unified Course Data Model for Phase 05 (Shandong Business Institute "我的课表" -> App Local Schedule).
  * Shared across all 4 representations:
@@ -42,9 +86,14 @@ export const APP_TIME_ROWS = ['08:00', '10:00', '14:00', '16:00'] as const
  * 2. DataStrip & ProcessFieldOrganizer (extracted data strip & field alignment)
  * 3. ImportPreviewRow (structured import preview list)
  * 4. DestinationCourseBlock (5x4 native App week view)
+ *
+ * Pacing note (Narrative Redesign):
+ * - Step 02 (sourceToPreviewP in [0, 1]): per-course duration = 0.20, stagger step = 0.095
+ *   -> active overlap reduced from 3.75 courses to ~2.1 courses at a time.
+ * - Step 04 (previewToDestinationP in [0, 1]): 3 weekday groups with wider spacing for clear visual tracking.
  */
 export const SCHOOL_IMPORT_COURSES: SchoolImportCourse[] = [
-  // === Group 1｜周一 (3 courses: 0.12 -> 0.44 in previewToDestinationP) ===
+  // === Group 1｜周一 (3 courses: 0.04 -> 0.38 in previewToDestinationP) ===
   {
     id: 'course-mon-1-2',
     order: 1,
@@ -61,11 +110,11 @@ export const SCHOOL_IMPORT_COURSES: SchoolImportCourse[] = [
     sourceColor: '#F06878',
     appTheme: 'warm',
     weekLabel: '第7周',
-    startP: 0.05,
-    endP: 0.32,
+    startP: 0.02,
+    endP: 0.22,
     writeGroup: 1,
-    destStartP: 0.12,
-    destEndP: 0.38,
+    destStartP: 0.04,
+    destEndP: 0.28,
   },
   {
     id: 'course-mon-3-4',
@@ -83,11 +132,11 @@ export const SCHOOL_IMPORT_COURSES: SchoolImportCourse[] = [
     sourceColor: '#9A79D9',
     appTheme: 'lavender',
     weekLabel: '第7周',
-    startP: 0.122,
-    endP: 0.392,
+    startP: 0.115,
+    endP: 0.315,
     writeGroup: 1,
-    destStartP: 0.15,
-    destEndP: 0.41,
+    destStartP: 0.09,
+    destEndP: 0.33,
   },
   {
     id: 'course-mon-5-6',
@@ -105,14 +154,14 @@ export const SCHOOL_IMPORT_COURSES: SchoolImportCourse[] = [
     sourceColor: '#2CC0CE',
     appTheme: 'lavender',
     weekLabel: '第7周',
-    startP: 0.194,
-    endP: 0.464,
+    startP: 0.21,
+    endP: 0.41,
     writeGroup: 1,
-    destStartP: 0.18,
-    destEndP: 0.44,
+    destStartP: 0.14,
+    destEndP: 0.38,
   },
 
-  // === Group 2｜周二～周四 (4 courses: 0.32 -> 0.70 in previewToDestinationP) ===
+  // === Group 2｜周二～周四 (4 courses: 0.34 -> 0.73 in previewToDestinationP) ===
   {
     id: 'course-tue-3-4',
     order: 4,
@@ -129,10 +178,10 @@ export const SCHOOL_IMPORT_COURSES: SchoolImportCourse[] = [
     sourceColor: '#F06E52',
     appTheme: 'warm',
     weekLabel: '第7周',
-    startP: 0.266,
-    endP: 0.536,
+    startP: 0.305,
+    endP: 0.505,
     writeGroup: 2,
-    destStartP: 0.32,
+    destStartP: 0.34,
     destEndP: 0.58,
   },
   {
@@ -151,11 +200,11 @@ export const SCHOOL_IMPORT_COURSES: SchoolImportCourse[] = [
     sourceColor: '#D98858',
     appTheme: 'warm',
     weekLabel: '第7周',
-    startP: 0.338,
-    endP: 0.608,
+    startP: 0.4,
+    endP: 0.6,
     writeGroup: 2,
-    destStartP: 0.36,
-    destEndP: 0.62,
+    destStartP: 0.39,
+    destEndP: 0.63,
   },
   {
     id: 'course-wed-5-6',
@@ -173,11 +222,11 @@ export const SCHOOL_IMPORT_COURSES: SchoolImportCourse[] = [
     sourceColor: '#EA88CF',
     appTheme: 'lavender',
     weekLabel: '第7周',
-    startP: 0.41,
-    endP: 0.68,
+    startP: 0.495,
+    endP: 0.695,
     writeGroup: 2,
-    destStartP: 0.4,
-    destEndP: 0.66,
+    destStartP: 0.44,
+    destEndP: 0.68,
   },
   {
     id: 'course-thu-1-2',
@@ -195,14 +244,14 @@ export const SCHOOL_IMPORT_COURSES: SchoolImportCourse[] = [
     sourceColor: '#D98858',
     appTheme: 'warm',
     weekLabel: '第7周',
-    startP: 0.482,
-    endP: 0.752,
+    startP: 0.59,
+    endP: 0.79,
     writeGroup: 2,
-    destStartP: 0.44,
-    destEndP: 0.7,
+    destStartP: 0.49,
+    destEndP: 0.73,
   },
 
-  // === Group 3｜周五 (2 courses: 0.62 -> 0.90 in previewToDestinationP) ===
+  // === Group 3｜周五 (2 courses: 0.69 -> 0.96 in previewToDestinationP) ===
   {
     id: 'course-fri-3-4',
     order: 8,
@@ -219,11 +268,11 @@ export const SCHOOL_IMPORT_COURSES: SchoolImportCourse[] = [
     sourceColor: '#F06878',
     appTheme: 'warm',
     weekLabel: '第7周',
-    startP: 0.554,
-    endP: 0.824,
+    startP: 0.685,
+    endP: 0.885,
     writeGroup: 3,
-    destStartP: 0.62,
-    destEndP: 0.86,
+    destStartP: 0.69,
+    destEndP: 0.91,
   },
   {
     id: 'course-fri-7-8',
@@ -241,11 +290,11 @@ export const SCHOOL_IMPORT_COURSES: SchoolImportCourse[] = [
     sourceColor: '#2CC0CE',
     appTheme: 'lavender',
     weekLabel: '第7周',
-    startP: 0.626,
-    endP: 0.896,
+    startP: 0.78,
+    endP: 0.98,
     writeGroup: 3,
-    destStartP: 0.66,
-    destEndP: 0.9,
+    destStartP: 0.74,
+    destEndP: 0.96,
   },
 ]
 
