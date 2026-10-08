@@ -16,8 +16,118 @@ export interface StageRailDomRefs {
 }
 
 /**
- * Desktop Left-Hand 4-Stage Vertical Narrative Rail (Sections 4–10, 35, 36, 39).
- * Driven continuously by scroll progress without sudden class toggles.
+ * Editorial Timeline Step Block for Spatial Narrative Long Page (Section 13).
+ * Part of the natural document flow — never sticky or fixed.
+ */
+export const EditorialStageRailNode: React.FC<{
+  stepIndex: number
+  railRefs: React.MutableRefObject<StageRailDomRefs>
+  showConnectorBelow?: boolean
+  connectorClassName?: string
+}> = ({
+  stepIndex,
+  railRefs,
+  showConnectorBelow = true,
+  connectorClassName = 'bottom-[-12px]',
+}) => {
+  const step = PHASE05_STAGE_STEPS[stepIndex]
+  const isFirst = stepIndex === 0
+
+  return (
+    <div
+      data-stage-rail-step={step.code}
+      className="relative pl-7 flex flex-col select-none"
+    >
+      {/* Continuous Vertical Track Segment for this Step */}
+      {showConnectorBelow && (
+        <div
+          aria-hidden="true"
+          className={`absolute left-[6px] top-[10px] ${connectorClassName} flex justify-center w-[4px] -translate-x-1/2`}
+        >
+          {/* Base 1px light-gray future track */}
+          <div className="w-[1px] h-full bg-[#D4D4D8]" />
+
+          {/* Continuous Darkening & Thickening Progress Segment (1px -> 3.5px, gray -> black) */}
+          <div
+            ref={(el) => {
+              railRefs.current.stepSegmentFills[stepIndex] = el
+            }}
+            style={{
+              height: '0%',
+              width: isFirst ? '3.5px' : '1px',
+              backgroundColor: isFirst ? '#111111' : '#D4D4D8',
+              willChange: 'height, width, background-color',
+            }}
+            className="absolute top-0 left-1/2 -translate-x-1/2 rounded-full"
+          />
+        </div>
+      )}
+
+      {/* Step Node Circle (6px future -> 10px current -> 7.5px done) */}
+      <span
+        ref={(el) => {
+          railRefs.current.stepNodes[stepIndex] = el
+        }}
+        aria-hidden="true"
+        style={{
+          width: isFirst ? '10px' : '6px',
+          height: isFirst ? '10px' : '6px',
+          backgroundColor: isFirst ? '#111111' : '#D4D4D8',
+          willChange: 'width, height, background-color',
+        }}
+        className="absolute left-[6px] top-[9px] -translate-x-1/2 -translate-y-1/2 rounded-full z-10"
+      />
+
+      {/* Step Code + Title + Short Subtitle */}
+      <div className="flex flex-col">
+        <div className="flex items-baseline gap-2">
+          <span
+            ref={(el) => {
+              railRefs.current.stepCodes[stepIndex] = el
+            }}
+            style={{
+              color: isFirst ? '#111111' : '#A1A1AA',
+              fontWeight: isFirst ? 680 : 450,
+            }}
+            className="text-[12.5px] leading-none tabular-nums tracking-tight"
+          >
+            {step.code}
+          </span>
+          <div
+            ref={(el) => {
+              railRefs.current.stepTitles[stepIndex] = el
+            }}
+            style={{
+              color: isFirst ? '#111111' : '#A1A1AA',
+              fontWeight: isFirst ? 680 : 450,
+              willChange: 'color, font-weight',
+            }}
+            className="text-[15.5px] xl:text-[16px] leading-[1.25] tracking-[-0.015em]"
+          >
+            {step.title}
+          </div>
+        </div>
+
+        <div
+          ref={(el) => {
+            railRefs.current.stepSubtitles[stepIndex] = el
+          }}
+          style={{
+            color: isFirst ? '#3F3F46' : '#C4C4CC',
+            willChange: 'color',
+          }}
+          className="mt-1 pl-[22px] text-[12.5px] leading-[1.35] font-normal tracking-tight"
+        >
+          {step.subtitle}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+/**
+ * Full-Height Editorial Timeline Rail spanning SourceZone -> Corridor 1 -> ProcessZone
+ * (Section 13: Non-sticky, non-fixed spatial editorial timeline).
  */
 export const ImportStageRail: React.FC<{
   railRefs: React.MutableRefObject<StageRailDomRefs>
@@ -25,112 +135,27 @@ export const ImportStageRail: React.FC<{
   return (
     <aside
       data-stage-rail="desktop"
-      aria-label="课表导入阶段导航"
-      className="hidden lg:flex flex-col justify-center w-[212px] xl:w-[228px] shrink-0 select-none pr-2"
+      aria-label="课表导入阶段时间轴"
+      className="hidden lg:flex flex-col w-[216px] xl:w-[232px] shrink-0 select-none pr-3"
     >
-      <div className="relative flex flex-col">
-        {PHASE05_STAGE_STEPS.map((step, idx) => {
-          const isLast = idx === PHASE05_STAGE_STEPS.length - 1
-          return (
-            <div
-              key={step.code}
-              data-stage-rail-step={step.code}
-              className={`relative pl-7 ${isLast ? 'pb-2' : 'pb-9'}`}
-            >
-              {/* Continuous Vertical Track Segment for this Step */}
-              <div
-                aria-hidden="true"
-                className="
-                  absolute left-[6px] top-[10px] bottom-[-10px]
-                  flex justify-center w-[4px] -translate-x-1/2
-                "
-              >
-                {/* Base 1px light-gray future track */}
-                <div className="w-[1px] h-full bg-[#D4D4D8]" />
-
-                {/* Continuous Darkening & Thickening Progress Segment (1px -> 3.5px, gray -> black) */}
-                <div
-                  ref={(el) => {
-                    railRefs.current.stepSegmentFills[idx] = el
-                  }}
-                  style={{
-                    height: idx === 0 ? '0%' : '0%',
-                    width: idx === 0 ? '3.5px' : '1px',
-                    backgroundColor: idx === 0 ? '#111111' : '#D4D4D8',
-                    willChange: 'height, width, background-color',
-                  }}
-                  className="absolute top-0 left-1/2 -translate-x-1/2 rounded-full"
-                />
-              </div>
-
-              {/* Step Node Circle (6px future -> 9.5px current -> 7px done) */}
-              <span
-                ref={(el) => {
-                  railRefs.current.stepNodes[idx] = el
-                }}
-                aria-hidden="true"
-                style={{
-                  width: idx === 0 ? '9.5px' : '6px',
-                  height: idx === 0 ? '9.5px' : '6px',
-                  backgroundColor: idx === 0 ? '#111111' : '#D4D4D8',
-                  willChange: 'width, height, background-color',
-                }}
-                className="absolute left-[6px] top-[9px] -translate-x-1/2 -translate-y-1/2 rounded-full z-10"
-              />
-
-              {/* Step Code + Title + Short Subtitle */}
-              <div className="flex flex-col">
-                <div className="flex items-baseline gap-2">
-                  <span
-                    ref={(el) => {
-                      railRefs.current.stepCodes[idx] = el
-                    }}
-                    style={{
-                      color: idx === 0 ? '#111111' : '#A1A1AA',
-                      fontWeight: idx === 0 ? 650 : 500,
-                    }}
-                    className="text-[12.5px] leading-none tabular-nums tracking-tight"
-                  >
-                    {step.code}
-                  </span>
-                  <div
-                    ref={(el) => {
-                      railRefs.current.stepTitles[idx] = el
-                    }}
-                    style={{
-                      color: idx === 0 ? '#111111' : '#A1A1AA',
-                      fontWeight: idx === 0 ? 650 : 460,
-                      willChange: 'color, font-weight',
-                    }}
-                    className="text-[15px] xl:text-[15.5px] leading-[1.25] tracking-[-0.015em]"
-                  >
-                    {step.title}
-                  </div>
-                </div>
-
-                <div
-                  ref={(el) => {
-                    railRefs.current.stepSubtitles[idx] = el
-                  }}
-                  style={{
-                    color: idx === 0 ? '#52525B' : '#A1A1AA',
-                    willChange: 'color',
-                  }}
-                  className="mt-1 pl-[22px] text-[12.5px] leading-[1.35] font-normal tracking-tight"
-                >
-                  {step.subtitle}
-                </div>
-              </div>
-            </div>
-          )
-        })}
-      </div>
+      {PHASE05_STAGE_STEPS.map((step, idx) => {
+        const isLast = idx === PHASE05_STAGE_STEPS.length - 1
+        return (
+          <div key={step.code} className={isLast ? 'pb-2' : 'pb-9'}>
+            <EditorialStageRailNode
+              stepIndex={idx}
+              railRefs={railRefs}
+              showConnectorBelow={!isLast}
+            />
+          </div>
+        )
+      })}
     </aside>
   )
 }
 
 /**
- * Mobile Top Compact Stage Indicator + Horizontal Progress Rail (Section 37).
+ * Mobile Top Compact Stage Indicator + Horizontal Progress Rail.
  */
 export const MobileStageHeader: React.FC<{
   railRefs: React.MutableRefObject<StageRailDomRefs>
@@ -139,7 +164,7 @@ export const MobileStageHeader: React.FC<{
   return (
     <div
       data-stage-rail="mobile"
-      className="lg:hidden w-full mb-3.5 select-none"
+      className="lg:hidden w-full mb-4 select-none"
     >
       <div className="flex items-baseline justify-between gap-2 pb-2">
         <div className="flex items-baseline gap-1.5 min-w-0">

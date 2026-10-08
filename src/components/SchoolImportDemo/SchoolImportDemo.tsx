@@ -5,6 +5,7 @@ import { ChevronLeft, ChevronRight, MoreHorizontal, X } from 'lucide-react'
 import {
   APP_TIME_ROWS,
   FEATURED_PROCESS_COURSE,
+  PHASE05_MOTION_CONFIG,
   PHASE05_STAGE_STEPS,
   SAMPLE_DATA_STRIP_COURSES,
   SCHOOL_IMPORT_COURSES,
@@ -25,7 +26,7 @@ import {
   type StageGeometryCache,
 } from './courseMorphEngine'
 import {
-  ImportStageRail,
+  EditorialStageRailNode,
   MobileStageHeader,
   type StageRailDomRefs,
 } from './ImportStageRail'
@@ -39,6 +40,7 @@ declare global {
     __setPhase05State?: (state: Phase05PreviewState) => void
     __setPhase05Progress?: (progress: number) => void
     __getPhase05Progress?: () => number
+    __getPhase05Telemetry?: () => unknown
   }
 }
 
@@ -220,8 +222,15 @@ export const DataStripItem: React.FC<{
   course: SchoolImportCourse
   hiddenInStatic?: boolean
   anchorAttr?: string
+  initialOpacity?: number
   registerStripEl?: (el: HTMLDivElement | null) => void
-}> = ({ course, hiddenInStatic = false, anchorAttr, registerStripEl }) => {
+}> = ({
+  course,
+  hiddenInStatic = false,
+  anchorAttr,
+  initialOpacity,
+  registerStripEl,
+}) => {
   return (
     <div
       ref={registerStripEl}
@@ -229,7 +238,10 @@ export const DataStripItem: React.FC<{
       data-stage-node="strip"
       data-process-anchor={anchorAttr}
       data-strip-representative={hiddenInStatic ? 'false' : 'true'}
-      style={{ willChange: 'opacity' }}
+      style={{
+        opacity: initialOpacity !== undefined ? initialOpacity : undefined,
+        willChange: 'opacity',
+      }}
       className={`${
         hiddenInStatic ? 'hidden' : 'flex'
       } relative items-center w-full h-[38px] rounded-[8px] bg-[#FAFAFC] ring-1 ring-slate-900/[0.08] shadow-[0_2px_6px_rgba(15,23,42,0.03)] px-3 py-2 overflow-hidden`}
@@ -256,7 +268,7 @@ export const DataStripItem: React.FC<{
 }
 
 /**
- * 3. PROCESS: 中央数据整理区（清晰卡片容器 + Data Strip 通道 + 5 行高对比字段对齐）
+ * 3. PROCESS: 中央数据整理区（Section 11: 固定代表课程 Node.js应用开发 展开为 5 行字段对齐 + 其余 8 门静态弱化 Data Strip）
  */
 export const ProcessOrganizerStage: React.FC<{
   courses: SchoolImportCourse[]
@@ -271,7 +283,6 @@ export const ProcessOrganizerStage: React.FC<{
 }> = ({
   courses,
   featuredCourse,
-  representativeStrips,
   stripLaneTopRef,
   stripLaneBottomRef,
   processBoxRef,
@@ -279,14 +290,14 @@ export const ProcessOrganizerStage: React.FC<{
   staticProcessFieldsRef,
   processStatusLabelRef,
 }) => {
-  const repIds = new Set(representativeStrips.map((c) => c.id))
+  const secondaryCourses = courses.filter((c) => c.id !== featuredCourse.id)
 
   const structuredFields = [
     { label: '课程', value: featuredCourse.displayName },
     { label: '星期', value: featuredCourse.day },
     {
       label: '节次',
-      value: `第 ${featuredCourse.startPeriod}–${featuredCourse.endPeriod} 节`,
+      value: `${featuredCourse.startPeriod}–${featuredCourse.endPeriod}`,
     },
     { label: '地点', value: featuredCourse.shortLocation },
     { label: '周次', value: featuredCourse.weekLabel },
@@ -310,56 +321,32 @@ export const ProcessOrganizerStage: React.FC<{
         </span>
       </div>
 
-      {/* Section A: Data Strip Stream Channel */}
-      <div className="flex flex-col gap-2">
-        <div className="relative flex flex-col gap-2">
-          {/* Underlying subtle stream lane guides */}
-          <div
-            aria-hidden="true"
-            className="pointer-events-none absolute inset-0 flex flex-col gap-2"
-          >
-            <div className="w-full h-[38px] rounded-[8px] border border-dashed border-slate-900/[0.07] bg-slate-900/[0.012]" />
-            <div className="w-full h-[38px] rounded-[8px] border border-dashed border-slate-900/[0.07] bg-slate-900/[0.012]" />
-          </div>
-
-          {/* Static representative strips (measured for stripLaneTopRect / stripLaneBottomRect) */}
-          <div
-            ref={staticStripPlaceholderRef}
-            style={{ willChange: 'opacity' }}
-            className="flex flex-col gap-2"
-          >
-            {representativeStrips.map((course, idx) => (
-              <DataStripItem
-                key={course.id}
-                course={course}
-                hiddenInStatic={false}
-                anchorAttr={`strip-lane-${idx}`}
-                registerStripEl={(el) => {
-                  if (idx === 0 && stripLaneTopRef) stripLaneTopRef.current = el
-                  if (idx === 1 && stripLaneBottomRef) stripLaneBottomRef.current = el
-                }}
-              />
-            ))}
-            {courses
-              .filter((c) => !repIds.has(c.id))
-              .map((course) => (
-                <DataStripItem
-                  key={course.id}
-                  course={course}
-                  hiddenInStatic={true}
-                />
-              ))}
-          </div>
+      {/* Section A: Featured Course Entry Data Strip Slot (Node.js应用开发) */}
+      <div className="relative">
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 rounded-[8px] border border-dashed border-slate-900/[0.07] bg-slate-900/[0.012]"
+        />
+        <div ref={staticStripPlaceholderRef} style={{ willChange: 'opacity' }}>
+          <DataStripItem
+            course={featuredCourse}
+            hiddenInStatic={false}
+            anchorAttr="strip-lane-0"
+            registerStripEl={(el) => {
+              if (stripLaneTopRef) stripLaneTopRef.current = el
+              if (stripLaneBottomRef) stripLaneBottomRef.current = el
+            }}
+          />
         </div>
       </div>
 
-      {/* Section B: 5-Row Field Alignment Structure */}
+      {/* Section B: 5-Row Field Alignment Structure for Node.js应用开发 */}
       <div
         ref={processBoxRef}
         data-course-id={featuredCourse.id}
         data-stage-node="process"
         data-process-anchor="field-table"
-        className="relative w-full rounded-[12px] bg-[#FAFAFC] ring-1 ring-slate-900/[0.06] px-3.5 py-1 divide-y divide-slate-900/[0.06]"
+        className="relative w-full rounded-[12px] bg-[#FAFAFC] ring-1 ring-slate-900/[0.06] px-4 py-1.5"
       >
         <div
           ref={staticProcessFieldsRef}
@@ -369,13 +356,42 @@ export const ProcessOrganizerStage: React.FC<{
           {structuredFields.map((field) => (
             <div
               key={field.label}
-              className="py-2 flex items-baseline justify-between gap-4 text-[13px]"
+              className="py-2.5 flex items-baseline justify-between gap-4 text-[13px]"
             >
               <span className="text-neutral-500 font-medium shrink-0">
                 {field.label}
               </span>
               <span className="text-neutral-950 font-semibold text-right truncate">
                 {field.value}
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Section C: Remaining 8 Courses in Subdued / Secondary Data Strip State */}
+      <div className="pt-1.5 border-t border-slate-900/[0.05] flex flex-col gap-1.5">
+        <div className="flex items-center justify-between text-[11px] text-neutral-400 font-medium px-0.5">
+          <span>其余已抽取课程数据条</span>
+          <span className="tabular-nums">{secondaryCourses.length} 门就绪</span>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 opacity-45">
+          {secondaryCourses.map((course) => (
+            <div
+              key={course.id}
+              data-secondary-strip={course.id}
+              className="flex items-center h-[30px] rounded-[6px] bg-[#FAFAFC] ring-1 ring-slate-900/[0.06] px-2.5 overflow-hidden"
+            >
+              <span
+                aria-hidden="true"
+                style={{ backgroundColor: course.sourceColor }}
+                className="w-[2px] h-3 rounded-full shrink-0 mr-1.5 opacity-80"
+              />
+              <span className="text-[11px] text-neutral-700 font-medium truncate">
+                {course.displayName}
+              </span>
+              <span className="ml-auto pl-1.5 text-[10px] text-neutral-400 shrink-0 tabular-nums">
+                {course.day} {course.startPeriod}–{course.endPeriod}节
               </span>
             </div>
           ))}
@@ -616,24 +632,17 @@ export const DestinationAppWeekStage: React.FC<{
 }
 
 /**
- * Phase 05: 学校课表导入 · 左侧四阶段 StageRail + 右侧单主角 StageViewport + 长节奏 Scroll Pacing
+ * Phase 05 Long Page Prototype (Round 1):
+ * Spatial Narrative Long Page: Section Header -> ZONE 1 (Source) -> CORRIDOR 1 (250vh) -> ZONE 2 (Process)
+ * Zero pin, zero sticky stage, zero sticky StageRail, zero wheel interception.
  */
 export const SchoolImportDemo: React.FC = () => {
   const [previewState, setPreviewState] = useState<Phase05PreviewState>(getInitialPhase05State)
 
   const sectionRef = useRef<HTMLElement | null>(null)
-  const storyTrackRef = useRef<HTMLDivElement | null>(null)
-  const stageWrapperRef = useRef<HTMLDivElement | null>(null)
-  const previewPanelRef = useRef<HTMLDivElement | null>(null)
-  const previewCountBadgeRef = useRef<HTMLSpanElement | null>(null)
-  const destinationGridRef = useRef<HTMLDivElement | null>(null)
-  const completionCopyRef = useRef<HTMLDivElement | null>(null)
-
-  // Stage column wrapper refs for single-protagonist StageViewport transitions
-  const sourceColRef = useRef<HTMLDivElement | null>(null)
-  const processColRef = useRef<HTMLDivElement | null>(null)
-  const previewWrapRef = useRef<HTMLDivElement | null>(null)
-  const destinationWrapRef = useRef<HTMLDivElement | null>(null)
+  const sourceZoneRef = useRef<HTMLDivElement | null>(null)
+  const corridor1Ref = useRef<HTMLDivElement | null>(null)
+  const processZoneRef = useRef<HTMLDivElement | null>(null)
 
   // StageRail & MobileStageHeader DOM refs (updated directly in applyGlobalProgress)
   const railRefs = useRef<StageRailDomRefs>({
@@ -651,8 +660,7 @@ export const SchoolImportDemo: React.FC = () => {
 
   // Static stage node refs for geometry measurement & opacity handoff
   const staticSourceRefs = useRef<Record<string, HTMLDivElement | null>>({})
-  const staticPreviewRefs = useRef<Record<string, HTMLDivElement | null>>({})
-  const staticDestinationRefs = useRef<Record<string, HTMLDivElement | null>>({})
+  const staticCorridorStripRefs = useRef<Record<string, HTMLDivElement | null>>({})
   const stripLaneTopRef = useRef<HTMLDivElement | null>(null)
   const stripLaneBottomRef = useRef<HTMLDivElement | null>(null)
   const processBoxRef = useRef<HTMLDivElement | null>(null)
@@ -677,12 +685,13 @@ export const SchoolImportDemo: React.FC = () => {
   const currentProgressRef = useRef<number>(0)
   const geometryCacheRef = useRef<StageGeometryCache>({
     isMobile: false,
-    stageWidth: 1000,
-    stageHeight: 500,
-    stripLaneTopRect: { x: 340, y: 60, width: 280, height: 38 },
-    stripLaneBottomRect: { x: 340, y: 106, width: 280, height: 38 },
-    processBoxRect: { x: 340, y: 170, width: 280, height: 195 },
-    destinationGridTopY: 110,
+    viewportHeight: 900,
+    stageWidth: 1200,
+    stageHeight: 3600,
+    stripLaneTopRect: { x: 340, y: 2800, width: 480, height: 38 },
+    stripLaneBottomRect: { x: 340, y: 2800, width: 480, height: 38 },
+    processBoxRect: { x: 340, y: 2860, width: 480, height: 210 },
+    destinationGridTopY: 0,
     courses: {},
   })
 
@@ -699,9 +708,8 @@ export const SchoolImportDemo: React.FC = () => {
     if (previewState !== 'ALL') return
 
     const section = sectionRef.current
-    const storyTrack = storyTrackRef.current
-    const stageWrapper = stageWrapperRef.current
-    if (!section || !storyTrack || !stageWrapper) return
+    const sourceZone = sourceZoneRef.current
+    if (!section || !sourceZone) return
 
     const toRelativeRect = (el: HTMLElement | null, rootBox: DOMRect): MorphRect => {
       if (!el) return { x: 0, y: 0, width: 0, height: 0 }
@@ -715,60 +723,53 @@ export const SchoolImportDemo: React.FC = () => {
     }
 
     /**
-     * Measure and cache all stage geometry in stageWrapper root coordinates.
-     * Temporarily clears centering transforms so base grid coordinates are exact.
+     * Measure and cache all stage geometry in sectionRef local coordinates
+     * (Section 15–16: localTop = elementRect.top - sectionRect.top, no scrollY added).
      */
     const measureStageGeometry = () => {
-      if (sourceColRef.current) sourceColRef.current.style.transform = 'none'
-      if (processColRef.current) processColRef.current.style.transform = 'none'
-      if (previewWrapRef.current) previewWrapRef.current.style.transform = 'none'
-      if (destinationWrapRef.current) destinationWrapRef.current.style.transform = 'none'
-
-      const rootBox = stageWrapper.getBoundingClientRect()
+      const rootBox = section.getBoundingClientRect()
       if (rootBox.width === 0 || rootBox.height === 0) return
 
       const isMobile = window.innerWidth < 1024
       const topLane = toRelativeRect(stripLaneTopRef.current, rootBox)
       const bottomLane = toRelativeRect(stripLaneBottomRef.current, rootBox)
       const procBox = toRelativeRect(processBoxRef.current, rootBox)
-      const destGridRect = toRelativeRect(destinationGridRef.current, rootBox)
 
       const coursesMap: StageGeometryCache['courses'] = {}
       for (const course of SCHOOL_IMPORT_COURSES) {
         const srcEl = staticSourceRefs.current[course.id]
-        const prevEl = staticPreviewRefs.current[course.id]
-        const destEl = staticDestinationRefs.current[course.id]
+        const stripEl = staticCorridorStripRefs.current[course.id]
         coursesMap[course.id] = {
           sourceRect: toRelativeRect(srcEl, rootBox),
-          stripRect: topLane,
-          previewRect: toRelativeRect(prevEl, rootBox),
-          destinationRect: toRelativeRect(destEl, rootBox),
+          stripRect: toRelativeRect(stripEl, rootBox),
+          previewRect: procBox,
+          destinationRect: procBox,
         }
       }
 
       geometryCacheRef.current = {
         isMobile,
+        viewportHeight: window.innerHeight || 900,
         stageWidth: rootBox.width,
         stageHeight: rootBox.height,
         stripLaneTopRect: topLane,
         stripLaneBottomRect: bottomLane.width > 0 ? bottomLane : topLane,
         processBoxRect: procBox,
-        destinationGridTopY: destGridRect.y,
+        destinationGridTopY: procBox.y,
         courses: coursesMap,
       }
     }
 
     /**
-     * Pure DOM state application for global narrative progress p in [0, 1].
+     * Pure DOM state application for Long Page Round 1 progress p in [0, 1].
      */
     const applyGlobalProgress = (rawP: number) => {
       const p = clamp(rawP, 0, 1)
       currentProgressRef.current = p
       const geom = geometryCacheRef.current
       const macro = computePhase05MacroState(p, SCHOOL_IMPORT_COURSES)
-      const s2p = macro.sourceToPreviewP
 
-      // 0. Update Desktop ImportStageRail & MobileStageHeader continuously
+      // 0. Update Desktop Editorial Timeline StageRail & MobileStageHeader continuously
       const rRefs = railRefs.current
       for (let idx = 0; idx < macro.railSteps.length; idx++) {
         const stepState = macro.railSteps[idx]
@@ -814,20 +815,9 @@ export const SchoolImportDemo: React.FC = () => {
         rRefs.mobileProgressBar.style.width = `${clamp(macro.railProgressPct, 4, 100).toFixed(1)}%`
       }
 
-      let anyCourseInProcessStageC = false
-      let maxProcessOverlayInfluence = 0
-
       for (let i = 0; i < SCHOOL_IMPORT_COURSES.length; i++) {
         const course = SCHOOL_IMPORT_COURSES[i]
         const state = computeFullPhase05CourseState(p, course, i, geom)
-
-        if (state.stage === 'stage-c-process') {
-          anyCourseInProcessStageC = true
-          maxProcessOverlayInfluence = Math.max(
-            maxProcessOverlayInfluence,
-            state.processLayerOpacity
-          )
-        }
 
         // 1. Static Source Node opacity
         const srcEl = staticSourceRefs.current[course.id]
@@ -835,52 +825,24 @@ export const SchoolImportDemo: React.FC = () => {
           srcEl.style.opacity = state.staticSourceOpacity.toFixed(3)
         }
 
-        // 2. Static Preview Row opacity (fixed height, never collapses)
-        const prevEl = staticPreviewRefs.current[course.id]
-        if (prevEl) {
-          prevEl.style.opacity = state.staticPreviewOpacity.toFixed(3)
+        // 2. Static Corridor 1 Data Strip opacity
+        const corridorStripEl = staticCorridorStripRefs.current[course.id]
+        if (corridorStripEl) {
+          corridorStripEl.style.opacity = (state.staticCorridorStripOpacity ?? 0).toFixed(3)
         }
 
-        // 3. Static Destination Course Block opacity
-        const destEl = staticDestinationRefs.current[course.id]
-        if (destEl) {
-          destEl.style.opacity = state.staticDestinationOpacity.toFixed(3)
-        }
-
-        // 4. Morph Overlay Card
+        // 3. Morph Overlay Card
         const cardEl = morphCardRefs.current[course.id]
         if (!cardEl) continue
 
-        let effectiveOverlayOpacity = state.overlayOpacity
-        if (geom.isMobile && state.visible) {
-          // On single-stage mobile viewport, fade out in-flight cards when their stage is not active
-          if (
-            state.stage === 'stage-a-extract' ||
-            state.stage === 'stage-b-stream' ||
-            state.stage === 'stage-c-process' ||
-            state.stage === 'stage-d-preview'
-          ) {
-            effectiveOverlayOpacity *= clamp(
-              Math.max(macro.mobileProcessOpacity, macro.mobilePreviewOpacity * 0.85),
-              0,
-              1
-            )
-          } else if (
-            state.stage === 'stage-e-detach-preview' ||
-            state.stage === 'stage-f-commit-destination'
-          ) {
-            effectiveOverlayOpacity *= clamp(macro.mobileDestinationOpacity, 0, 1)
-          }
-        }
-
-        if (!state.visible || effectiveOverlayOpacity <= 0.001) {
+        if (!state.visible || state.overlayOpacity <= 0.001) {
           cardEl.style.opacity = '0'
           cardEl.style.visibility = 'hidden'
           continue
         }
 
         cardEl.style.visibility = 'visible'
-        cardEl.style.opacity = effectiveOverlayOpacity.toFixed(3)
+        cardEl.style.opacity = state.overlayOpacity.toFixed(3)
         cardEl.style.zIndex = String(state.zIndex)
         cardEl.style.transform = `translate3d(${state.x.toFixed(2)}px, ${state.y.toFixed(2)}px, 0) scale(${state.scale.toFixed(4)})`
         cardEl.style.width = `${state.width.toFixed(2)}px`
@@ -899,21 +861,14 @@ export const SchoolImportDemo: React.FC = () => {
           cardEl.style.boxShadow = 'none'
         }
 
-        // 4a. Left Source Color Bar -> Preview Dot -> Compact Record Dot -> Dissolve
+        // 3a. Left Source Color Bar
         const barEl = morphBarRefs.current[course.id]
         if (barEl) {
           const dotT = state.leftBarToDotProgress
           const procT = state.processLayerOpacity
-          const isDestPhase =
-            state.stage === 'stage-e-detach-preview' ||
-            state.stage === 'stage-f-commit-destination'
-          const compactShift = isDestPhase
-            ? clamp(state.compactRecordTextOpacity + state.destinationTextOpacity, 0, 1)
-            : 0
           const w = lerp(2.5, 6, dotT)
           const h = lerp(14, 6, dotT)
-          const baseLeft = lerp(lerp(10, 6, procT), 0, dotT)
-          const leftPx = lerp(baseLeft, 9, compactShift)
+          const leftPx = lerp(lerp(12, 8, procT), 0, dotT)
           const topPct = lerp(50, 10, procT)
           barEl.style.opacity = state.leftBarOpacity.toFixed(3)
           barEl.style.width = `${w.toFixed(2)}px`
@@ -922,7 +877,7 @@ export const SchoolImportDemo: React.FC = () => {
           barEl.style.top = `${topPct.toFixed(1)}%`
         }
 
-        // 4b. Layer 1: Source Text Layer
+        // 3b. Layer 1: Source Text Layer
         const srcLayer = morphSourceLayerRefs.current[course.id]
         if (srcLayer) {
           srcLayer.style.opacity = state.sourceTextOpacity.toFixed(3)
@@ -930,7 +885,7 @@ export const SchoolImportDemo: React.FC = () => {
             state.sourceTextOpacity > 0.005 ? 'visible' : 'hidden'
         }
 
-        // 4c. Layer 2: Data Strip / Normalized Record Text Layer
+        // 3c. Layer 2: Data Strip Text Layer
         const stripLayer = morphStripLayerRefs.current[course.id]
         if (stripLayer) {
           stripLayer.style.opacity = state.stripTextOpacity.toFixed(3)
@@ -942,7 +897,7 @@ export const SchoolImportDemo: React.FC = () => {
           badgeEl.style.display = state.isNormalizedStrip ? 'inline-flex' : 'none'
         }
 
-        // 4d. Layer 3: Process 5-Row Field Alignment Layer
+        // 3d. Layer 3: Process 5-Row Field Alignment Layer
         const procLayer = morphProcessLayerRefs.current[course.id]
         if (procLayer) {
           procLayer.style.opacity = state.processLayerOpacity.toFixed(3)
@@ -968,124 +923,55 @@ export const SchoolImportDemo: React.FC = () => {
           }
         }
 
-        // 4e. Layer 4: Preview Row Text Layer
+        // 3e. Layers 4..6 (kept hidden in Round 1)
         const prevLayer = morphPreviewLayerRefs.current[course.id]
         if (prevLayer) {
-          prevLayer.style.opacity = state.previewTextOpacity.toFixed(3)
-          prevLayer.style.visibility =
-            state.previewTextOpacity > 0.005 ? 'visible' : 'hidden'
+          prevLayer.style.opacity = '0'
+          prevLayer.style.visibility = 'hidden'
         }
-
-        // 4f. Layer 5: Compact Record Text Layer (Phase 05C Stage E2 -> F)
         const compactLayer = morphCompactLayerRefs.current[course.id]
         if (compactLayer) {
-          compactLayer.style.opacity = state.compactRecordTextOpacity.toFixed(3)
-          compactLayer.style.visibility =
-            state.compactRecordTextOpacity > 0.005 ? 'visible' : 'hidden'
+          compactLayer.style.opacity = '0'
+          compactLayer.style.visibility = 'hidden'
         }
-
-        // 4g. Layer 6: Destination Course Block Text Layer (Phase 05C Stage F -> G)
         const destLayer = morphDestinationLayerRefs.current[course.id]
         if (destLayer) {
-          destLayer.style.opacity = state.destinationTextOpacity.toFixed(3)
-          destLayer.style.visibility =
-            state.destinationTextOpacity > 0.005 ? 'visible' : 'hidden'
+          destLayer.style.opacity = '0'
+          destLayer.style.visibility = 'hidden'
         }
       }
 
-      // 5. Central Process Stage Static Placeholders (Idle vs Active vs Completed)
+      // 4. Process Zone Static Placeholders Handoff (Node.js应用开发 entry strip -> 5-row field table)
       if (staticStripPlaceholderRef.current) {
-        const stripIdleOpacity = s2p <= 0.02 ? 1 - s2p / 0.02 : 0
-        staticStripPlaceholderRef.current.style.opacity = stripIdleOpacity.toFixed(3)
+        staticStripPlaceholderRef.current.style.opacity =
+          macro.staticProcessEntryOpacity.toFixed(3)
       }
 
       if (staticProcessFieldsRef.current) {
-        let bgFieldOpacity = 0.25
-        if (s2p <= 0.04) {
-          bgFieldOpacity = lerp(0.75, 0.22, s2p / 0.04)
-        } else if (anyCourseInProcessStageC) {
-          bgFieldOpacity = lerp(0.22, 0.0, clamp(maxProcessOverlayInfluence * 1.4, 0, 1))
-        } else if (s2p >= 0.86) {
-          bgFieldOpacity = lerp(0.22, 0.55, clamp((s2p - 0.86) / 0.06, 0, 1))
-        }
-        staticProcessFieldsRef.current.style.opacity = bgFieldOpacity.toFixed(3)
+        staticProcessFieldsRef.current.style.opacity =
+          macro.staticProcessFieldsOpacity.toFixed(3)
       }
 
       if (processStatusLabelRef.current) {
-        if (s2p >= 0.895) {
-          processStatusLabelRef.current.textContent = '已完成 9 门课程字段对齐'
+        if (macro.processP >= 0.85) {
+          processStatusLabelRef.current.textContent = '已完成字段对齐 · Node.js应用开发'
         } else {
           processStatusLabelRef.current.textContent = '提取课程字段'
         }
       }
-
-      // 6. Preview Header Count Badge (Phase 05C live write feedback)
-      if (previewCountBadgeRef.current) {
-        if (p < PHASE05C_GLOBAL_START || macro.settledDestinationCount === 0) {
-          previewCountBadgeRef.current.textContent = `共 ${SCHOOL_IMPORT_COURSES.length} 门课程`
-        } else if (macro.settledDestinationCount < SCHOOL_IMPORT_COURSES.length) {
-          previewCountBadgeRef.current.textContent = `已写入 ${macro.settledDestinationCount} / ${SCHOOL_IMPORT_COURSES.length} 门`
-        } else {
-          previewCountBadgeRef.current.textContent = `${SCHOOL_IMPORT_COURSES.length} 门已全部写入`
-        }
-      }
-
-      // 7. Single-Protagonist StageViewport Opacity & Safe Hold Centering (Sections 2, 11–18, 22)
-      const isMobile = geom.isMobile
-      const srcOp = isMobile ? macro.mobileSourceOpacity : macro.sourceStageOpacity
-      const procOp = isMobile ? macro.mobileProcessOpacity : macro.processStageOpacity
-      const prevOp = isMobile ? macro.mobilePreviewOpacity : macro.previewStageOpacity
-      const destOp = isMobile ? macro.mobileDestinationOpacity : macro.destinationStageOpacity
-
-      // Safe centering shift amounts (only non-zero when all 9 courses are settled in static DOM)
-      const maxShiftSource = Math.min(220, geom.stageWidth * 0.21)
-      const maxShiftPreview = Math.min(240, geom.stageWidth * 0.23)
-      const maxShiftDest = Math.min(130, geom.stageWidth * 0.12)
-
-      if (sourceColRef.current) {
-        sourceColRef.current.style.opacity = srcOp.toFixed(3)
-        sourceColRef.current.style.visibility = srcOp > 0.005 ? 'visible' : 'hidden'
-        sourceColRef.current.style.pointerEvents = srcOp > 0.4 ? 'auto' : 'none'
-        const shiftX = isMobile ? 0 : macro.sourceCenterOffsetFactor * maxShiftSource
-        sourceColRef.current.style.transform = `translate3d(${shiftX.toFixed(1)}px, 0, 0)`
-      }
-
-      if (processColRef.current) {
-        processColRef.current.style.opacity = procOp.toFixed(3)
-        processColRef.current.style.visibility = procOp > 0.005 ? 'visible' : 'hidden'
-        processColRef.current.style.pointerEvents = procOp > 0.4 ? 'auto' : 'none'
-        processColRef.current.style.transform = 'none'
-      }
-
-      if (previewWrapRef.current) {
-        previewWrapRef.current.style.opacity = prevOp.toFixed(3)
-        previewWrapRef.current.style.visibility = prevOp > 0.005 ? 'visible' : 'hidden'
-        previewWrapRef.current.style.pointerEvents = prevOp > 0.4 ? 'auto' : 'none'
-        const shiftX = isMobile ? 0 : -macro.previewCenterOffsetFactor * maxShiftPreview
-        previewWrapRef.current.style.transform = `translate3d(${shiftX.toFixed(1)}px, 0, 0)`
-      }
-
-      if (destinationWrapRef.current) {
-        destinationWrapRef.current.style.opacity = destOp.toFixed(3)
-        destinationWrapRef.current.style.visibility = destOp > 0.005 ? 'visible' : 'hidden'
-        destinationWrapRef.current.style.pointerEvents = destOp > 0.4 ? 'auto' : 'none'
-        const shiftX = isMobile ? 0 : macro.destinationCenterOffsetFactor * maxShiftDest
-        destinationWrapRef.current.style.transform = `translate3d(${shiftX.toFixed(1)}px, 0, 0)`
-      }
-
-      // 8. Completion Status Copy fade-in & lift
-      if (completionCopyRef.current) {
-        completionCopyRef.current.style.opacity = macro.completionOpacity.toFixed(3)
-        completionCopyRef.current.style.transform = `translate3d(0, ${macro.completionY.toFixed(2)}px, 0)`
-      }
     }
 
-    // Expose deterministic progress setter for verification & inspection
+    // Expose deterministic progress setter & telemetry for verification
     window.__setPhase05Progress = (targetP: number) => {
       measureStageGeometry()
       applyGlobalProgress(targetP)
     }
     window.__getPhase05Progress = () => currentProgressRef.current
+    window.__getPhase05Telemetry = () => ({
+      globalP: currentProgressRef.current,
+      macro: computePhase05MacroState(currentProgressRef.current, SCHOOL_IMPORT_COURSES),
+      motionConfig: PHASE05_MOTION_CONFIG,
+    })
 
     // Initial measurement & p = 0 state
     measureStageGeometry()
@@ -1093,9 +979,9 @@ export const SchoolImportDemo: React.FC = () => {
 
     const ctx = gsap.context(() => {
       ScrollTrigger.create({
-        trigger: storyTrack,
-        start: () => (window.innerWidth < 1024 ? 'top top+=58' : 'top top+=72'),
-        end: 'bottom bottom',
+        trigger: sourceZone,
+        start: () => (window.innerWidth < 1024 ? 'top top+=88' : 'top top+=140'),
+        end: () => `+=${Math.round((window.innerHeight || 900) * 3.4)}`,
         scrub: true,
         invalidateOnRefresh: true,
         onRefresh: (self) => {
@@ -1118,7 +1004,7 @@ export const SchoolImportDemo: React.FC = () => {
       measureStageGeometry()
       applyGlobalProgress(currentProgressRef.current)
     })
-    resizeObserver.observe(stageWrapper)
+    resizeObserver.observe(section)
 
     window.addEventListener('resize', handleResizeOrRefresh)
     window.addEventListener('load', handleResizeOrRefresh)
@@ -1130,20 +1016,23 @@ export const SchoolImportDemo: React.FC = () => {
       window.removeEventListener('load', handleResizeOrRefresh)
       delete window.__setPhase05Progress
       delete window.__getPhase05Progress
+      delete window.__getPhase05Telemetry
       ctx.revert()
     }
   }, [previewState])
 
   const showSource = previewState === 'ALL' || previewState === 'SOURCE'
   const showProcess = previewState === 'ALL' || previewState === 'PROCESS'
-  const showPreview = previewState === 'ALL' || previewState === 'PREVIEW'
-  const showDestination = previewState === 'ALL' || previewState === 'DESTINATION'
 
   return (
     <section
       id="school-import-demo"
       ref={sectionRef}
       data-phase05-state={previewState}
+      data-phase05-architecture="spatial-long-page-round-1"
+      data-corridor-d-vh={PHASE05_MOTION_CONFIG.corridorCourseDurationVh}
+      data-corridor-s-vh={PHASE05_MOTION_CONFIG.corridorCourseStaggerVh}
+      data-corridor1-height-vh={PHASE05_MOTION_CONFIG.corridor1HeightVh}
       data-phase05b-start={PHASE05B_GLOBAL_START}
       data-phase05b-end={PHASE05B_GLOBAL_END}
       data-phase05c-start={PHASE05C_GLOBAL_START}
@@ -1152,8 +1041,10 @@ export const SchoolImportDemo: React.FC = () => {
     >
       <div className="w-full px-4 sm:px-8 md:px-12 lg:px-16">
         <div className="w-full max-w-7xl mx-auto">
-          {/* Top Narrative Copy (Upgraded contrast per Section 30–34) */}
-          <div className="max-w-2xl">
+          {/* =================================================================
+              PART 1: SECTION HEADER (Section 3)
+             ================================================================= */}
+          <div data-zone="section-header" className="max-w-2xl">
             <h2
               style={{ lineHeight: 1.16 }}
               className="text-2xl sm:text-4xl md:text-[42px] lg:text-[44px] font-bold tracking-[-0.03em] text-neutral-950"
@@ -1168,334 +1059,345 @@ export const SchoolImportDemo: React.FC = () => {
             </p>
           </div>
 
-          {/* Long-Pacing Narrative Scroll Track (Native CSS Sticky, Zero ScrollTrigger Pin) */}
-          <div
-            ref={storyTrackRef}
-            data-story-track="phase05"
-            className={
-              previewState === 'ALL'
-                ? 'relative mt-6 sm:mt-8 lg:mt-7 min-h-[330svh] lg:min-h-[360svh]'
-                : 'relative mt-8 sm:mt-10'
-            }
-          >
+          {/* Mobile Compact Stage Indicator (Normal Document Flow, Non-Sticky) */}
+          {previewState === 'ALL' && (
+            <div className="mt-6 lg:hidden">
+              <MobileStageHeader railRefs={railRefs} />
+            </div>
+          )}
+
+          {/* =================================================================
+              PART 2: ZONE 1 · SOURCE (Section 4)
+              Real document flow (~76-80vh), reading hold before extraction.
+             ================================================================= */}
+          {showSource && (
             <div
-              className={
-                previewState === 'ALL'
-                  ? 'sticky top-[58px] lg:top-[72px] w-full flex flex-col lg:flex-row lg:items-center gap-3 lg:gap-7 py-2 lg:py-3'
-                  : 'w-full'
-              }
+              ref={sourceZoneRef}
+              data-zone="source"
+              className="relative mt-8 sm:mt-10 lg:mt-12 min-h-[76vh] flex flex-col lg:flex-row lg:items-stretch gap-6 lg:gap-12"
             >
-              {/* Mobile Top Compact Stage Indicator + Horizontal Progress Rail */}
-              {previewState === 'ALL' && <MobileStageHeader railRefs={railRefs} />}
+              {/* Left Editorial Timeline Column: Step 01 Node + Continuous Connector across SourceZone + Corridor 1 */}
+              {previewState === 'ALL' && (
+                <aside
+                  data-stage-rail="desktop"
+                  aria-label="课表导入阶段时间轴"
+                  className="hidden lg:flex flex-col w-[224px] xl:w-[240px] shrink-0 relative pt-2"
+                >
+                  <EditorialStageRailNode
+                    stepIndex={0}
+                    railRefs={railRefs}
+                    showConnectorBelow={true}
+                    connectorClassName="bottom-[-250vh]"
+                  />
+                </aside>
+              )}
 
-              {/* Desktop Left 4-Stage Narrative Rail */}
-              {previewState === 'ALL' && <ImportStageRail railRefs={railRefs} />}
-
-              {/* Right Single-Protagonist StageViewport (Relative coordinate root for CourseMorphOverlay) */}
-              <div
-                ref={stageWrapperRef}
-                data-stage-viewport="true"
-                className="relative flex-1 min-w-0 grid grid-cols-1 lg:grid-cols-12 gap-5 lg:gap-5 items-center"
-              >
-                {/* Stage 01 · SOURCE (Cols 1..4 on Desktop, centered during Step 01 hold) */}
-                {showSource && (
-                  <div
-                    ref={sourceColRef}
-                    style={{
-                      transformOrigin: 'center center',
-                      willChange: 'opacity, transform',
+              {/* Right Main Stage Column: SourceScheduleStage */}
+              <div className="flex-1 min-w-0 flex items-start">
+                <div className="w-full max-w-[560px]">
+                  <SourceScheduleStage
+                    courses={SCHOOL_IMPORT_COURSES}
+                    registerSourceNode={(id, el) => {
+                      staticSourceRefs.current[id] = el
                     }}
-                    className="col-start-1 row-start-1 lg:col-start-1 lg:col-span-4 lg:row-start-1"
-                  >
-                    <SourceScheduleStage
-                      courses={SCHOOL_IMPORT_COURSES}
-                      registerSourceNode={(id, el) => {
-                        staticSourceRefs.current[id] = el
-                      }}
-                    />
-                  </div>
-                )}
-
-                {/* Stage 02 · PROCESS (Cols 5..8 on Desktop, central protagonist during Step 02) */}
-                {showProcess && (
-                  <div
-                    ref={processColRef}
-                    style={{
-                      transformOrigin: 'center center',
-                      willChange: 'opacity, transform',
-                    }}
-                    className="col-start-1 row-start-1 lg:col-start-5 lg:col-span-4 lg:row-start-1"
-                  >
-                    <ProcessOrganizerStage
-                      courses={SCHOOL_IMPORT_COURSES}
-                      featuredCourse={FEATURED_PROCESS_COURSE}
-                      representativeStrips={SAMPLE_DATA_STRIP_COURSES}
-                      stripLaneTopRef={stripLaneTopRef}
-                      stripLaneBottomRef={stripLaneBottomRef}
-                      processBoxRef={processBoxRef}
-                      staticStripPlaceholderRef={staticStripPlaceholderRef}
-                      staticProcessFieldsRef={staticProcessFieldsRef}
-                      processStatusLabelRef={processStatusLabelRef}
-                    />
-                  </div>
-                )}
-
-                {/* Stage 03 · PREVIEW (Cols 9..12 on Desktop, centered during Step 03 hold) */}
-                {showPreview && (
-                  <div
-                    ref={previewWrapRef}
-                    style={{
-                      transformOrigin: 'center center',
-                      willChange: 'opacity, transform',
-                    }}
-                    className="col-start-1 row-start-1 lg:col-start-9 lg:col-span-4 lg:row-start-1"
-                  >
-                    <ImportPreviewStage
-                      courses={SCHOOL_IMPORT_COURSES}
-                      panelRef={previewPanelRef}
-                      countBadgeRef={previewCountBadgeRef}
-                      registerPreviewNode={(id, el) => {
-                        staticPreviewRefs.current[id] = el
-                      }}
-                    />
-                  </div>
-                )}
-
-                {/* Stage 04 · DESTINATION (Cols 1..8 on Desktop Row 1, prime protagonist during Step 04) */}
-                {showDestination && (
-                  <div
-                    ref={destinationWrapRef}
-                    style={{
-                      transformOrigin: 'center center',
-                      willChange: 'opacity, transform',
-                    }}
-                    className="col-start-1 row-start-1 lg:col-start-1 lg:col-span-8 lg:row-start-1 z-10"
-                  >
-                    <DestinationAppWeekStage
-                      courses={SCHOOL_IMPORT_COURSES}
-                      destinationGridRef={destinationGridRef}
-                      completionCopyRef={completionCopyRef}
-                      initialStaticCompleted={previewState === 'DESTINATION'}
-                      registerDestinationNode={(id, el) => {
-                        staticDestinationRefs.current[id] = el
-                      }}
-                    />
-                  </div>
-                )}
-
-                {/* ===============================================================
-                    CourseMorphOverlay: 9 Unified Morphing Course Entities
-                    (SOURCE -> DATA STRIP -> PROCESS -> PREVIEW -> COMPACT RECORD -> DESTINATION)
-                   =============================================================== */}
-                {previewState === 'ALL' && (
-                  <div
-                    data-course-morph-overlay="true"
-                    className="pointer-events-none absolute inset-0 z-30"
-                  >
-                    {SCHOOL_IMPORT_COURSES.map((course) => {
-                      const processFields = [
-                        { label: '课程', value: course.displayName },
-                        { label: '星期', value: course.day },
-                        {
-                          label: '节次',
-                          value: `第 ${course.startPeriod}–${course.endPeriod} 节`,
-                        },
-                        { label: '地点', value: course.shortLocation },
-                        { label: '周次', value: course.weekLabel },
-                      ]
-
-                      return (
-                        <div
-                          key={course.id}
-                          ref={(el) => {
-                            morphCardRefs.current[course.id] = el
-                          }}
-                          data-morph-course-id={course.id}
-                          style={{
-                            left: 0,
-                            top: 0,
-                            opacity: 0,
-                            visibility: 'hidden',
-                            transformOrigin: '50% 50%',
-                            borderWidth: '1px',
-                            borderStyle: 'solid',
-                            borderColor: 'rgba(15, 23, 42, 0)',
-                            willChange:
-                              'transform, width, height, border-radius, background-color, opacity, box-shadow',
-                          }}
-                          className="absolute overflow-hidden"
-                        >
-                          {/* Continuous Left Color Identity Bar -> Preview Row Dot -> Dissolve */}
-                          <span
-                            ref={(el) => {
-                              morphBarRefs.current[course.id] = el
-                            }}
-                            aria-hidden="true"
-                            style={{
-                              backgroundColor: course.sourceColor,
-                              left: 10,
-                              top: '50%',
-                              width: 2.5,
-                              height: 14,
-                              opacity: 0,
-                              transform: 'translateY(-50%)',
-                            }}
-                            className="absolute rounded-full z-20"
-                          />
-
-                          {/* Layer 1: High-Saturation SOURCE Block Content */}
-                          <div
-                            ref={(el) => {
-                              morphSourceLayerRefs.current[course.id] = el
-                            }}
-                            className="absolute inset-0 px-1.5 py-1 text-white flex flex-col justify-start overflow-hidden"
-                          >
-                            <div className="text-[10.5px] font-semibold leading-[1.2] tracking-tight break-all line-clamp-3">
-                              {course.name}
-                            </div>
-                            <div className="text-[9px] text-white/92 font-normal leading-[1.18] mt-0.5 break-all line-clamp-3">
-                              {course.sourceRawLocation}
-                            </div>
-                          </div>
-
-                          {/* Layer 2: Slender DATA STRIP / Normalized Record Content */}
-                          <div
-                            ref={(el) => {
-                              morphStripLayerRefs.current[course.id] = el
-                            }}
-                            style={{ opacity: 0, visibility: 'hidden' }}
-                            className="absolute inset-0 pl-5 pr-2.5 flex items-center justify-between gap-1.5 overflow-hidden"
-                          >
-                            <div className="text-[12px] sm:text-[12.5px] text-neutral-800 font-medium tracking-tight whitespace-nowrap overflow-hidden text-ellipsis">
-                              <span>{course.displayName}</span>
-                              <span className="mx-1 text-neutral-300">·</span>
-                              <span className="text-neutral-600 font-normal">{course.day}</span>
-                              <span className="mx-1 text-neutral-300">·</span>
-                              <span className="text-neutral-600 font-normal">
-                                {course.startPeriod}–{course.endPeriod}节
-                              </span>
-                              <span className="mx-1 text-neutral-300">·</span>
-                              <span className="text-neutral-600 font-normal">
-                                {course.shortLocation}
-                              </span>
-                            </div>
-                            <span
-                              ref={(el) => {
-                                morphNormBadgeRefs.current[course.id] = el
-                              }}
-                              style={{ display: 'none' }}
-                              className="shrink-0 px-1.5 py-0.5 rounded bg-slate-900/[0.05] text-[10.5px] text-neutral-600 font-medium tabular-nums"
-                            >
-                              {course.weekLabel}
-                            </span>
-                          </div>
-
-                          {/* Layer 3: PROCESS 5-Row Field Alignment Content */}
-                          <div
-                            ref={(el) => {
-                              morphProcessLayerRefs.current[course.id] = el
-                            }}
-                            style={{ opacity: 0, visibility: 'hidden' }}
-                            className="absolute inset-0 pl-4 pr-3 flex flex-col justify-between divide-y divide-slate-900/[0.06] bg-white"
-                          >
-                            {processFields.map((field, rIdx) => (
-                              <div
-                                key={field.label}
-                                className="flex-1 flex items-center justify-between gap-3 text-[12.5px] sm:text-[13px] overflow-hidden"
-                              >
-                                <span
-                                  ref={(el) => {
-                                    if (!morphProcessRowLabelRefs.current[course.id]) {
-                                      morphProcessRowLabelRefs.current[course.id] = []
-                                    }
-                                    morphProcessRowLabelRefs.current[course.id][rIdx] = el
-                                  }}
-                                  className="text-neutral-500 font-medium shrink-0"
-                                >
-                                  {field.label}
-                                </span>
-                                <span
-                                  ref={(el) => {
-                                    if (!morphProcessRowValRefs.current[course.id]) {
-                                      morphProcessRowValRefs.current[course.id] = []
-                                    }
-                                    morphProcessRowValRefs.current[course.id][rIdx] = el
-                                  }}
-                                  style={{ willChange: 'transform' }}
-                                  className="text-neutral-950 font-semibold text-right truncate"
-                                >
-                                  {field.value}
-                                </span>
-                              </div>
-                            ))}
-                          </div>
-
-                          {/* Layer 4: Final PREVIEW Row Content */}
-                          <div
-                            ref={(el) => {
-                              morphPreviewLayerRefs.current[course.id] = el
-                            }}
-                            style={{ opacity: 0, visibility: 'hidden' }}
-                            className="absolute inset-0 pl-3.5 flex items-center justify-between gap-3 text-[12.5px] sm:text-[13px]"
-                          >
-                            <span className="text-neutral-900 font-medium truncate">
-                              {course.displayName}
-                            </span>
-                            <span className="text-neutral-600 font-normal shrink-0 tabular-nums">
-                              {course.day} · 第{course.startPeriod}–{course.endPeriod}节
-                            </span>
-                          </div>
-
-                          {/* Layer 5: Phase 05C COMPACT RECORD Content (Stage E2 -> Stage F) */}
-                          <div
-                            ref={(el) => {
-                              morphCompactLayerRefs.current[course.id] = el
-                            }}
-                            style={{ opacity: 0, visibility: 'hidden' }}
-                            className="absolute inset-0 pl-5 pr-2.5 flex items-center overflow-hidden"
-                          >
-                            <div className="text-[11.5px] sm:text-[12px] text-neutral-800 font-medium tracking-tight whitespace-nowrap overflow-hidden text-ellipsis">
-                              <span>{course.displayName}</span>
-                              <span className="mx-1 text-neutral-300">·</span>
-                              <span className="text-neutral-600 font-normal">{course.day}</span>
-                              <span className="mx-1 text-neutral-300">·</span>
-                              <span className="text-neutral-600 font-normal tabular-nums">
-                                {course.startPeriod}–{course.endPeriod}节
-                              </span>
-                            </div>
-                          </div>
-
-                          {/* Layer 6: Phase 05C DESTINATION App Week Course Block Content (Stage F -> Stage G) */}
-                          <div
-                            ref={(el) => {
-                              morphDestinationLayerRefs.current[course.id] = el
-                            }}
-                            style={{ opacity: 0, visibility: 'hidden' }}
-                            className={`absolute inset-0 p-1.5 lg:px-2 lg:py-1.5 overflow-hidden flex flex-col justify-start ${
-                              course.appTheme === 'warm' ? 'text-[#5E3704]' : 'text-[#2B1B54]'
-                            }`}
-                          >
-                            <div className="shrink-0 text-[10px] sm:text-[11px] lg:text-[11px] font-semibold leading-[1.2] tracking-tight line-clamp-2 break-all">
-                              {course.name}
-                            </div>
-                            <div
-                              className={`overflow-hidden line-clamp-2 text-[8.5px] sm:text-[9.5px] lg:text-[9.5px] font-normal leading-[1.18] mt-0.5 break-all ${
-                                course.appTheme === 'warm' ? 'text-[#6D440E]' : 'text-[#3D2C6E]'
-                              }`}
-                            >
-                              {course.appLocation}
-                            </div>
-                          </div>
-                        </div>
-                      )
-                    })}
-                  </div>
-                )}
+                  />
+                </div>
               </div>
             </div>
-          </div>
+          )}
+
+          {/* =================================================================
+              PART 3: CORRIDOR 1 · SOURCE -> PROCESS (Sections 5–10)
+              Real document flow height = 250vh ((9 - 1) * 25vh + 50vh).
+              9 courses sequentially detach from Source and morph into Data Strips.
+             ================================================================= */}
+          {previewState === 'ALL' && (
+            <div
+              ref={corridor1Ref}
+              data-corridor="source-to-process"
+              style={{ height: `${PHASE05_MOTION_CONFIG.corridor1HeightVh}vh` }}
+              className="relative flex flex-col lg:flex-row lg:items-stretch gap-6 lg:gap-12"
+            >
+              {/* Left Editorial Timeline Spacer (Connector from Step 01 spans through here) */}
+              <div
+                aria-hidden="true"
+                className="hidden lg:block w-[224px] xl:w-[240px] shrink-0"
+              />
+
+              {/* Right Corridor Stream Column: 9 Spatially Distributed Data Strip Slots */}
+              <div className="flex-1 min-w-0 relative h-full">
+                <div className="w-full max-w-[560px] h-full relative">
+                  {SCHOOL_IMPORT_COURSES.map((course, idx) => {
+                    // Spaced at 22 + 25*i vh (22vh..222vh) inside the 250vh corridor so each course morphs in the viewport center and leaves 28vh before ProcessZone
+                    const topVh = 22 + idx * PHASE05_MOTION_CONFIG.corridorCourseStaggerVh
+                    const topPct = (topVh / PHASE05_MOTION_CONFIG.corridor1HeightVh) * 100
+                    return (
+                      <div
+                        key={course.id}
+                        style={{ top: `${topPct.toFixed(2)}%` }}
+                        className="absolute left-0 right-0 -translate-y-1/2"
+                      >
+                        {/* Subtle stream slot guide */}
+                        <div
+                          aria-hidden="true"
+                          className="pointer-events-none absolute inset-0 rounded-[8px] border border-dashed border-slate-900/[0.05] bg-slate-900/[0.008]"
+                        />
+                        <DataStripItem
+                          course={course}
+                          initialOpacity={0}
+                          anchorAttr={`corridor-strip-${idx}`}
+                          registerStripEl={(el) => {
+                            staticCorridorStripRefs.current[course.id] = el
+                          }}
+                        />
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* =================================================================
+              PART 4: ZONE 2 · PROCESS (Section 11)
+              Real document flow (~92vh). Fixed featured course Node.js应用开发
+              expands from Data Strip into 5-row structured field table.
+             ================================================================= */}
+          {showProcess && (
+            <div
+              ref={processZoneRef}
+              data-zone="process"
+              className="relative min-h-[92vh] pt-10 flex flex-col lg:flex-row lg:items-start gap-6 lg:gap-12"
+            >
+              {/* Left Editorial Timeline Column: Step 02 (Active) + Steps 03 & 04 (Future Light-Gray) */}
+              {previewState === 'ALL' && (
+                <aside
+                  aria-label="课表导入后续阶段时间轴"
+                  className="hidden lg:flex flex-col w-[224px] xl:w-[240px] shrink-0 pt-2"
+                >
+                  <div className="pb-10">
+                    <EditorialStageRailNode
+                      stepIndex={1}
+                      railRefs={railRefs}
+                      showConnectorBelow={true}
+                      connectorClassName="bottom-0"
+                    />
+                  </div>
+                  <div className="pb-10">
+                    <EditorialStageRailNode
+                      stepIndex={2}
+                      railRefs={railRefs}
+                      showConnectorBelow={true}
+                      connectorClassName="bottom-0"
+                    />
+                  </div>
+                  <div className="pb-2">
+                    <EditorialStageRailNode
+                      stepIndex={3}
+                      railRefs={railRefs}
+                      showConnectorBelow={false}
+                    />
+                  </div>
+                </aside>
+              )}
+
+              {/* Right Main Stage Column: ProcessOrganizerStage */}
+              <div className="flex-1 min-w-0 flex items-start">
+                <div className="w-full max-w-[560px]">
+                  <ProcessOrganizerStage
+                    courses={SCHOOL_IMPORT_COURSES}
+                    featuredCourse={FEATURED_PROCESS_COURSE}
+                    representativeStrips={SAMPLE_DATA_STRIP_COURSES}
+                    stripLaneTopRef={stripLaneTopRef}
+                    stripLaneBottomRef={stripLaneBottomRef}
+                    processBoxRef={processBoxRef}
+                    staticStripPlaceholderRef={staticStripPlaceholderRef}
+                    staticProcessFieldsRef={staticProcessFieldsRef}
+                    processStatusLabelRef={processStatusLabelRef}
+                  />
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
+
+      {/* =====================================================================
+          CourseMorphOverlay (Sections 14–16):
+          Section-relative absolute overlay (position: absolute; inset: 0; pointer-events: none)
+          bridging SourceZone -> Corridor 1 -> ProcessZone in unified coordinates.
+         ===================================================================== */}
+      {previewState === 'ALL' && (
+        <div
+          data-course-morph-overlay="true"
+          className="pointer-events-none absolute inset-0 z-30"
+        >
+          {SCHOOL_IMPORT_COURSES.map((course) => {
+            const processFields = [
+              { label: '课程', value: course.displayName },
+              { label: '星期', value: course.day },
+              {
+                label: '节次',
+                value: `${course.startPeriod}–${course.endPeriod}`,
+              },
+              { label: '地点', value: course.shortLocation },
+              { label: '周次', value: course.weekLabel },
+            ]
+
+            return (
+              <div
+                key={course.id}
+                ref={(el) => {
+                  morphCardRefs.current[course.id] = el
+                }}
+                data-morph-course-id={course.id}
+                style={{
+                  left: 0,
+                  top: 0,
+                  opacity: 0,
+                  visibility: 'hidden',
+                  transformOrigin: '50% 50%',
+                  borderWidth: '1px',
+                  borderStyle: 'solid',
+                  borderColor: 'rgba(15, 23, 42, 0)',
+                  willChange:
+                    'transform, width, height, border-radius, background-color, opacity, box-shadow',
+                }}
+                className="absolute overflow-hidden"
+              >
+                {/* Continuous Left Color Identity Bar */}
+                <span
+                  ref={(el) => {
+                    morphBarRefs.current[course.id] = el
+                  }}
+                  aria-hidden="true"
+                  style={{
+                    backgroundColor: course.sourceColor,
+                    left: 12,
+                    top: '50%',
+                    width: 2.5,
+                    height: 14,
+                    opacity: 0,
+                    transform: 'translateY(-50%)',
+                  }}
+                  className="absolute rounded-full z-20"
+                />
+
+                {/* Layer 1: High-Saturation SOURCE Block Content */}
+                <div
+                  ref={(el) => {
+                    morphSourceLayerRefs.current[course.id] = el
+                  }}
+                  className="absolute inset-0 px-1.5 py-1 text-white flex flex-col justify-start overflow-hidden"
+                >
+                  <div className="text-[10.5px] font-semibold leading-[1.2] tracking-tight break-all line-clamp-3">
+                    {course.name}
+                  </div>
+                  <div className="text-[9px] text-white/92 font-normal leading-[1.18] mt-0.5 break-all line-clamp-3">
+                    {course.sourceRawLocation}
+                  </div>
+                </div>
+
+                {/* Layer 2: Slender DATA STRIP Content */}
+                <div
+                  ref={(el) => {
+                    morphStripLayerRefs.current[course.id] = el
+                  }}
+                  style={{ opacity: 0, visibility: 'hidden' }}
+                  className="absolute inset-0 pl-5 pr-2.5 flex items-center justify-between gap-1.5 overflow-hidden"
+                >
+                  <div className="text-[12px] sm:text-[12.5px] text-neutral-800 font-medium tracking-tight whitespace-nowrap overflow-hidden text-ellipsis">
+                    <span>{course.displayName}</span>
+                    <span className="mx-1 text-neutral-300">·</span>
+                    <span className="text-neutral-600 font-normal">{course.day}</span>
+                    <span className="mx-1 text-neutral-300">·</span>
+                    <span className="text-neutral-600 font-normal">
+                      {course.startPeriod}–{course.endPeriod}节
+                    </span>
+                    <span className="mx-1 text-neutral-300">·</span>
+                    <span className="text-neutral-600 font-normal">
+                      {course.shortLocation}
+                    </span>
+                  </div>
+                  <span
+                    ref={(el) => {
+                      morphNormBadgeRefs.current[course.id] = el
+                    }}
+                    style={{ display: 'none' }}
+                    className="shrink-0 px-1.5 py-0.5 rounded bg-slate-900/[0.05] text-[10.5px] text-neutral-600 font-medium tabular-nums"
+                  >
+                    {course.weekLabel}
+                  </span>
+                </div>
+
+                {/* Layer 3: PROCESS 5-Row Field Alignment Content */}
+                <div
+                  ref={(el) => {
+                    morphProcessLayerRefs.current[course.id] = el
+                  }}
+                  style={{ opacity: 0, visibility: 'hidden' }}
+                  className="absolute inset-0 px-4 py-1.5 flex flex-col justify-between divide-y divide-slate-900/[0.06] bg-white"
+                >
+                  {processFields.map((field, rIdx) => (
+                    <div
+                      key={field.label}
+                      className="flex-1 flex items-center justify-between gap-4 text-[13px] overflow-hidden"
+                    >
+                      <span
+                        ref={(el) => {
+                          if (!morphProcessRowLabelRefs.current[course.id]) {
+                            morphProcessRowLabelRefs.current[course.id] = []
+                          }
+                          morphProcessRowLabelRefs.current[course.id][rIdx] = el
+                        }}
+                        className="text-neutral-500 font-medium shrink-0"
+                      >
+                        {field.label}
+                      </span>
+                      <span
+                        ref={(el) => {
+                          if (!morphProcessRowValRefs.current[course.id]) {
+                            morphProcessRowValRefs.current[course.id] = []
+                          }
+                          morphProcessRowValRefs.current[course.id][rIdx] = el
+                        }}
+                        style={{ willChange: 'transform' }}
+                        className="text-neutral-950 font-semibold text-right truncate"
+                      >
+                        {field.value}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Layer 4..6 placeholders (retained for Round 2 reuse) */}
+                <div
+                  ref={(el) => {
+                    morphPreviewLayerRefs.current[course.id] = el
+                  }}
+                  style={{ opacity: 0, visibility: 'hidden' }}
+                  className="hidden"
+                />
+                <div
+                  ref={(el) => {
+                    morphCompactLayerRefs.current[course.id] = el
+                  }}
+                  style={{ opacity: 0, visibility: 'hidden' }}
+                  className="hidden"
+                />
+                <div
+                  ref={(el) => {
+                    morphDestinationLayerRefs.current[course.id] = el
+                  }}
+                  style={{ opacity: 0, visibility: 'hidden' }}
+                  className="hidden"
+                />
+              </div>
+            )
+          })}
+        </div>
+      )}
     </section>
   )
 }
+

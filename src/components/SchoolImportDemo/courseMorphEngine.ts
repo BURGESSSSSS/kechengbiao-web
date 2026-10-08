@@ -1,4 +1,8 @@
-import type { SchoolImportCourse } from './schoolImportData'
+import {
+  FEATURED_PROCESS_COURSE,
+  PHASE05_MOTION_CONFIG,
+  type SchoolImportCourse,
+} from './schoolImportData'
 
 export interface MorphRect {
   x: number
@@ -16,6 +20,7 @@ export interface CourseGeometryEntry {
 
 export interface StageGeometryCache {
   isMobile: boolean
+  viewportHeight: number
   stageWidth: number
   stageHeight: number
   stripLaneTopRect: MorphRect
@@ -74,6 +79,7 @@ export interface CourseMorphState {
 
   // Static DOM Counterparts
   staticSourceOpacity: number
+  staticCorridorStripOpacity?: number
   staticPreviewOpacity: number
   staticDestinationOpacity: number
 }
@@ -85,7 +91,7 @@ export interface StageRailStepState {
   segmentFill: number // 0..1 continuous vertical segment fill
   railWidthPx: number // 1px -> 3.5px (current) -> 2px (done)
   railColor: string // continuous gray -> charcoal -> black
-  nodeSizePx: number // 6px -> 9.5px (current) -> 7px (done)
+  nodeSizePx: number // 6px -> 10px (current) -> 7.5px (done)
   nodeColor: string
   codeColor: string
   titleColor: string
@@ -95,19 +101,26 @@ export interface StageRailStepState {
 
 export interface Phase05MacroState {
   globalP: number
+  corridorP: number
+  processP: number
   sourceToPreviewP: number
   previewToDestinationP: number
   activeStepIndex: 0 | 1 | 2 | 3
   railProgressPct: number
   railSteps: StageRailStepState[]
+  // Active course motion telemetry for Round 1 verification
+  activeMainCourseCount: number
+  activeSecondaryCourseCount: number
+  staticProcessEntryOpacity: number
+  staticProcessFieldsOpacity: number
   // Desktop StageViewport container opacities & centering offsets
   sourceStageOpacity: number
   processStageOpacity: number
   previewStageOpacity: number
   destinationStageOpacity: number
-  sourceCenterOffsetFactor: number // 1 during Step 01 hold, 0 during morph
-  previewCenterOffsetFactor: number // 1 during Step 03 hold, 0 during morph
-  destinationCenterOffsetFactor: number // 1 during Step 04 complete hold, 0 during morph
+  sourceCenterOffsetFactor: number
+  previewCenterOffsetFactor: number
+  destinationCenterOffsetFactor: number
   // Mobile StageViewport container opacities
   mobileSourceOpacity: number
   mobileProcessOpacity: number
@@ -118,7 +131,7 @@ export interface Phase05MacroState {
   upstreamScale: number
   previewContainerOpacity: number
   destinationContainerOpacity: number
-  // Completion caption (Section 21 & 22)
+  // Completion caption
   completionOpacity: number
   completionY: number
   settledDestinationCount: number
@@ -950,7 +963,398 @@ export function computeDestinationMorphState(
 }
 
 /**
- * Unified Phase 05 (05B + 05C) Course State Coordinator for globalP (storyP) in [0, 1].
+ * Spatial Narrative Long Page (Round 1):
+ * SourceZone -> Corridor 1 (D=50vh, S=25vh, 250vh) -> ProcessZone (Node.js应用开发 5-row field expansion)
+ */
+export function computeLongPageRound1CourseState(
+  globalP: number,
+  course: SchoolImportCourse,
+  _index: number,
+  geometry: StageGeometryCache
+): CourseMorphState {
+  const p = clamp(globalP, 0, 1)
+  const corridorP = clamp(
+    (p - PHASE05_MOTION_CONFIG.corridorStartP) /
+      (PHASE05_MOTION_CONFIG.corridorEndP - PHASE05_MOTION_CONFIG.corridorStartP),
+    0,
+    1
+  )
+  const processP = clamp(
+    (p - PHASE05_MOTION_CONFIG.processStartP) /
+      (PHASE05_MOTION_CONFIG.processEndP - PHASE05_MOTION_CONFIG.processStartP),
+    0,
+    1
+  )
+
+  const entry = geometry.courses[course.id]
+  const fallbackRect: MorphRect = { x: 0, y: 0, width: 120, height: 38 }
+  const sourceRect = entry?.sourceRect ?? fallbackRect
+  const corridorStripRect = entry?.stripRect ?? geometry.stripLaneTopRect ?? fallbackRect
+  const processEntryRect = geometry.stripLaneTopRect ?? corridorStripRect
+  const processBoxRect = geometry.processBoxRect ?? fallbackRect
+
+  // ===========================================================================
+  // PHASE B: Process Zone Expansion for Fixed Featured Course (Node.js应用开发)
+  // ===========================================================================
+  if (course.id === FEATURED_PROCESS_COURSE.id && processP > 0.0001) {
+    if (processP >= 0.9999) {
+      return {
+        courseId: course.id,
+        stage: 'stage-c-process',
+        localP: 1,
+        visible: false,
+        zIndex: 60 + course.order,
+        x: processBoxRect.x,
+        y: processBoxRect.y,
+        width: processBoxRect.width,
+        height: processBoxRect.height,
+        scale: 1,
+        borderRadius: 12,
+        backgroundColor: 'rgb(255, 255, 255)',
+        borderAlpha: 0.085,
+        shadowStrength: 0,
+        overlayOpacity: 0,
+        leftBarOpacity: 1,
+        leftBarToDotProgress: 0,
+        sourceTextOpacity: 0,
+        stripTextOpacity: 0,
+        isNormalizedStrip: false,
+        processLayerOpacity: 1,
+        processLabelOpacity: 1,
+        processAlignT: 1,
+        previewTextOpacity: 0,
+        compactRecordTextOpacity: 0,
+        destinationTextOpacity: 0,
+        staticSourceOpacity: 0,
+        staticCorridorStripOpacity: 1,
+        staticPreviewOpacity: 0,
+        staticDestinationOpacity: 0,
+      }
+    }
+
+    // Sub-stage B1 (0.00 -> 0.56): Data Strip -> 5-Row Field Expansion
+    if (processP <= 0.56) {
+      const u = clamp(processP / 0.56, 0, 1)
+      const e = easeInOutCubic(u)
+
+      return {
+        courseId: course.id,
+        stage: 'stage-c-process',
+        localP: processP,
+        visible: true,
+        zIndex: 65 + course.order,
+        x: lerp(processEntryRect.x, processBoxRect.x, e),
+        y: lerp(processEntryRect.y, processBoxRect.y, e),
+        width: lerp(processEntryRect.width, processBoxRect.width, e),
+        height: lerp(processEntryRect.height, processBoxRect.height, e),
+        scale: 1,
+        borderRadius: lerp(8, 12, e),
+        backgroundColor: interpolateHexColor('#FAFAFC', '#FFFFFF', e),
+        borderAlpha: lerp(0.085, 0.095, e),
+        shadowStrength: lerp(0.28, 0.45, e),
+        overlayOpacity: 1,
+        leftBarOpacity: 1,
+        leftBarToDotProgress: 0,
+        sourceTextOpacity: 0,
+        stripTextOpacity: 1 - clamp(u / 0.45, 0, 1),
+        isNormalizedStrip: false,
+        processLayerOpacity: clamp((u - 0.16) / 0.62, 0, 1),
+        processLabelOpacity: clamp((u - 0.28) / 0.62, 0, 1),
+        processAlignT: easeOutQuad(clamp((u - 0.18) / 0.82, 0, 1)) * 0.72,
+        previewTextOpacity: 0,
+        compactRecordTextOpacity: 0,
+        destinationTextOpacity: 0,
+        staticSourceOpacity: 0,
+        staticCorridorStripOpacity: 1,
+        staticPreviewOpacity: 0,
+        staticDestinationOpacity: 0,
+      }
+    }
+
+    // Sub-stage B2 (0.56 -> 0.88): 5-Row Field Alignment Lock
+    if (processP <= 0.88) {
+      const u = (processP - 0.56) / (0.88 - 0.56)
+      const alignFinish = 0.72 + 0.28 * easeOutCubic(clamp(u / 0.65, 0, 1))
+
+      return {
+        courseId: course.id,
+        stage: 'stage-c-process',
+        localP: processP,
+        visible: true,
+        zIndex: 65 + course.order,
+        x: processBoxRect.x,
+        y: processBoxRect.y,
+        width: processBoxRect.width,
+        height: processBoxRect.height,
+        scale: 1,
+        borderRadius: 12,
+        backgroundColor: 'rgb(255, 255, 255)',
+        borderAlpha: 0.095,
+        shadowStrength: 0.45,
+        overlayOpacity: 1,
+        leftBarOpacity: 1,
+        leftBarToDotProgress: 0,
+        sourceTextOpacity: 0,
+        stripTextOpacity: 0,
+        isNormalizedStrip: false,
+        processLayerOpacity: 1,
+        processLabelOpacity: 1,
+        processAlignT: alignFinish,
+        previewTextOpacity: 0,
+        compactRecordTextOpacity: 0,
+        destinationTextOpacity: 0,
+        staticSourceOpacity: 0,
+        staticCorridorStripOpacity: 1,
+        staticPreviewOpacity: 0,
+        staticDestinationOpacity: 0,
+      }
+    }
+
+    // Sub-stage B3 (0.88 -> 1.00): Seamless Handoff to Static 5-Row Field Table
+    const handoffT = clamp((processP - 0.88) / 0.12, 0, 1)
+    return {
+      courseId: course.id,
+      stage: 'stage-c-process',
+      localP: processP,
+      visible: true,
+      zIndex: 65 + course.order,
+      x: processBoxRect.x,
+      y: processBoxRect.y,
+      width: processBoxRect.width,
+      height: processBoxRect.height,
+      scale: 1,
+      borderRadius: 12,
+      backgroundColor: 'rgb(255, 255, 255)',
+      borderAlpha: lerp(0.095, 0.06, handoffT),
+      shadowStrength: lerp(0.45, 0, handoffT),
+      overlayOpacity: 1 - handoffT,
+      leftBarOpacity: 1,
+      leftBarToDotProgress: 0,
+      sourceTextOpacity: 0,
+      stripTextOpacity: 0,
+      isNormalizedStrip: false,
+      processLayerOpacity: 1,
+      processLabelOpacity: 1,
+      processAlignT: 1,
+      previewTextOpacity: 0,
+      compactRecordTextOpacity: 0,
+      destinationTextOpacity: 0,
+      staticSourceOpacity: 0,
+      staticCorridorStripOpacity: 1,
+      staticPreviewOpacity: 0,
+      staticDestinationOpacity: 0,
+    }
+  }
+
+  // ===========================================================================
+  // PHASE A: Corridor 1 Extraction & Morph (Source Course Block -> Data Strip)
+  // ===========================================================================
+  const rawLocal = (corridorP - course.startP) / (course.endP - course.startP)
+  const localP = clamp(rawLocal, 0, 1)
+
+  // 1. Before extraction begins: course rests in SourceScheduleStage
+  if (localP <= 0.0001) {
+    return {
+      courseId: course.id,
+      stage: 'idle-source',
+      localP: 0,
+      visible: false,
+      zIndex: 10 + course.order,
+      x: sourceRect.x,
+      y: sourceRect.y,
+      width: sourceRect.width,
+      height: sourceRect.height,
+      scale: 1,
+      borderRadius: 5,
+      backgroundColor: course.sourceColor,
+      borderAlpha: 0,
+      shadowStrength: 0,
+      overlayOpacity: 0,
+      leftBarOpacity: 0,
+      leftBarToDotProgress: 0,
+      sourceTextOpacity: 1,
+      stripTextOpacity: 0,
+      isNormalizedStrip: false,
+      processLayerOpacity: 0,
+      processLabelOpacity: 0,
+      processAlignT: 0,
+      previewTextOpacity: 0,
+      compactRecordTextOpacity: 0,
+      destinationTextOpacity: 0,
+      staticSourceOpacity: 1,
+      staticCorridorStripOpacity: 0,
+      staticPreviewOpacity: 0,
+      staticDestinationOpacity: 0,
+    }
+  }
+
+  // 2. After Corridor 1 morph finishes: static Corridor Data Strip owns display
+  if (localP >= 0.9999) {
+    return {
+      courseId: course.id,
+      stage: 'stage-b-stream',
+      localP: 1,
+      visible: false,
+      zIndex: 20 + course.order,
+      x: corridorStripRect.x,
+      y: corridorStripRect.y,
+      width: corridorStripRect.width,
+      height: corridorStripRect.height,
+      scale: 1,
+      borderRadius: 8,
+      backgroundColor: 'rgb(250, 250, 252)',
+      borderAlpha: 0.085,
+      shadowStrength: 0,
+      overlayOpacity: 0,
+      leftBarOpacity: 1,
+      leftBarToDotProgress: 0,
+      sourceTextOpacity: 0,
+      stripTextOpacity: 1,
+      isNormalizedStrip: false,
+      processLayerOpacity: 0,
+      processLabelOpacity: 0,
+      processAlignT: 0,
+      previewTextOpacity: 0,
+      compactRecordTextOpacity: 0,
+      destinationTextOpacity: 0,
+      staticSourceOpacity: 0,
+      staticCorridorStripOpacity: 1,
+      staticPreviewOpacity: 0,
+      staticDestinationOpacity: 0,
+    }
+  }
+
+  // Spatial trajectory in section-local coordinates:
+  // Starts at the course's weekday column X (sourceRect.x) and travels ~126px (14vh) down into corridorStripRect.
+  // Since slots are spaced by S = 25vh (225px), [Y_i - 126, Y_i + 38] and [Y_{i+1} - 126, Y_{i+1} + 38] are strictly disjoint.
+  const vh = geometry.viewportHeight || 900
+  const travelY = Math.min(135, Math.max(105, vh * 0.14))
+  const startX = sourceRect.x
+  const startY = Math.max(sourceRect.y, corridorStripRect.y - travelY)
+  const isDirectFromSource = _index === 0 || Math.abs(startY - sourceRect.y) < 16
+
+  const staticSourceOpacity = 1 - clamp(localP / 0.08, 0, 1)
+  const detachX = startX + (geometry.isMobile ? 0 : 4)
+  const detachY = startY + 10
+
+  // Sub-stage A1 (0.00 -> 0.12): Detach from Source Block
+  if (localP <= 0.12) {
+    const u = localP / 0.12
+    const e = easeOutQuad(u)
+    return {
+      courseId: course.id,
+      stage: 'stage-a-extract',
+      localP,
+      visible: true,
+      zIndex: 40 + course.order,
+      x: lerp(startX, detachX, e),
+      y: lerp(startY, detachY, e),
+      width: sourceRect.width,
+      height: sourceRect.height,
+      scale: lerp(1, 1.015, e),
+      borderRadius: lerp(5, 6, e),
+      backgroundColor: course.sourceColor,
+      borderAlpha: 0,
+      shadowStrength: 0.52 * e,
+      overlayOpacity: isDirectFromSource ? 1 : clamp(u / 0.45, 0, 1),
+      leftBarOpacity: 0,
+      leftBarToDotProgress: 0,
+      sourceTextOpacity: 1 - 0.08 * e,
+      stripTextOpacity: 0,
+      isNormalizedStrip: false,
+      processLayerOpacity: 0,
+      processLabelOpacity: 0,
+      processAlignT: 0,
+      previewTextOpacity: 0,
+      compactRecordTextOpacity: 0,
+      destinationTextOpacity: 0,
+      staticSourceOpacity,
+      staticCorridorStripOpacity: 0,
+      staticPreviewOpacity: 0,
+      staticDestinationOpacity: 0,
+    }
+  }
+
+  // Sub-stage A2 (0.12 -> 0.90): Continuous Morph from Source Course Block -> Data Strip
+  if (localP <= 0.90) {
+    const u = (localP - 0.12) / (0.90 - 0.12)
+    const ePos = 0.25 * u + 0.75 * easeInOutCubic(u)
+    const eHeight = easeOutCubic(u)
+    const colorT = easeInOutQuad(clamp((u - 0.08) / 0.80, 0, 1))
+
+    return {
+      courseId: course.id,
+      stage: 'stage-a-extract',
+      localP,
+      visible: true,
+      zIndex: 40 + course.order,
+      x: lerp(detachX, corridorStripRect.x, ePos),
+      y: lerp(detachY, corridorStripRect.y, ePos),
+      width: lerp(sourceRect.width, corridorStripRect.width, ePos),
+      height: lerp(sourceRect.height, corridorStripRect.height, eHeight),
+      scale: lerp(1.015, 1.0, ePos),
+      borderRadius: lerp(6, 8, ePos),
+      backgroundColor: interpolateHexColor(course.sourceColor, '#FAFAFC', colorT),
+      borderAlpha: lerp(0, 0.085, colorT),
+      shadowStrength: lerp(0.52, 0.28, ePos),
+      overlayOpacity: 1,
+      leftBarOpacity: clamp((u - 0.14) / 0.45, 0, 1),
+      leftBarToDotProgress: 0,
+      sourceTextOpacity: 1 - clamp(u / 0.48, 0, 1),
+      stripTextOpacity: clamp((u - 0.30) / 0.52, 0, 1),
+      isNormalizedStrip: false,
+      processLayerOpacity: 0,
+      processLabelOpacity: 0,
+      processAlignT: 0,
+      previewTextOpacity: 0,
+      compactRecordTextOpacity: 0,
+      destinationTextOpacity: 0,
+      staticSourceOpacity: 0,
+      staticCorridorStripOpacity: 0,
+      staticPreviewOpacity: 0,
+      staticDestinationOpacity: 0,
+    }
+  }
+
+  // Sub-stage A3 (0.90 -> 1.00): Flush Settle into Corridor Data Strip Slot
+  const handoffT = clamp((localP - 0.90) / 0.10, 0, 1)
+  return {
+    courseId: course.id,
+    stage: 'stage-b-stream',
+    localP,
+    visible: true,
+    zIndex: 30 + course.order,
+    x: corridorStripRect.x,
+    y: corridorStripRect.y,
+    width: corridorStripRect.width,
+    height: corridorStripRect.height,
+    scale: 1,
+    borderRadius: 8,
+    backgroundColor: 'rgb(250, 250, 252)',
+    borderAlpha: 0.085,
+    shadowStrength: lerp(0.28, 0, handoffT),
+    overlayOpacity: 1 - handoffT,
+    leftBarOpacity: 1,
+    leftBarToDotProgress: 0,
+    sourceTextOpacity: 0,
+    stripTextOpacity: 1,
+    isNormalizedStrip: false,
+    processLayerOpacity: 0,
+    processLabelOpacity: 0,
+    processAlignT: 0,
+    previewTextOpacity: 0,
+    compactRecordTextOpacity: 0,
+    destinationTextOpacity: 0,
+    staticSourceOpacity: 0,
+    staticCorridorStripOpacity: handoffT,
+    staticPreviewOpacity: 0,
+    staticDestinationOpacity: 0,
+  }
+}
+
+/**
+ * Unified Phase 05 Course State Coordinator for globalP in [0, 1].
+ * In Round 1 Long Page Prototype, delegates to computeLongPageRound1CourseState.
  */
 export function computeFullPhase05CourseState(
   globalP: number,
@@ -958,78 +1362,75 @@ export function computeFullPhase05CourseState(
   index: number,
   geometry: StageGeometryCache
 ): CourseMorphState {
-  const clampedGlobal = clamp(globalP, 0, 1)
-  if (clampedGlobal <= PHASE05C_GLOBAL_START) {
-    const sourceToPreviewP = clamp(
-      (clampedGlobal - PHASE05B_GLOBAL_START) /
-        (PHASE05B_GLOBAL_END - PHASE05B_GLOBAL_START),
-      0,
-      1
-    )
-    return computeCourseMorphState(sourceToPreviewP, course, index, geometry)
-  }
-
-  const previewToDestinationP = clamp(
-    (clampedGlobal - PHASE05C_GLOBAL_START) /
-      (PHASE05C_GLOBAL_END - PHASE05C_GLOBAL_START),
-    0,
-    1
-  )
-  return computeDestinationMorphState(previewToDestinationP, course, index, geometry)
+  return computeLongPageRound1CourseState(globalP, course, index, geometry)
 }
 
-const STEP_WINDOWS: readonly [number, number][] = [
-  [0.0, 0.22],
-  [0.22, 0.52],
-  [0.52, 0.74],
-  [0.74, 1.0],
-]
-
 /**
- * Macro Stage State for Phase 05 (StageRail continuous interpolation + StageViewport protagonist weights + completion copy).
+ * Macro Stage State for Phase 05 Long Page Prototype Round 1:
+ * Editorial Timeline (01 Source -> Corridor 1 -> 02 Process, with 03/04 in future gray)
+ * + active course concurrency counters + Process Zone static handoff opacities.
  */
 export function computePhase05MacroState(
   globalP: number,
   courses: SchoolImportCourse[]
 ): Phase05MacroState {
   const p = clamp(globalP, 0, 1)
-  const sourceToPreviewP = clamp(
-    (p - PHASE05B_GLOBAL_START) / (PHASE05B_GLOBAL_END - PHASE05B_GLOBAL_START),
+  const corridorP = clamp(
+    (p - PHASE05_MOTION_CONFIG.corridorStartP) /
+      (PHASE05_MOTION_CONFIG.corridorEndP - PHASE05_MOTION_CONFIG.corridorStartP),
     0,
     1
   )
-  const previewToDestinationP = clamp(
-    (p - PHASE05C_GLOBAL_START) / (PHASE05C_GLOBAL_END - PHASE05C_GLOBAL_START),
+  const processP = clamp(
+    (p - PHASE05_MOTION_CONFIG.processStartP) /
+      (PHASE05_MOTION_CONFIG.processEndP - PHASE05_MOTION_CONFIG.processStartP),
     0,
     1
   )
 
-  // 1. Active step index for mobile indicator & accessibility
-  let activeStepIndex: 0 | 1 | 2 | 3 = 0
-  if (p >= 0.74) activeStepIndex = 3
-  else if (p >= 0.52) activeStepIndex = 2
-  else if (p >= 0.22) activeStepIndex = 1
+  // Count active main-motion (middle 50% of D=50vh: localP in [0.25, 0.75]) and secondary-motion courses in Corridor 1
+  let activeMainCourseCount = 0
+  let activeSecondaryCourseCount = 0
+  if (corridorP > 0 && corridorP < 1) {
+    for (const c of courses) {
+      const lp = (corridorP - c.startP) / (c.endP - c.startP)
+      if (lp > 0.001 && lp < 0.999) {
+        if (lp >= 0.25 && lp <= 0.75) {
+          activeMainCourseCount++
+        } else {
+          activeSecondaryCourseCount++
+        }
+      }
+    }
+  }
 
-  // 2. Continuous Stage Rail interpolation (DONE / CURRENT / FUTURE)
-  const tau = 0.032
-  const railSteps: StageRailStepState[] = STEP_WINDOWS.map(([sStart, sEnd], idx) => {
-    const enterT =
-      idx === 0
-        ? 1
-        : easeInOutQuad(clamp((p - (sStart - tau)) / (2 * tau), 0, 1))
-    const exitT =
-      idx === 3
-        ? 0
-        : easeInOutQuad(clamp((p - (sEnd - tau)) / (2 * tau), 0, 1))
+  // Active step index (Round 1 only activates 01 and 02; 03 and 04 remain future)
+  const activeStepIndex: 0 | 1 | 2 | 3 =
+    p >= PHASE05_MOTION_CONFIG.processStartP - 0.06 ? 1 : 0
 
-    const activeWeight = clamp(enterT * (1 - exitT), 0, 1)
-    const doneWeight = exitT
-    const effectiveEnd = idx === 3 ? 0.92 : sEnd
-    const segmentFill = clamp((p - sStart) / (effectiveEnd - sStart), 0, 1)
+  // Step 01 & Step 02 continuous Editorial Timeline weights
+  const step02EnterT = easeInOutQuad(
+    clamp((p - (PHASE05_MOTION_CONFIG.processStartP - 0.08)) / 0.10, 0, 1)
+  )
+  const step01Active = 1 - step02EnterT
+  const step01Done = step02EnterT
+  const step01SegmentFill = clamp(
+    p / PHASE05_MOTION_CONFIG.processStartP,
+    0,
+    1
+  )
 
-    // Rail segment thickness: 1px (future) -> 3.5px (current) -> 2px (done)
+  const step02Active = step02EnterT
+  const step02Done = 0
+  const step02SegmentFill = processP
+
+  const buildStepStyle = (
+    idx: number,
+    activeWeight: number,
+    doneWeight: number,
+    segmentFill: number
+  ): StageRailStepState => {
     const railWidthPx = lerp(lerp(1.0, 2.0, doneWeight), 3.5, activeWeight)
-    // Rail segment color: #D4D4D8 (future) -> #52525B (done) -> #111111 (current)
     const doneRailHex = interpolateHexColor(
       '#D4D4D8',
       '#52525B',
@@ -1037,12 +1438,10 @@ export function computePhase05MacroState(
     )
     const railColor = interpolateHexColor(doneRailHex, '#111111', activeWeight)
 
-    // Node diameter: 6px (future) -> 7.5px (done) -> 10px (current)
     const nodeSizePx = lerp(lerp(6.0, 7.5, doneWeight), 10.0, activeWeight)
     const doneNodeHex = interpolateHexColor('#D4D4D8', '#52525B', doneWeight)
     const nodeColor = interpolateHexColor(doneNodeHex, '#111111', activeWeight)
 
-    // Typography colors & weights: FUTURE (#A1A1AA) -> DONE (#6E6E77) -> CURRENT (#111111)
     const doneCodeHex = interpolateHexColor('#A1A1AA', '#6E6E77', doneWeight)
     const codeColor = interpolateHexColor(doneCodeHex, '#111111', activeWeight)
 
@@ -1067,157 +1466,63 @@ export function computePhase05MacroState(
       titleWeight,
       subtitleColor,
     }
-  })
-
-  // Continuous overall rail progress (0% -> 100%)
-  const totalRailFill =
-    (railSteps[0].segmentFill +
-      railSteps[1].segmentFill +
-      railSteps[2].segmentFill +
-      railSteps[3].segmentFill) *
-    25
-  const railProgressPct = clamp(totalRailFill, 0, 100)
-
-  // 3. Desktop StageViewport protagonist opacities (only 1 stage is main protagonist at a time)
-  // Step 01: SOURCE is protagonist (0.00 -> 0.22)
-  let sourceStageOpacity = 1
-  if (p <= 0.16) {
-    sourceStageOpacity = 1
-  } else if (p <= 0.25) {
-    sourceStageOpacity = lerp(1, 0.36, easeInOutQuad((p - 0.16) / 0.09))
-  } else if (p <= 0.47) {
-    sourceStageOpacity = 0.36
-  } else if (p <= 0.53) {
-    sourceStageOpacity = lerp(0.36, 0, easeInOutQuad((p - 0.47) / 0.06))
-  } else {
-    sourceStageOpacity = 0
   }
 
-  // Step 02: PROCESS is protagonist (0.22 -> 0.52)
-  let processStageOpacity = 0
-  if (p <= 0.12) {
-    processStageOpacity = 0
-  } else if (p <= 0.19) {
-    processStageOpacity = easeInOutQuad((p - 0.12) / 0.07)
-  } else if (p <= 0.48) {
-    processStageOpacity = 1
-  } else if (p <= 0.54) {
-    processStageOpacity = 1 - easeInOutQuad((p - 0.48) / 0.06)
-  } else {
-    processStageOpacity = 0
+  const railSteps: StageRailStepState[] = [
+    buildStepStyle(0, step01Active, step01Done, step01SegmentFill),
+    buildStepStyle(1, step02Active, step02Done, step02SegmentFill),
+    buildStepStyle(2, 0, 0, 0), // 03 导入预览 (Future in Round 1)
+    buildStepStyle(3, 0, 0, 0), // 04 写入本地 (Future in Round 1)
+  ]
+
+  const railProgressPct = clamp(
+    (step01SegmentFill * 0.5 + step02SegmentFill * 0.5) * 100,
+    4,
+    100
+  )
+
+  // Process Zone static handoff opacities for Node.js应用开发
+  const staticProcessEntryOpacity =
+    processP <= 0.0001 ? 1 : 1 - clamp(processP / 0.08, 0, 1)
+  let staticProcessFieldsOpacity = 0.16
+  if (processP > 0.0001 && processP < 0.88) {
+    staticProcessFieldsOpacity = 0.04
+  } else if (processP >= 0.88) {
+    const handoffT = clamp((processP - 0.88) / 0.12, 0, 1)
+    staticProcessFieldsOpacity = lerp(0.08, 1.0, handoffT)
   }
-
-  // Step 03: PREVIEW is protagonist (0.52 -> 0.74), receives in Step 02, feeds in Step 04
-  let previewStageOpacity = 0
-  if (p <= 0.18) {
-    previewStageOpacity = 0
-  } else if (p <= 0.26) {
-    previewStageOpacity = lerp(0, 0.86, easeInOutQuad((p - 0.18) / 0.08))
-  } else if (p <= 0.48) {
-    previewStageOpacity = 0.86
-  } else if (p <= 0.53) {
-    previewStageOpacity = lerp(0.86, 1, easeInOutQuad((p - 0.48) / 0.05))
-  } else if (p <= 0.73) {
-    previewStageOpacity = 1
-  } else if (p <= 0.86) {
-    previewStageOpacity = lerp(1, 0.72, easeInOutQuad((p - 0.73) / 0.13))
-  } else if (p <= 0.92) {
-    previewStageOpacity = lerp(0.72, 0, easeInOutQuad((p - 0.86) / 0.06))
-  } else {
-    previewStageOpacity = 0
-  }
-
-  // Step 04: DESTINATION is protagonist (0.74 -> 1.00), 100% hidden during Steps 01-03
-  let destinationStageOpacity = 0
-  if (p <= 0.68) {
-    destinationStageOpacity = 0
-  } else if (p <= 0.74) {
-    destinationStageOpacity = easeInOutQuad((p - 0.68) / 0.06)
-  } else {
-    destinationStageOpacity = 1
-  }
-
-  // Safe centering factors when CourseMorphOverlay is completely idle (all courses settled in static DOM)
-  // - sourceCenterOffsetFactor: 1 during 0.00..0.10, smoothly 0 by 0.155 (before PHASE05B_GLOBAL_START = 0.16)
-  const sourceCenterOffsetFactor =
-    p <= 0.10 ? 1 : p < 0.155 ? 1 - easeInOutCubic((p - 0.10) / 0.055) : 0
-
-  // - previewCenterOffsetFactor: 0 at <=0.505, rises to 1 during 0.505..0.55, holds 1 during 0.55..0.66, returns to 0 by 0.725 (before PHASE05C_GLOBAL_START = 0.73)
-  let previewCenterOffsetFactor = 0
-  if (p > 0.505 && p <= 0.55) {
-    previewCenterOffsetFactor = easeInOutCubic((p - 0.505) / 0.045)
-  } else if (p > 0.55 && p <= 0.66) {
-    previewCenterOffsetFactor = 1
-  } else if (p > 0.66 && p < 0.725) {
-    previewCenterOffsetFactor = 1 - easeInOutCubic((p - 0.66) / 0.065)
-  }
-
-  // - destinationCenterOffsetFactor: 0 at <=0.905 (after PHASE05C_GLOBAL_END = 0.91 finishes last course at 0.903), rises to 1 by 0.94
-  const destinationCenterOffsetFactor =
-    p <= 0.906 ? 0 : p < 0.94 ? easeInOutCubic((p - 0.906) / 0.034) : 1
-
-  // 4. Mobile single-protagonist stage opacities
-  const mobileSourceOpacity =
-    p <= 0.16 ? 1 : p < 0.22 ? 1 - easeInOutQuad((p - 0.16) / 0.06) : 0
-  const mobileProcessOpacity =
-    p <= 0.16
-      ? 0
-      : p < 0.22
-        ? easeInOutQuad((p - 0.16) / 0.06)
-        : p <= 0.47
-          ? 1
-          : p < 0.52
-            ? 1 - easeInOutQuad((p - 0.47) / 0.05)
-            : 0
-  const mobilePreviewOpacity =
-    p <= 0.47
-      ? 0
-      : p < 0.52
-        ? easeInOutQuad((p - 0.47) / 0.05)
-        : p <= 0.69
-          ? 1
-          : p < 0.74
-            ? 1 - easeInOutQuad((p - 0.69) / 0.05)
-            : 0
-  const mobileDestinationOpacity =
-    p <= 0.69 ? 0 : p < 0.74 ? easeInOutQuad((p - 0.69) / 0.05) : 1
-
-  // Count how many courses have settled into Destination
-  let settledDestinationCount = 0
-  for (const c of courses) {
-    const wP = (previewToDestinationP - c.destStartP) / (c.destEndP - c.destStartP)
-    if (wP >= 0.85) settledDestinationCount++
-  }
-
-  // Completion caption fades in (opacity 0->1, y 6px->0) after 9th course settles (storyP ~ 0.903)
-  const compT = easeOutQuad(clamp((p - 0.90) / (0.935 - 0.90), 0, 1))
-  const completionOpacity = compT
-  const completionY = lerp(6, 0, compT)
 
   return {
     globalP: p,
-    sourceToPreviewP,
-    previewToDestinationP,
+    corridorP,
+    processP,
+    sourceToPreviewP: corridorP,
+    previewToDestinationP: 0,
     activeStepIndex,
     railProgressPct,
     railSteps,
-    sourceStageOpacity,
-    processStageOpacity,
-    previewStageOpacity,
-    destinationStageOpacity,
-    sourceCenterOffsetFactor,
-    previewCenterOffsetFactor,
-    destinationCenterOffsetFactor,
-    mobileSourceOpacity,
-    mobileProcessOpacity,
-    mobilePreviewOpacity,
-    mobileDestinationOpacity,
-    upstreamOpacity: sourceStageOpacity,
+    activeMainCourseCount,
+    activeSecondaryCourseCount,
+    staticProcessEntryOpacity,
+    staticProcessFieldsOpacity,
+    sourceStageOpacity: 1,
+    processStageOpacity: 1,
+    previewStageOpacity: 0,
+    destinationStageOpacity: 0,
+    sourceCenterOffsetFactor: 0,
+    previewCenterOffsetFactor: 0,
+    destinationCenterOffsetFactor: 0,
+    mobileSourceOpacity: 1,
+    mobileProcessOpacity: 1,
+    mobilePreviewOpacity: 0,
+    mobileDestinationOpacity: 0,
+    upstreamOpacity: 1,
     upstreamScale: 1,
-    previewContainerOpacity: previewStageOpacity,
-    destinationContainerOpacity: destinationStageOpacity,
-    completionOpacity,
-    completionY,
-    settledDestinationCount,
+    previewContainerOpacity: 0,
+    destinationContainerOpacity: 0,
+    completionOpacity: 0,
+    completionY: 6,
+    settledDestinationCount: 0,
   }
 }
+

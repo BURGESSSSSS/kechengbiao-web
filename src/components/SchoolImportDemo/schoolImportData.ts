@@ -35,6 +35,80 @@ export const SCHOOL_PERIODS = [1, 2, 3, 4, 5, 6, 7, 8] as const
 
 export const APP_TIME_ROWS = ['08:00', '10:00', '14:00', '16:00'] as const
 
+export interface Phase05MotionConfig {
+  courseCount: number
+  sourceZoneMinVh: number
+  sourceReadingHoldVh: number
+  corridorCourseDurationVh: number // D = 50vh
+  corridorCourseStaggerVh: number // S = 25vh
+  corridor1HeightVh: number // (N - 1) * S + D = 250vh
+  processZoneMinVh: number
+  processExpandDurationVh: number
+  processHoldVh: number
+  // Normalized globalP windows in Round 1 Long Page [0, 1]
+  sourceHoldEndP: number
+  corridorStartP: number
+  corridorEndP: number
+  processStartP: number
+  processEndP: number
+}
+
+const CORRIDOR_COURSE_COUNT = 9
+const CORRIDOR_D_VH = 50
+const CORRIDOR_S_VH = 25
+const CORRIDOR_1_HEIGHT_VH =
+  (CORRIDOR_COURSE_COUNT - 1) * CORRIDOR_S_VH + CORRIDOR_D_VH // 250vh
+const SOURCE_HOLD_VH = 24
+const PROCESS_EXPAND_VH = 48
+const PROCESS_HOLD_VH = 18
+const TOTAL_ACTIVE_SCROLL_VH =
+  SOURCE_HOLD_VH + CORRIDOR_1_HEIGHT_VH + PROCESS_EXPAND_VH + PROCESS_HOLD_VH // 340vh
+
+export const PHASE05_MOTION_CONFIG: Phase05MotionConfig = {
+  courseCount: CORRIDOR_COURSE_COUNT,
+  sourceZoneMinVh: 80,
+  sourceReadingHoldVh: SOURCE_HOLD_VH,
+  corridorCourseDurationVh: CORRIDOR_D_VH,
+  corridorCourseStaggerVh: CORRIDOR_S_VH,
+  corridor1HeightVh: CORRIDOR_1_HEIGHT_VH,
+  processZoneMinVh: 92,
+  processExpandDurationVh: PROCESS_EXPAND_VH,
+  processHoldVh: PROCESS_HOLD_VH,
+  sourceHoldEndP: Number((SOURCE_HOLD_VH / TOTAL_ACTIVE_SCROLL_VH).toFixed(4)), // ~0.0706
+  corridorStartP: Number((SOURCE_HOLD_VH / TOTAL_ACTIVE_SCROLL_VH).toFixed(4)), // ~0.0706
+  corridorEndP: Number(
+    ((SOURCE_HOLD_VH + CORRIDOR_1_HEIGHT_VH) / TOTAL_ACTIVE_SCROLL_VH).toFixed(4)
+  ), // ~0.8059
+  processStartP: Number(
+    ((SOURCE_HOLD_VH + CORRIDOR_1_HEIGHT_VH) / TOTAL_ACTIVE_SCROLL_VH).toFixed(4)
+  ), // ~0.8059
+  processEndP: Number(
+    (
+      (SOURCE_HOLD_VH + CORRIDOR_1_HEIGHT_VH + PROCESS_EXPAND_VH) /
+      TOTAL_ACTIVE_SCROLL_VH
+    ).toFixed(4)
+  ), // ~0.9471
+}
+
+function corridorStartPForIndex(idx: number): number {
+  return Number(
+    (
+      (idx * PHASE05_MOTION_CONFIG.corridorCourseStaggerVh) /
+      PHASE05_MOTION_CONFIG.corridor1HeightVh
+    ).toFixed(4)
+  )
+}
+
+function corridorEndPForIndex(idx: number): number {
+  return Number(
+    (
+      (idx * PHASE05_MOTION_CONFIG.corridorCourseStaggerVh +
+        PHASE05_MOTION_CONFIG.corridorCourseDurationVh) /
+      PHASE05_MOTION_CONFIG.corridor1HeightVh
+    ).toFixed(4)
+  )
+}
+
 export interface Phase05StageStepMeta {
   index: number
   code: '01' | '02' | '03' | '04'
@@ -51,49 +125,46 @@ export const PHASE05_STAGE_STEPS: readonly Phase05StageStepMeta[] = [
     title: '教务系统源课表',
     subtitle: '企业微信内打开',
     startP: 0.0,
-    endP: 0.22,
+    endP: PHASE05_MOTION_CONFIG.corridorStartP,
   },
   {
     index: 1,
     code: '02',
     title: '结构化抽取',
     subtitle: '提取课程字段',
-    startP: 0.22,
-    endP: 0.52,
+    startP: PHASE05_MOTION_CONFIG.corridorStartP,
+    endP: 1.0,
   },
   {
     index: 2,
     code: '03',
     title: '导入预览',
     subtitle: '写入前确认',
-    startP: 0.52,
-    endP: 0.74,
+    startP: 1.0,
+    endP: 1.0,
   },
   {
     index: 3,
     code: '04',
     title: '写入本地',
     subtitle: '离线保存可查',
-    startP: 0.74,
+    startP: 1.0,
     endP: 1.0,
   },
 ] as const
 
 /**
  * Single Unified Course Data Model for Phase 05 (Shandong Business Institute "我的课表" -> App Local Schedule).
- * Shared across all 4 representations:
- * 1. SourceCourseBlock (5x8 school timetable grid)
- * 2. DataStrip & ProcessFieldOrganizer (extracted data strip & field alignment)
- * 3. ImportPreviewRow (structured import preview list)
- * 4. DestinationCourseBlock (5x4 native App week view)
  *
- * Pacing note (Narrative Redesign):
- * - Step 02 (sourceToPreviewP in [0, 1]): per-course duration = 0.20, stagger step = 0.095
- *   -> active overlap reduced from 3.75 courses to ~2.1 courses at a time.
- * - Step 04 (previewToDestinationP in [0, 1]): 3 weekday groups with wider spacing for clear visual tracking.
+ * Pacing note (Long Page Prototype Round 1):
+ * - Corridor 1 (corridorP in [0, 1] over 250vh):
+ *   D = 50vh -> duration = 50 / 250 = 0.20
+ *   S = 25vh -> stagger  = 25 / 250 = 0.10
+ *   At any scroll position, at most 1 course is in main motion (localP 30%–70%)
+ *   and at most 1 course is in secondary motion (<30% or >70%).
  */
 export const SCHOOL_IMPORT_COURSES: SchoolImportCourse[] = [
-  // === Group 1｜周一 (3 courses: 0.04 -> 0.38 in previewToDestinationP) ===
+  // === Group 1｜周一 ===
   {
     id: 'course-mon-1-2',
     order: 1,
@@ -110,8 +181,8 @@ export const SCHOOL_IMPORT_COURSES: SchoolImportCourse[] = [
     sourceColor: '#F06878',
     appTheme: 'warm',
     weekLabel: '第7周',
-    startP: 0.02,
-    endP: 0.22,
+    startP: corridorStartPForIndex(0), // 0.00
+    endP: corridorEndPForIndex(0), // 0.20
     writeGroup: 1,
     destStartP: 0.04,
     destEndP: 0.28,
@@ -132,8 +203,8 @@ export const SCHOOL_IMPORT_COURSES: SchoolImportCourse[] = [
     sourceColor: '#9A79D9',
     appTheme: 'lavender',
     weekLabel: '第7周',
-    startP: 0.115,
-    endP: 0.315,
+    startP: corridorStartPForIndex(1), // 0.10
+    endP: corridorEndPForIndex(1), // 0.30
     writeGroup: 1,
     destStartP: 0.09,
     destEndP: 0.33,
@@ -142,7 +213,7 @@ export const SCHOOL_IMPORT_COURSES: SchoolImportCourse[] = [
     id: 'course-mon-5-6',
     order: 3,
     name: 'Node.js应用开发',
-    displayName: 'Node.js 应用开发',
+    displayName: 'Node.js应用开发',
     day: '周一',
     dayCol: 0,
     startPeriod: 5,
@@ -154,14 +225,14 @@ export const SCHOOL_IMPORT_COURSES: SchoolImportCourse[] = [
     sourceColor: '#2CC0CE',
     appTheme: 'lavender',
     weekLabel: '第7周',
-    startP: 0.21,
-    endP: 0.41,
+    startP: corridorStartPForIndex(2), // 0.20
+    endP: corridorEndPForIndex(2), // 0.40
     writeGroup: 1,
     destStartP: 0.14,
     destEndP: 0.38,
   },
 
-  // === Group 2｜周二～周四 (4 courses: 0.34 -> 0.73 in previewToDestinationP) ===
+  // === Group 2｜周二～周四 ===
   {
     id: 'course-tue-3-4',
     order: 4,
@@ -178,8 +249,8 @@ export const SCHOOL_IMPORT_COURSES: SchoolImportCourse[] = [
     sourceColor: '#F06E52',
     appTheme: 'warm',
     weekLabel: '第7周',
-    startP: 0.305,
-    endP: 0.505,
+    startP: corridorStartPForIndex(3), // 0.30
+    endP: corridorEndPForIndex(3), // 0.50
     writeGroup: 2,
     destStartP: 0.34,
     destEndP: 0.58,
@@ -200,8 +271,8 @@ export const SCHOOL_IMPORT_COURSES: SchoolImportCourse[] = [
     sourceColor: '#D98858',
     appTheme: 'warm',
     weekLabel: '第7周',
-    startP: 0.4,
-    endP: 0.6,
+    startP: corridorStartPForIndex(4), // 0.40
+    endP: corridorEndPForIndex(4), // 0.60
     writeGroup: 2,
     destStartP: 0.39,
     destEndP: 0.63,
@@ -222,8 +293,8 @@ export const SCHOOL_IMPORT_COURSES: SchoolImportCourse[] = [
     sourceColor: '#EA88CF',
     appTheme: 'lavender',
     weekLabel: '第7周',
-    startP: 0.495,
-    endP: 0.695,
+    startP: corridorStartPForIndex(5), // 0.50
+    endP: corridorEndPForIndex(5), // 0.70
     writeGroup: 2,
     destStartP: 0.44,
     destEndP: 0.68,
@@ -244,14 +315,14 @@ export const SCHOOL_IMPORT_COURSES: SchoolImportCourse[] = [
     sourceColor: '#D98858',
     appTheme: 'warm',
     weekLabel: '第7周',
-    startP: 0.59,
-    endP: 0.79,
+    startP: corridorStartPForIndex(6), // 0.60
+    endP: corridorEndPForIndex(6), // 0.80
     writeGroup: 2,
     destStartP: 0.49,
     destEndP: 0.73,
   },
 
-  // === Group 3｜周五 (2 courses: 0.69 -> 0.96 in previewToDestinationP) ===
+  // === Group 3｜周五 ===
   {
     id: 'course-fri-3-4',
     order: 8,
@@ -268,8 +339,8 @@ export const SCHOOL_IMPORT_COURSES: SchoolImportCourse[] = [
     sourceColor: '#F06878',
     appTheme: 'warm',
     weekLabel: '第7周',
-    startP: 0.685,
-    endP: 0.885,
+    startP: corridorStartPForIndex(7), // 0.70
+    endP: corridorEndPForIndex(7), // 0.90
     writeGroup: 3,
     destStartP: 0.69,
     destEndP: 0.91,
@@ -278,7 +349,7 @@ export const SCHOOL_IMPORT_COURSES: SchoolImportCourse[] = [
     id: 'course-fri-7-8',
     order: 9,
     name: 'Node.js应用开发',
-    displayName: 'Node.js 应用开发',
+    displayName: 'Node.js应用开发',
     day: '周五',
     dayCol: 4,
     startPeriod: 7,
@@ -290,8 +361,8 @@ export const SCHOOL_IMPORT_COURSES: SchoolImportCourse[] = [
     sourceColor: '#2CC0CE',
     appTheme: 'lavender',
     weekLabel: '第7周',
-    startP: 0.78,
-    endP: 0.98,
+    startP: corridorStartPForIndex(8), // 0.80
+    endP: corridorEndPForIndex(8), // 1.00
     writeGroup: 3,
     destStartP: 0.74,
     destEndP: 0.96,
