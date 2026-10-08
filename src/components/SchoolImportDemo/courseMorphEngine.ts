@@ -108,6 +108,8 @@ export interface Phase05MacroState {
   activeStepIndex: 0 | 1 | 2 | 3
   railProgressPct: number
   railSteps: StageRailStepState[]
+  corridorTransitionHintOpacity: number
+  corridorTransitionHintY: number
   // Active course motion telemetry for Round 1 verification
   activeMainCourseCount: number
   activeSecondaryCourseCount: number
@@ -1225,12 +1227,14 @@ export function computeLongPageRound1CourseState(
   }
 
   // Spatial trajectory in section-local coordinates:
-  // Starts at the course's weekday column X (sourceRect.x) and travels ~126px (14vh) down into corridorStripRect.
-  // Since slots are spaced by S = 25vh (225px), [Y_i - 126, Y_i + 38] and [Y_{i+1} - 126, Y_{i+1} + 38] are strictly disjoint.
+  // Course 0 detaches directly from its pink cell in SourceScheduleStage;
+  // Courses 1..8 start at their weekday column X and travel ~95px (10.5vh) into corridorStripRect.
+  // Since slots are spaced by 15.5vh (~140px), consecutive trajectories are strictly disjoint.
   const vh = geometry.viewportHeight || 900
-  const travelY = Math.min(135, Math.max(105, vh * 0.14))
+  const travelY = Math.min(104, Math.max(82, vh * 0.105))
   const startX = sourceRect.x
-  const startY = Math.max(sourceRect.y, corridorStripRect.y - travelY)
+  const startY =
+    _index === 0 ? sourceRect.y : Math.max(sourceRect.y, corridorStripRect.y - travelY)
   const isDirectFromSource = _index === 0 || Math.abs(startY - sourceRect.y) < 16
 
   const staticSourceOpacity = 1 - clamp(localP / 0.08, 0, 1)
@@ -1354,7 +1358,7 @@ export function computeLongPageRound1CourseState(
 
 /**
  * Unified Phase 05 Course State Coordinator for globalP in [0, 1].
- * In Round 1 Long Page Prototype, delegates to computeLongPageRound1CourseState.
+ * In Round 1 / 1.1 Long Page Prototype, delegates to computeLongPageRound1CourseState.
  */
 export function computeFullPhase05CourseState(
   globalP: number,
@@ -1366,8 +1370,8 @@ export function computeFullPhase05CourseState(
 }
 
 /**
- * Macro Stage State for Phase 05 Long Page Prototype Round 1:
- * Editorial Timeline (01 Source -> Corridor 1 -> 02 Process, with 03/04 in future gray)
+ * Macro Stage State for Phase 05 Long Page Prototype Round 1.1:
+ * Locally Sticky StageRail (01 Source -> sedang extracting -> 02 Process, with 03/04 in future gray)
  * + active course concurrency counters + Process Zone static handoff opacities.
  */
 export function computePhase05MacroState(
@@ -1388,7 +1392,7 @@ export function computePhase05MacroState(
     1
   )
 
-  // Count active main-motion (middle 50% of D=50vh: localP in [0.25, 0.75]) and secondary-motion courses in Corridor 1
+  // Count active main-motion (middle 50% of D=40vh: localP in [0.25, 0.75]) and secondary-motion courses in Corridor 1
   let activeMainCourseCount = 0
   let activeSecondaryCourseCount = 0
   if (corridorP > 0 && corridorP < 1) {
@@ -1404,25 +1408,26 @@ export function computePhase05MacroState(
     }
   }
 
-  // Active step index (Round 1 only activates 01 and 02; 03 and 04 remain future)
-  const activeStepIndex: 0 | 1 | 2 | 3 =
-    p >= PHASE05_MOTION_CONFIG.processStartP - 0.06 ? 1 : 0
+  // Active step index (Round 1.1 only activates 01 and 02; 03 and 04 remain future)
+  const activeStepIndex: 0 | 1 | 2 | 3 = corridorP >= 0.65 ? 1 : 0
 
-  // Step 01 & Step 02 continuous Editorial Timeline weights
-  const step02EnterT = easeInOutQuad(
-    clamp((p - (PHASE05_MOTION_CONFIG.processStartP - 0.08)) / 0.10, 0, 1)
-  )
-  const step01Active = 1 - step02EnterT
-  const step01Done = step02EnterT
-  const step01SegmentFill = clamp(
-    p / PHASE05_MOTION_CONFIG.processStartP,
-    0,
-    1
-  )
+  // Continuous, non-abrupt StageRail weights across Corridor 1 (Section 12:
+  // 01 gradually de-weights, connector continuously fills, 02 gradually strengthens)
+  const step01DeWeightT = easeInOutQuad(clamp((corridorP - 0.15) / 0.62, 0, 1))
+  const step01Active = 1 - step01DeWeightT
+  const step01Done = step01DeWeightT
+  const step01SegmentFill = clamp(corridorP / 0.85, 0, 1)
 
-  const step02Active = step02EnterT
+  const step02StrengthenT = easeInOutQuad(clamp((corridorP - 0.32) / 0.56, 0, 1))
+  const step02Active = step02StrengthenT
   const step02Done = 0
   const step02SegmentFill = processP
+
+  // Auxiliary transition semantic hint ("正在提取课程") between 01 and 02 (Sections 10–11)
+  const hintFadeIn = clamp((corridorP - 0.03) / 0.12, 0, 1)
+  const hintFadeOut = 1 - clamp((corridorP - 0.72) / 0.16, 0, 1)
+  const corridorTransitionHintOpacity = easeInOutQuad(hintFadeIn * hintFadeOut)
+  const corridorTransitionHintY = lerp(3, 0, hintFadeIn)
 
   const buildStepStyle = (
     idx: number,
@@ -1471,8 +1476,8 @@ export function computePhase05MacroState(
   const railSteps: StageRailStepState[] = [
     buildStepStyle(0, step01Active, step01Done, step01SegmentFill),
     buildStepStyle(1, step02Active, step02Done, step02SegmentFill),
-    buildStepStyle(2, 0, 0, 0), // 03 导入预览 (Future in Round 1)
-    buildStepStyle(3, 0, 0, 0), // 04 写入本地 (Future in Round 1)
+    buildStepStyle(2, 0, 0, 0), // 03 导入预览 (Future in Round 1.1)
+    buildStepStyle(3, 0, 0, 0), // 04 写入本地 (Future in Round 1.1)
   ]
 
   const railProgressPct = clamp(
@@ -1501,6 +1506,8 @@ export function computePhase05MacroState(
     activeStepIndex,
     railProgressPct,
     railSteps,
+    corridorTransitionHintOpacity,
+    corridorTransitionHintY,
     activeMainCourseCount,
     activeSecondaryCourseCount,
     staticProcessEntryOpacity,

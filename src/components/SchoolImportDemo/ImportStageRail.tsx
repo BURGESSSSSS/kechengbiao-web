@@ -8,6 +8,7 @@ export interface StageRailDomRefs {
   stepCodes: (HTMLSpanElement | null)[]
   stepTitles: (HTMLDivElement | null)[]
   stepSubtitles: (HTMLDivElement | null)[]
+  transitionHintEl?: HTMLDivElement | null
   // Mobile compact progress header refs
   mobileStepCode: HTMLSpanElement | null
   mobileStepTitle: HTMLSpanElement | null
@@ -16,19 +17,20 @@ export interface StageRailDomRefs {
 }
 
 /**
- * Editorial Timeline Step Block for Spatial Narrative Long Page (Section 13).
- * Part of the natural document flow — never sticky or fixed.
+ * Editorial Timeline Step Block for Spatial Narrative Long Page (Sections 9–12).
  */
 export const EditorialStageRailNode: React.FC<{
   stepIndex: number
   railRefs: React.MutableRefObject<StageRailDomRefs>
   showConnectorBelow?: boolean
   connectorClassName?: string
+  showCorridorTransitionHint?: boolean
 }> = ({
   stepIndex,
   railRefs,
   showConnectorBelow = true,
   connectorClassName = 'bottom-[-12px]',
+  showCorridorTransitionHint = false,
 }) => {
   const step = PHASE05_STAGE_STEPS[stepIndex]
   const isFirst = stepIndex === 0
@@ -120,14 +122,32 @@ export const EditorialStageRailNode: React.FC<{
         >
           {step.subtitle}
         </div>
+
+        {/* Auxiliary 01 -> 02 Transition Semantic Hint (Sections 10–11: NOT a 5th stage node) */}
+        {showCorridorTransitionHint && (
+          <div
+            ref={(el) => {
+              railRefs.current.transitionHintEl = el
+            }}
+            data-rail-transition-hint="true"
+            style={{
+              opacity: 0,
+              transform: 'translate3d(0, 2px, 0)',
+              willChange: 'opacity, transform',
+            }}
+            className="mt-3.5 pl-[22px] text-[11.5px] leading-none text-neutral-600 font-medium tracking-tight"
+          >
+            正在提取课程
+          </div>
+        )}
       </div>
     </div>
   )
 }
 
 /**
- * Full-Height Editorial Timeline Rail spanning SourceZone -> Corridor 1 -> ProcessZone
- * (Section 13: Non-sticky, non-fixed spatial editorial timeline).
+ * Locally Sticky Desktop StageRail (Sections 9–12: ONLY Rail is sticky at top: 136px;
+ * Main Stage / Source / Corridor / Process / Overlay scroll normally).
  */
 export const ImportStageRail: React.FC<{
   railRefs: React.MutableRefObject<StageRailDomRefs>
@@ -136,16 +156,19 @@ export const ImportStageRail: React.FC<{
     <aside
       data-stage-rail="desktop"
       aria-label="课表导入阶段时间轴"
-      className="hidden lg:flex flex-col w-[216px] xl:w-[232px] shrink-0 select-none pr-3"
+      className="hidden lg:flex flex-col w-[224px] xl:w-[240px] shrink-0 select-none pr-3 sticky top-[136px] self-start"
     >
       {PHASE05_STAGE_STEPS.map((step, idx) => {
         const isLast = idx === PHASE05_STAGE_STEPS.length - 1
+        const isFirst = idx === 0
         return (
-          <div key={step.code} className={isLast ? 'pb-2' : 'pb-9'}>
+          <div key={step.code} className={isLast ? 'pb-2' : isFirst ? 'pb-7' : 'pb-8'}>
             <EditorialStageRailNode
               stepIndex={idx}
               railRefs={railRefs}
               showConnectorBelow={!isLast}
+              connectorClassName="bottom-0"
+              showCorridorTransitionHint={isFirst}
             />
           </div>
         )

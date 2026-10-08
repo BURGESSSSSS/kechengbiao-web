@@ -26,7 +26,7 @@ import {
   type StageGeometryCache,
 } from './courseMorphEngine'
 import {
-  EditorialStageRailNode,
+  ImportStageRail,
   MobileStageHeader,
   type StageRailDomRefs,
 } from './ImportStageRail'
@@ -801,6 +801,11 @@ export const SchoolImportDemo: React.FC = () => {
         }
       }
 
+      if (rRefs.transitionHintEl) {
+        rRefs.transitionHintEl.style.opacity = macro.corridorTransitionHintOpacity.toFixed(3)
+        rRefs.transitionHintEl.style.transform = `translate3d(0, ${macro.corridorTransitionHintY.toFixed(2)}px, 0)`
+      }
+
       const activeMeta = PHASE05_STAGE_STEPS[macro.activeStepIndex]
       if (rRefs.mobileStepCode) {
         rRefs.mobileStepCode.textContent = `${activeMeta.code} / 04`
@@ -923,7 +928,7 @@ export const SchoolImportDemo: React.FC = () => {
           }
         }
 
-        // 3e. Layers 4..6 (kept hidden in Round 1)
+        // 3e. Layers 4..6 (kept hidden in Round 1 / 1.1)
         const prevLayer = morphPreviewLayerRefs.current[course.id]
         if (prevLayer) {
           prevLayer.style.opacity = '0'
@@ -980,8 +985,11 @@ export const SchoolImportDemo: React.FC = () => {
     const ctx = gsap.context(() => {
       ScrollTrigger.create({
         trigger: sourceZone,
-        start: () => (window.innerWidth < 1024 ? 'top top+=88' : 'top top+=140'),
-        end: () => `+=${Math.round((window.innerHeight || 900) * 3.4)}`,
+        start: () => (window.innerWidth < 1024 ? 'top top+=110' : 'top top+=240'),
+        end: () =>
+          `+=${Math.round(
+            (window.innerHeight || 900) * (PHASE05_MOTION_CONFIG.totalActiveScrollVh / 100),
+          )}`,
         scrub: true,
         invalidateOnRefresh: true,
         onRefresh: (self) => {
@@ -1029,10 +1037,12 @@ export const SchoolImportDemo: React.FC = () => {
       id="school-import-demo"
       ref={sectionRef}
       data-phase05-state={previewState}
-      data-phase05-architecture="spatial-long-page-round-1"
+      data-phase05-architecture="spatial-long-page-round-1.1"
       data-corridor-d-vh={PHASE05_MOTION_CONFIG.corridorCourseDurationVh}
       data-corridor-s-vh={PHASE05_MOTION_CONFIG.corridorCourseStaggerVh}
       data-corridor1-height-vh={PHASE05_MOTION_CONFIG.corridor1HeightVh}
+      data-source-overlap-ratio={PHASE05_MOTION_CONFIG.sourceCorridorOverlapRatio}
+      data-process-overlap-ratio={PHASE05_MOTION_CONFIG.processCorridorOverlapRatio}
       data-phase05b-start={PHASE05B_GLOBAL_START}
       data-phase05b-end={PHASE05B_GLOBAL_END}
       data-phase05c-start={PHASE05C_GLOBAL_START}
@@ -1067,158 +1077,128 @@ export const SchoolImportDemo: React.FC = () => {
           )}
 
           {/* =================================================================
-              PART 2: ZONE 1 · SOURCE (Section 4)
-              Real document flow (~76-80vh), reading hold before extraction.
+              SPATIAL NARRATIVE TWO-COLUMN FLOW:
+              - Left Column: Locally sticky Stage Rail (ONLY Stage Rail is sticky)
+              - Right Column: Normal scrolling Long Page (SourceZone -> Corridor 1 -> ProcessZone)
+                with spatial overlap (Source front 28%, Process back 32%)
              ================================================================= */}
-          {showSource && (
-            <div
-              ref={sourceZoneRef}
-              data-zone="source"
-              className="relative mt-8 sm:mt-10 lg:mt-12 min-h-[76vh] flex flex-col lg:flex-row lg:items-stretch gap-6 lg:gap-12"
-            >
-              {/* Left Editorial Timeline Column: Step 01 Node + Continuous Connector across SourceZone + Corridor 1 */}
-              {previewState === 'ALL' && (
-                <aside
-                  data-stage-rail="desktop"
-                  aria-label="课表导入阶段时间轴"
-                  className="hidden lg:flex flex-col w-[224px] xl:w-[240px] shrink-0 relative pt-2"
+          <div className="mt-8 sm:mt-10 lg:mt-12 flex flex-col lg:flex-row lg:items-stretch gap-6 lg:gap-12">
+            {previewState === 'ALL' && <ImportStageRail railRefs={railRefs} />}
+
+            <div className="flex-1 min-w-0">
+              {/* =============================================================
+                  PART 2: ZONE 1 · SOURCE
+                  Normal document flow; stays visible in upper viewport during
+                  the first ~28-30% of Corridor 1 via spatial overlap.
+                 ============================================================= */}
+              {showSource && (
+                <div
+                  ref={sourceZoneRef}
+                  data-zone="source"
+                  className="relative z-10 min-h-[56vh] flex items-start"
                 >
-                  <EditorialStageRailNode
-                    stepIndex={0}
-                    railRefs={railRefs}
-                    showConnectorBelow={true}
-                    connectorClassName="bottom-[-250vh]"
-                  />
-                </aside>
+                  <div className="w-full max-w-[560px]">
+                    <SourceScheduleStage
+                      courses={SCHOOL_IMPORT_COURSES}
+                      registerSourceNode={(id, el) => {
+                        staticSourceRefs.current[id] = el
+                      }}
+                    />
+                  </div>
+                </div>
               )}
 
-              {/* Right Main Stage Column: SourceScheduleStage */}
-              <div className="flex-1 min-w-0 flex items-start">
-                <div className="w-full max-w-[560px]">
-                  <SourceScheduleStage
-                    courses={SCHOOL_IMPORT_COURSES}
-                    registerSourceNode={(id, el) => {
-                      staticSourceRefs.current[id] = el
-                    }}
-                  />
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* =================================================================
-              PART 3: CORRIDOR 1 · SOURCE -> PROCESS (Sections 5–10)
-              Real document flow height = 250vh ((9 - 1) * 25vh + 50vh).
-              9 courses sequentially detach from Source and morph into Data Strips.
-             ================================================================= */}
-          {previewState === 'ALL' && (
-            <div
-              ref={corridor1Ref}
-              data-corridor="source-to-process"
-              style={{ height: `${PHASE05_MOTION_CONFIG.corridor1HeightVh}vh` }}
-              className="relative flex flex-col lg:flex-row lg:items-stretch gap-6 lg:gap-12"
-            >
-              {/* Left Editorial Timeline Spacer (Connector from Step 01 spans through here) */}
-              <div
-                aria-hidden="true"
-                className="hidden lg:block w-[224px] xl:w-[240px] shrink-0"
-              />
-
-              {/* Right Corridor Stream Column: 9 Spatially Distributed Data Strip Slots */}
-              <div className="flex-1 min-w-0 relative h-full">
-                <div className="w-full max-w-[560px] h-full relative">
-                  {SCHOOL_IMPORT_COURSES.map((course, idx) => {
-                    // Spaced at 22 + 25*i vh (22vh..222vh) inside the 250vh corridor so each course morphs in the viewport center and leaves 28vh before ProcessZone
-                    const topVh = 22 + idx * PHASE05_MOTION_CONFIG.corridorCourseStaggerVh
-                    const topPct = (topVh / PHASE05_MOTION_CONFIG.corridor1HeightVh) * 100
-                    return (
-                      <div
-                        key={course.id}
-                        style={{ top: `${topPct.toFixed(2)}%` }}
-                        className="absolute left-0 right-0 -translate-y-1/2"
-                      >
-                        {/* Subtle stream slot guide */}
+              {/* =============================================================
+                  PART 3: CORRIDOR 1 · SOURCE -> PROCESS (Round 1.1)
+                  Height = 200vh (D=40vh, S=20vh).
+                  - Front 28% (-56vh) overlaps with SourceZone
+                  - Back 32% (-64vh on ProcessZone) overlaps with ProcessZone
+                 ============================================================= */}
+              {previewState === 'ALL' && (
+                <div
+                  ref={corridor1Ref}
+                  data-corridor="source-to-process"
+                  data-corridor-front-overlap={PHASE05_MOTION_CONFIG.sourceCorridorOverlapRatio}
+                  data-corridor-back-overlap={PHASE05_MOTION_CONFIG.processCorridorOverlapRatio}
+                  style={{
+                    height: `${PHASE05_MOTION_CONFIG.corridor1HeightVh}vh`,
+                    marginTop: `-${Math.round(
+                      PHASE05_MOTION_CONFIG.corridor1HeightVh *
+                        PHASE05_MOTION_CONFIG.sourceCorridorOverlapRatio,
+                    )}vh`,
+                  }}
+                  className="relative z-10 pointer-events-none"
+                >
+                  <div className="w-full max-w-[560px] h-full relative">
+                    {SCHOOL_IMPORT_COURSES.map((course, idx) => {
+                      // 9 Data Strip slots distributed from 56vh (just below Source card) to 180vh (just above Process card at 198vh)
+                      const topVh = 56 + idx * 15.5
+                      const topPct = (topVh / PHASE05_MOTION_CONFIG.corridor1HeightVh) * 100
+                      return (
                         <div
-                          aria-hidden="true"
-                          className="pointer-events-none absolute inset-0 rounded-[8px] border border-dashed border-slate-900/[0.05] bg-slate-900/[0.008]"
-                        />
-                        <DataStripItem
-                          course={course}
-                          initialOpacity={0}
-                          anchorAttr={`corridor-strip-${idx}`}
-                          registerStripEl={(el) => {
-                            staticCorridorStripRefs.current[course.id] = el
-                          }}
-                        />
-                      </div>
-                    )
-                  })}
+                          key={course.id}
+                          style={{ top: `${topPct.toFixed(2)}%` }}
+                          className="absolute left-0 right-0 -translate-y-1/2"
+                        >
+                          {/* Subtle stream slot guide */}
+                          <div
+                            aria-hidden="true"
+                            className="pointer-events-none absolute inset-0 rounded-[8px] border border-dashed border-slate-900/[0.05] bg-slate-900/[0.008]"
+                          />
+                          <DataStripItem
+                            course={course}
+                            initialOpacity={0}
+                            anchorAttr={`corridor-strip-${idx}`}
+                            registerStripEl={(el) => {
+                              staticCorridorStripRefs.current[course.id] = el
+                            }}
+                          />
+                        </div>
+                      )
+                    })}
+                  </div>
                 </div>
-              </div>
-            </div>
-          )}
-
-          {/* =================================================================
-              PART 4: ZONE 2 · PROCESS (Section 11)
-              Real document flow (~92vh). Fixed featured course Node.js应用开发
-              expands from Data Strip into 5-row structured field table.
-             ================================================================= */}
-          {showProcess && (
-            <div
-              ref={processZoneRef}
-              data-zone="process"
-              className="relative min-h-[92vh] pt-10 flex flex-col lg:flex-row lg:items-start gap-6 lg:gap-12"
-            >
-              {/* Left Editorial Timeline Column: Step 02 (Active) + Steps 03 & 04 (Future Light-Gray) */}
-              {previewState === 'ALL' && (
-                <aside
-                  aria-label="课表导入后续阶段时间轴"
-                  className="hidden lg:flex flex-col w-[224px] xl:w-[240px] shrink-0 pt-2"
-                >
-                  <div className="pb-10">
-                    <EditorialStageRailNode
-                      stepIndex={1}
-                      railRefs={railRefs}
-                      showConnectorBelow={true}
-                      connectorClassName="bottom-0"
-                    />
-                  </div>
-                  <div className="pb-10">
-                    <EditorialStageRailNode
-                      stepIndex={2}
-                      railRefs={railRefs}
-                      showConnectorBelow={true}
-                      connectorClassName="bottom-0"
-                    />
-                  </div>
-                  <div className="pb-2">
-                    <EditorialStageRailNode
-                      stepIndex={3}
-                      railRefs={railRefs}
-                      showConnectorBelow={false}
-                    />
-                  </div>
-                </aside>
               )}
 
-              {/* Right Main Stage Column: ProcessOrganizerStage */}
-              <div className="flex-1 min-w-0 flex items-start">
-                <div className="w-full max-w-[560px]">
-                  <ProcessOrganizerStage
-                    courses={SCHOOL_IMPORT_COURSES}
-                    featuredCourse={FEATURED_PROCESS_COURSE}
-                    representativeStrips={SAMPLE_DATA_STRIP_COURSES}
-                    stripLaneTopRef={stripLaneTopRef}
-                    stripLaneBottomRef={stripLaneBottomRef}
-                    processBoxRef={processBoxRef}
-                    staticStripPlaceholderRef={staticStripPlaceholderRef}
-                    staticProcessFieldsRef={staticProcessFieldsRef}
-                    processStatusLabelRef={processStatusLabelRef}
-                  />
+              {/* =============================================================
+                  PART 4: ZONE 2 · PROCESS
+                  Overlaps the last 32% (-64vh) of Corridor 1 so ProcessOrganizerStage
+                  rises from the bottom of the viewport while the final courses finish.
+                 ============================================================= */}
+              {showProcess && (
+                <div
+                  ref={processZoneRef}
+                  data-zone="process"
+                  style={
+                    previewState === 'ALL'
+                      ? {
+                          marginTop: `-${Math.round(
+                            PHASE05_MOTION_CONFIG.corridor1HeightVh *
+                              PHASE05_MOTION_CONFIG.processCorridorOverlapRatio,
+                          )}vh`,
+                          paddingTop: '62vh',
+                        }
+                      : undefined
+                  }
+                  className="relative z-20 min-h-[82vh] flex items-start"
+                >
+                  <div className="w-full max-w-[560px]">
+                    <ProcessOrganizerStage
+                      courses={SCHOOL_IMPORT_COURSES}
+                      featuredCourse={FEATURED_PROCESS_COURSE}
+                      representativeStrips={SAMPLE_DATA_STRIP_COURSES}
+                      stripLaneTopRef={stripLaneTopRef}
+                      stripLaneBottomRef={stripLaneBottomRef}
+                      processBoxRef={processBoxRef}
+                      staticStripPlaceholderRef={staticStripPlaceholderRef}
+                      staticProcessFieldsRef={staticProcessFieldsRef}
+                      processStatusLabelRef={processStatusLabelRef}
+                    />
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
-          )}
+          </div>
         </div>
       </div>
 

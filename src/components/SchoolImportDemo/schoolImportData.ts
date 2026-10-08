@@ -39,13 +39,18 @@ export interface Phase05MotionConfig {
   courseCount: number
   sourceZoneMinVh: number
   sourceReadingHoldVh: number
-  corridorCourseDurationVh: number // D = 50vh
-  corridorCourseStaggerVh: number // S = 25vh
-  corridor1HeightVh: number // (N - 1) * S + D = 250vh
+  corridorCourseDurationVh: number // D = 40vh
+  corridorCourseStaggerVh: number // S = 20vh
+  corridor1HeightVh: number // (N - 1) * S + D = 200vh
+  sourceCorridorOverlapRatio: number // 0.28 (28% front overlap: 56vh)
+  sourceCorridorOverlapVh: number // 56vh
+  processCorridorOverlapRatio: number // 0.32 (32% back overlap: 64vh)
+  processCorridorOverlapVh: number // 64vh
   processZoneMinVh: number
   processExpandDurationVh: number
   processHoldVh: number
-  // Normalized globalP windows in Round 1 Long Page [0, 1]
+  totalActiveScrollVh: number
+  // Normalized globalP windows in Round 1.1 Long Page [0, 1]
   sourceHoldEndP: number
   corridorStartP: number
   corridorEndP: number
@@ -54,40 +59,45 @@ export interface Phase05MotionConfig {
 }
 
 const CORRIDOR_COURSE_COUNT = 9
-const CORRIDOR_D_VH = 50
-const CORRIDOR_S_VH = 25
+const CORRIDOR_D_VH = 40
+const CORRIDOR_S_VH = 20
 const CORRIDOR_1_HEIGHT_VH =
-  (CORRIDOR_COURSE_COUNT - 1) * CORRIDOR_S_VH + CORRIDOR_D_VH // 250vh
-const SOURCE_HOLD_VH = 24
-const PROCESS_EXPAND_VH = 48
-const PROCESS_HOLD_VH = 18
-const TOTAL_ACTIVE_SCROLL_VH =
-  SOURCE_HOLD_VH + CORRIDOR_1_HEIGHT_VH + PROCESS_EXPAND_VH + PROCESS_HOLD_VH // 340vh
+  (CORRIDOR_COURSE_COUNT - 1) * CORRIDOR_S_VH + CORRIDOR_D_VH // 200vh
+const SOURCE_CORRIDOR_OVERLAP_RATIO = 0.28 // 28% (within 25%–30%)
+const SOURCE_CORRIDOR_OVERLAP_VH = Math.round(
+  CORRIDOR_1_HEIGHT_VH * SOURCE_CORRIDOR_OVERLAP_RATIO
+) // 56vh
+const PROCESS_CORRIDOR_OVERLAP_RATIO = 0.32 // 32% (within 30%–35%)
+const PROCESS_CORRIDOR_OVERLAP_VH = Math.round(
+  CORRIDOR_1_HEIGHT_VH * PROCESS_CORRIDOR_OVERLAP_RATIO
+) // 64vh
+const SOURCE_HOLD_VH = 8
+const PROCESS_EXPAND_VH = 38
+const PROCESS_HOLD_VH = 8
+const TOTAL_ACTIVE_SCROLL_VH = 216
 
 export const PHASE05_MOTION_CONFIG: Phase05MotionConfig = {
   courseCount: CORRIDOR_COURSE_COUNT,
-  sourceZoneMinVh: 80,
+  sourceZoneMinVh: 56,
   sourceReadingHoldVh: SOURCE_HOLD_VH,
   corridorCourseDurationVh: CORRIDOR_D_VH,
   corridorCourseStaggerVh: CORRIDOR_S_VH,
   corridor1HeightVh: CORRIDOR_1_HEIGHT_VH,
-  processZoneMinVh: 92,
+  sourceCorridorOverlapRatio: SOURCE_CORRIDOR_OVERLAP_RATIO,
+  sourceCorridorOverlapVh: SOURCE_CORRIDOR_OVERLAP_VH,
+  processCorridorOverlapRatio: PROCESS_CORRIDOR_OVERLAP_RATIO,
+  processCorridorOverlapVh: PROCESS_CORRIDOR_OVERLAP_VH,
+  processZoneMinVh: 88,
   processExpandDurationVh: PROCESS_EXPAND_VH,
   processHoldVh: PROCESS_HOLD_VH,
-  sourceHoldEndP: Number((SOURCE_HOLD_VH / TOTAL_ACTIVE_SCROLL_VH).toFixed(4)), // ~0.0706
-  corridorStartP: Number((SOURCE_HOLD_VH / TOTAL_ACTIVE_SCROLL_VH).toFixed(4)), // ~0.0706
+  totalActiveScrollVh: TOTAL_ACTIVE_SCROLL_VH,
+  sourceHoldEndP: Number((SOURCE_HOLD_VH / TOTAL_ACTIVE_SCROLL_VH).toFixed(4)), // ~0.0370
+  corridorStartP: Number((SOURCE_HOLD_VH / TOTAL_ACTIVE_SCROLL_VH).toFixed(4)), // ~0.0370
   corridorEndP: Number(
     ((SOURCE_HOLD_VH + CORRIDOR_1_HEIGHT_VH) / TOTAL_ACTIVE_SCROLL_VH).toFixed(4)
-  ), // ~0.8059
-  processStartP: Number(
-    ((SOURCE_HOLD_VH + CORRIDOR_1_HEIGHT_VH) / TOTAL_ACTIVE_SCROLL_VH).toFixed(4)
-  ), // ~0.8059
-  processEndP: Number(
-    (
-      (SOURCE_HOLD_VH + CORRIDOR_1_HEIGHT_VH + PROCESS_EXPAND_VH) /
-      TOTAL_ACTIVE_SCROLL_VH
-    ).toFixed(4)
-  ), // ~0.9471
+  ), // ~0.9630
+  processStartP: Number((172 / TOTAL_ACTIVE_SCROLL_VH).toFixed(4)), // ~0.7963 (Process enters & expands during back overlap)
+  processEndP: Number((210 / TOTAL_ACTIVE_SCROLL_VH).toFixed(4)), // ~0.9722
 }
 
 function corridorStartPForIndex(idx: number): number {
