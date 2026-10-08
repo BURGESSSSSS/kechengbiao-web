@@ -17,6 +17,10 @@ export interface SchoolImportCourse {
   // Phase 05B: SOURCE -> DATA STRIP -> PROCESS -> PREVIEW window (in sourceToPreviewP in [0, 1])
   startP: number
   endP: number
+  // Round 2: CORRIDOR 2 (PROCESS -> PREVIEW) window (in corridor2P in [0, 1])
+  corridor2Index: number
+  corridor2StartP: number
+  corridor2EndP: number
   // Phase 05C: PREVIEW -> COMPACT RECORD -> DESTINATION window (in previewToDestinationP in [0, 1])
   writeGroup: 1 | 2 | 3
   destStartP: number
@@ -39,42 +43,78 @@ export interface Phase05MotionConfig {
   courseCount: number
   sourceZoneMinVh: number
   sourceReadingHoldVh: number
-  corridorCourseDurationVh: number // D = 40vh
-  corridorCourseStaggerVh: number // S = 20vh
-  corridor1HeightVh: number // (N - 1) * S + D = 200vh
+  // Corridor 1: Source -> Process
+  corridorCourseDurationVh: number // D1 = 40vh
+  corridorCourseStaggerVh: number // S1 = 20vh
+  corridor1HeightVh: number // (N - 1) * S1 + D1 = 200vh
   sourceCorridorOverlapRatio: number // 0.28 (28% front overlap: 56vh)
   sourceCorridorOverlapVh: number // 56vh
-  processCorridorOverlapRatio: number // 0.32 (32% back overlap: 64vh)
-  processCorridorOverlapVh: number // 64vh
+  processCorridorOverlapRatio: number // 0.44 (44% back overlap: 88vh, +12% earlier than Round 1.1)
+  processCorridorOverlapVh: number // 88vh
   processZoneMinVh: number
   processExpandDurationVh: number
   processHoldVh: number
-  totalActiveScrollVh: number
-  // Normalized globalP windows in Round 1.1 Long Page [0, 1]
+  // Corridor 2: Process -> Preview
+  corridor2CourseDurationVh: number // D2 = 34vh
+  corridor2CourseStaggerVh: number // S2 = 17vh
+  corridor2HeightVh: number // (N - 1) * S2 + D2 = 170vh
+  processCorridor2OverlapRatio: number // 0.28 (28% front overlap: 48vh)
+  processCorridor2OverlapVh: number // 48vh
+  previewCorridor2OverlapRatio: number // 0.34 (34% back overlap: 58vh)
+  previewCorridor2OverlapVh: number // 58vh
+  // Preview Zone + Preview Reading Space
+  previewZoneMinVh: number // 100vh (within 90–110vh)
+  previewReadingSpaceVh: number // 38vh
+  totalActiveScrollVh: number // 412vh
+  // Normalized globalP windows in Round 2 Long Page [0, 1]
   sourceHoldEndP: number
   corridorStartP: number
   corridorEndP: number
   processStartP: number
   processEndP: number
+  corridor2StartP: number
+  corridor2EndP: number
+  previewReadingStartP: number
+  previewReadingEndP: number
 }
 
 const CORRIDOR_COURSE_COUNT = 9
+
+// Corridor 1 (Source -> Process): D1 = 40vh, S1 = 20vh -> 200vh
 const CORRIDOR_D_VH = 40
 const CORRIDOR_S_VH = 20
 const CORRIDOR_1_HEIGHT_VH =
   (CORRIDOR_COURSE_COUNT - 1) * CORRIDOR_S_VH + CORRIDOR_D_VH // 200vh
-const SOURCE_CORRIDOR_OVERLAP_RATIO = 0.28 // 28% (within 25%–30%)
+const SOURCE_CORRIDOR_OVERLAP_RATIO = 0.28 // 28% (56vh)
 const SOURCE_CORRIDOR_OVERLAP_VH = Math.round(
   CORRIDOR_1_HEIGHT_VH * SOURCE_CORRIDOR_OVERLAP_RATIO
 ) // 56vh
-const PROCESS_CORRIDOR_OVERLAP_RATIO = 0.32 // 32% (within 30%–35%)
+// Round 2 Section 1 minor tweak: Process enters viewport ~12% earlier than Round 1.1 (0.32 -> 0.44, +24vh earlier)
+const PROCESS_CORRIDOR_OVERLAP_RATIO = 0.44 // 44% (88vh)
 const PROCESS_CORRIDOR_OVERLAP_VH = Math.round(
   CORRIDOR_1_HEIGHT_VH * PROCESS_CORRIDOR_OVERLAP_RATIO
-) // 64vh
+) // 88vh
+
+// Corridor 2 (Process -> Preview): D2 = 34vh, S2 = 17vh -> (9 - 1) * 17 + 34 = 170vh
+const CORRIDOR_2_D_VH = 34
+const CORRIDOR_2_S_VH = 17
+const CORRIDOR_2_HEIGHT_VH =
+  (CORRIDOR_COURSE_COUNT - 1) * CORRIDOR_2_S_VH + CORRIDOR_2_D_VH // 170vh
+const PROCESS_CORRIDOR_2_OVERLAP_RATIO = 0.28 // 28% (within 25%–30%: 48vh)
+const PROCESS_CORRIDOR_2_OVERLAP_VH = Math.round(
+  CORRIDOR_2_HEIGHT_VH * PROCESS_CORRIDOR_2_OVERLAP_RATIO
+) // 48vh
+const PREVIEW_CORRIDOR_2_OVERLAP_RATIO = 0.34 // 34% (within 30%–35%: 58vh)
+const PREVIEW_CORRIDOR_2_OVERLAP_VH = Math.round(
+  CORRIDOR_2_HEIGHT_VH * PREVIEW_CORRIDOR_2_OVERLAP_RATIO
+) // 58vh
+
 const SOURCE_HOLD_VH = 8
-const PROCESS_EXPAND_VH = 38
-const PROCESS_HOLD_VH = 8
-const TOTAL_ACTIVE_SCROLL_VH = 216
+const PROCESS_EXPAND_VH = 36
+const PROCESS_HOLD_VH = 10
+const PREVIEW_ZONE_MIN_VH = 98 // total rendered height ~103.5vh, strictly within 90–110vh (Section 13)
+const PREVIEW_READING_SPACE_VH = 38
+const TOTAL_ACTIVE_SCROLL_VH = 400
 
 export const PHASE05_MOTION_CONFIG: Phase05MotionConfig = {
   courseCount: CORRIDOR_COURSE_COUNT,
@@ -87,17 +127,34 @@ export const PHASE05_MOTION_CONFIG: Phase05MotionConfig = {
   sourceCorridorOverlapVh: SOURCE_CORRIDOR_OVERLAP_VH,
   processCorridorOverlapRatio: PROCESS_CORRIDOR_OVERLAP_RATIO,
   processCorridorOverlapVh: PROCESS_CORRIDOR_OVERLAP_VH,
-  processZoneMinVh: 88,
+  processZoneMinVh: 82,
   processExpandDurationVh: PROCESS_EXPAND_VH,
   processHoldVh: PROCESS_HOLD_VH,
+  corridor2CourseDurationVh: CORRIDOR_2_D_VH,
+  corridor2CourseStaggerVh: CORRIDOR_2_S_VH,
+  corridor2HeightVh: CORRIDOR_2_HEIGHT_VH,
+  processCorridor2OverlapRatio: PROCESS_CORRIDOR_2_OVERLAP_RATIO,
+  processCorridor2OverlapVh: PROCESS_CORRIDOR_2_OVERLAP_VH,
+  previewCorridor2OverlapRatio: PREVIEW_CORRIDOR_2_OVERLAP_RATIO,
+  previewCorridor2OverlapVh: PREVIEW_CORRIDOR_2_OVERLAP_VH,
+  previewZoneMinVh: PREVIEW_ZONE_MIN_VH,
+  previewReadingSpaceVh: PREVIEW_READING_SPACE_VH,
   totalActiveScrollVh: TOTAL_ACTIVE_SCROLL_VH,
-  sourceHoldEndP: Number((SOURCE_HOLD_VH / TOTAL_ACTIVE_SCROLL_VH).toFixed(4)), // ~0.0370
-  corridorStartP: Number((SOURCE_HOLD_VH / TOTAL_ACTIVE_SCROLL_VH).toFixed(4)), // ~0.0370
+  sourceHoldEndP: Number((SOURCE_HOLD_VH / TOTAL_ACTIVE_SCROLL_VH).toFixed(4)), // 0.0200
+  corridorStartP: Number((SOURCE_HOLD_VH / TOTAL_ACTIVE_SCROLL_VH).toFixed(4)), // 0.0200
   corridorEndP: Number(
     ((SOURCE_HOLD_VH + CORRIDOR_1_HEIGHT_VH) / TOTAL_ACTIVE_SCROLL_VH).toFixed(4)
-  ), // ~0.9630
-  processStartP: Number((172 / TOTAL_ACTIVE_SCROLL_VH).toFixed(4)), // ~0.7963 (Process enters & expands during back overlap)
-  processEndP: Number((210 / TOTAL_ACTIVE_SCROLL_VH).toFixed(4)), // ~0.9722
+  ), // 0.5200 (208 / 400)
+  processStartP: Number((146 / TOTAL_ACTIVE_SCROLL_VH).toFixed(4)), // 0.3650
+  processEndP: Number((182 / TOTAL_ACTIVE_SCROLL_VH).toFixed(4)), // 0.4550
+  corridor2StartP: Number((192 / TOTAL_ACTIVE_SCROLL_VH).toFixed(4)), // 0.4800
+  corridor2EndP: Number(
+    ((192 + CORRIDOR_2_HEIGHT_VH) / TOTAL_ACTIVE_SCROLL_VH).toFixed(4)
+  ), // 0.9050 (362 / 400)
+  previewReadingStartP: Number(
+    ((192 + CORRIDOR_2_HEIGHT_VH) / TOTAL_ACTIVE_SCROLL_VH).toFixed(4)
+  ), // 0.9050
+  previewReadingEndP: 1.0,
 }
 
 function corridorStartPForIndex(idx: number): number {
@@ -115,6 +172,25 @@ function corridorEndPForIndex(idx: number): number {
       (idx * PHASE05_MOTION_CONFIG.corridorCourseStaggerVh +
         PHASE05_MOTION_CONFIG.corridorCourseDurationVh) /
       PHASE05_MOTION_CONFIG.corridor1HeightVh
+    ).toFixed(4)
+  )
+}
+
+function corridor2StartPForIndex(c2Idx: number): number {
+  return Number(
+    (
+      (c2Idx * PHASE05_MOTION_CONFIG.corridor2CourseStaggerVh) /
+      PHASE05_MOTION_CONFIG.corridor2HeightVh
+    ).toFixed(4)
+  )
+}
+
+function corridor2EndPForIndex(c2Idx: number): number {
+  return Number(
+    (
+      (c2Idx * PHASE05_MOTION_CONFIG.corridor2CourseStaggerVh +
+        PHASE05_MOTION_CONFIG.corridor2CourseDurationVh) /
+      PHASE05_MOTION_CONFIG.corridor2HeightVh
     ).toFixed(4)
   )
 }
@@ -143,14 +219,14 @@ export const PHASE05_STAGE_STEPS: readonly Phase05StageStepMeta[] = [
     title: '结构化抽取',
     subtitle: '提取课程字段',
     startP: PHASE05_MOTION_CONFIG.corridorStartP,
-    endP: 1.0,
+    endP: PHASE05_MOTION_CONFIG.corridor2StartP,
   },
   {
     index: 2,
     code: '03',
     title: '导入预览',
     subtitle: '写入前确认',
-    startP: 1.0,
+    startP: PHASE05_MOTION_CONFIG.corridor2StartP,
     endP: 1.0,
   },
   {
@@ -165,13 +241,6 @@ export const PHASE05_STAGE_STEPS: readonly Phase05StageStepMeta[] = [
 
 /**
  * Single Unified Course Data Model for Phase 05 (Shandong Business Institute "我的课表" -> App Local Schedule).
- *
- * Pacing note (Long Page Prototype Round 1):
- * - Corridor 1 (corridorP in [0, 1] over 250vh):
- *   D = 50vh -> duration = 50 / 250 = 0.20
- *   S = 25vh -> stagger  = 25 / 250 = 0.10
- *   At any scroll position, at most 1 course is in main motion (localP 30%–70%)
- *   and at most 1 course is in secondary motion (<30% or >70%).
  */
 export const SCHOOL_IMPORT_COURSES: SchoolImportCourse[] = [
   // === Group 1｜周一 ===
@@ -193,6 +262,9 @@ export const SCHOOL_IMPORT_COURSES: SchoolImportCourse[] = [
     weekLabel: '第7周',
     startP: corridorStartPForIndex(0), // 0.00
     endP: corridorEndPForIndex(0), // 0.20
+    corridor2Index: 1,
+    corridor2StartP: corridor2StartPForIndex(1), // 0.10
+    corridor2EndP: corridor2EndPForIndex(1), // 0.30
     writeGroup: 1,
     destStartP: 0.04,
     destEndP: 0.28,
@@ -215,6 +287,9 @@ export const SCHOOL_IMPORT_COURSES: SchoolImportCourse[] = [
     weekLabel: '第7周',
     startP: corridorStartPForIndex(1), // 0.10
     endP: corridorEndPForIndex(1), // 0.30
+    corridor2Index: 2,
+    corridor2StartP: corridor2StartPForIndex(2), // 0.20
+    corridor2EndP: corridor2EndPForIndex(2), // 0.40
     writeGroup: 1,
     destStartP: 0.09,
     destEndP: 0.33,
@@ -237,6 +312,9 @@ export const SCHOOL_IMPORT_COURSES: SchoolImportCourse[] = [
     weekLabel: '第7周',
     startP: corridorStartPForIndex(2), // 0.20
     endP: corridorEndPForIndex(2), // 0.40
+    corridor2Index: 0, // Featured Process course collapses first in Corridor 2 (Sections 4, 5, 10)
+    corridor2StartP: corridor2StartPForIndex(0), // 0.00
+    corridor2EndP: corridor2EndPForIndex(0), // 0.20
     writeGroup: 1,
     destStartP: 0.14,
     destEndP: 0.38,
@@ -261,6 +339,9 @@ export const SCHOOL_IMPORT_COURSES: SchoolImportCourse[] = [
     weekLabel: '第7周',
     startP: corridorStartPForIndex(3), // 0.30
     endP: corridorEndPForIndex(3), // 0.50
+    corridor2Index: 3,
+    corridor2StartP: corridor2StartPForIndex(3), // 0.30
+    corridor2EndP: corridor2EndPForIndex(3), // 0.50
     writeGroup: 2,
     destStartP: 0.34,
     destEndP: 0.58,
@@ -283,6 +364,9 @@ export const SCHOOL_IMPORT_COURSES: SchoolImportCourse[] = [
     weekLabel: '第7周',
     startP: corridorStartPForIndex(4), // 0.40
     endP: corridorEndPForIndex(4), // 0.60
+    corridor2Index: 4,
+    corridor2StartP: corridor2StartPForIndex(4), // 0.40
+    corridor2EndP: corridor2EndPForIndex(4), // 0.60
     writeGroup: 2,
     destStartP: 0.39,
     destEndP: 0.63,
@@ -305,6 +389,9 @@ export const SCHOOL_IMPORT_COURSES: SchoolImportCourse[] = [
     weekLabel: '第7周',
     startP: corridorStartPForIndex(5), // 0.50
     endP: corridorEndPForIndex(5), // 0.70
+    corridor2Index: 5,
+    corridor2StartP: corridor2StartPForIndex(5), // 0.50
+    corridor2EndP: corridor2EndPForIndex(5), // 0.70
     writeGroup: 2,
     destStartP: 0.44,
     destEndP: 0.68,
@@ -327,6 +414,9 @@ export const SCHOOL_IMPORT_COURSES: SchoolImportCourse[] = [
     weekLabel: '第7周',
     startP: corridorStartPForIndex(6), // 0.60
     endP: corridorEndPForIndex(6), // 0.80
+    corridor2Index: 6,
+    corridor2StartP: corridor2StartPForIndex(6), // 0.60
+    corridor2EndP: corridor2EndPForIndex(6), // 0.80
     writeGroup: 2,
     destStartP: 0.49,
     destEndP: 0.73,
@@ -351,6 +441,9 @@ export const SCHOOL_IMPORT_COURSES: SchoolImportCourse[] = [
     weekLabel: '第7周',
     startP: corridorStartPForIndex(7), // 0.70
     endP: corridorEndPForIndex(7), // 0.90
+    corridor2Index: 7,
+    corridor2StartP: corridor2StartPForIndex(7), // 0.70
+    corridor2EndP: corridor2EndPForIndex(7), // 0.90
     writeGroup: 3,
     destStartP: 0.69,
     destEndP: 0.91,
@@ -373,6 +466,9 @@ export const SCHOOL_IMPORT_COURSES: SchoolImportCourse[] = [
     weekLabel: '第7周',
     startP: corridorStartPForIndex(8), // 0.80
     endP: corridorEndPForIndex(8), // 1.00
+    corridor2Index: 8,
+    corridor2StartP: corridor2StartPForIndex(8), // 0.80
+    corridor2EndP: corridor2EndPForIndex(8), // 1.00
     writeGroup: 3,
     destStartP: 0.74,
     destEndP: 0.96,
