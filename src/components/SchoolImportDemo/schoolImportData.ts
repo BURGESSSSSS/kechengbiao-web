@@ -21,8 +21,11 @@ export interface SchoolImportCourse {
   corridor2Index: number
   corridor2StartP: number
   corridor2EndP: number
-  // Phase 05C: PREVIEW -> COMPACT RECORD -> DESTINATION window (in previewToDestinationP in [0, 1])
+  // Phase 05C / Round 3: CORRIDOR 3 (PREVIEW -> COMPACT RECORD -> DESTINATION) window (in corridor3P in [0, 1])
   writeGroup: 1 | 2 | 3
+  corridor3Index: number
+  corridor3StartP: number
+  corridor3EndP: number
   destStartP: number
   destEndP: number
 }
@@ -63,10 +66,21 @@ export interface Phase05MotionConfig {
   previewCorridor2OverlapRatio: number // 0.34 (34% back overlap: 58vh)
   previewCorridor2OverlapVh: number // 58vh
   // Preview Zone + Preview Reading Space
-  previewZoneMinVh: number // 100vh (within 90–110vh)
-  previewReadingSpaceVh: number // 38vh
-  totalActiveScrollVh: number // 412vh
-  // Normalized globalP windows in Round 2 Long Page [0, 1]
+  previewZoneMinVh: number // 98vh (rendered ~103vh, within 90–110vh)
+  previewReadingSpaceVh: number // 34vh
+  // Corridor 3: Preview -> Destination
+  corridor3CourseDurationVh: number // D3 = 44vh (within 42–46vh)
+  corridor3CourseStaggerVh: number // S3 = 22vh (within 21–23vh)
+  corridor3HeightVh: number // (N - 1) * S3 + D3 = 220vh
+  previewCorridor3OverlapRatio: number // 0.28 (28% front overlap: 62vh)
+  previewCorridor3OverlapVh: number // 62vh
+  destinationCorridor3OverlapRatio: number // 0.34 (34% back overlap: 75vh)
+  destinationCorridor3OverlapVh: number // 75vh
+  // Destination Zone + Final Reading Space
+  destinationZoneMinVh: number // 92vh (within 80–100vh)
+  finalReadingSpaceVh: number // 40vh
+  totalActiveScrollVh: number // 656vh
+  // Normalized globalP windows in Round 3 Complete Long Page [0, 1]
   sourceHoldEndP: number
   corridorStartP: number
   corridorEndP: number
@@ -76,6 +90,10 @@ export interface Phase05MotionConfig {
   corridor2EndP: number
   previewReadingStartP: number
   previewReadingEndP: number
+  corridor3StartP: number
+  corridor3EndP: number
+  finalReadingStartP: number
+  finalReadingEndP: number
 }
 
 const CORRIDOR_COURSE_COUNT = 9
@@ -109,12 +127,28 @@ const PREVIEW_CORRIDOR_2_OVERLAP_VH = Math.round(
   CORRIDOR_2_HEIGHT_VH * PREVIEW_CORRIDOR_2_OVERLAP_RATIO
 ) // 58vh
 
+// Corridor 3 (Preview -> Destination): D3 = 44vh, S3 = 22vh -> (9 - 1) * 22 + 44 = 220vh
+const CORRIDOR_3_D_VH = 44
+const CORRIDOR_3_S_VH = 22
+const CORRIDOR_3_HEIGHT_VH =
+  (CORRIDOR_COURSE_COUNT - 1) * CORRIDOR_3_S_VH + CORRIDOR_3_D_VH // 220vh
+const PREVIEW_CORRIDOR_3_OVERLAP_RATIO = 0.28 // 28% (within 25%–30%: 62vh)
+const PREVIEW_CORRIDOR_3_OVERLAP_VH = Math.round(
+  CORRIDOR_3_HEIGHT_VH * PREVIEW_CORRIDOR_3_OVERLAP_RATIO
+) // 62vh
+const DESTINATION_CORRIDOR_3_OVERLAP_RATIO = 0.34 // 34% (within 30%–35%: 75vh)
+const DESTINATION_CORRIDOR_3_OVERLAP_VH = Math.round(
+  CORRIDOR_3_HEIGHT_VH * DESTINATION_CORRIDOR_3_OVERLAP_RATIO
+) // 75vh
+
 const SOURCE_HOLD_VH = 8
 const PROCESS_EXPAND_VH = 36
 const PROCESS_HOLD_VH = 10
-const PREVIEW_ZONE_MIN_VH = 98 // total rendered height ~103.5vh, strictly within 90–110vh (Section 13)
-const PREVIEW_READING_SPACE_VH = 38
-const TOTAL_ACTIVE_SCROLL_VH = 400
+const PREVIEW_ZONE_MIN_VH = 98 // total rendered height ~103.5vh, strictly within 90–110vh
+const PREVIEW_READING_SPACE_VH = 34 // 362vh -> 396vh
+const DESTINATION_ZONE_MIN_VH = 86 // total rendered height ~92vh, strictly within 80–100vh (Section 20)
+const FINAL_READING_SPACE_VH = 40 // 616vh -> 656vh
+const TOTAL_ACTIVE_SCROLL_VH = 656
 
 export const PHASE05_MOTION_CONFIG: Phase05MotionConfig = {
   courseCount: CORRIDOR_COURSE_COUNT,
@@ -139,22 +173,39 @@ export const PHASE05_MOTION_CONFIG: Phase05MotionConfig = {
   previewCorridor2OverlapVh: PREVIEW_CORRIDOR_2_OVERLAP_VH,
   previewZoneMinVh: PREVIEW_ZONE_MIN_VH,
   previewReadingSpaceVh: PREVIEW_READING_SPACE_VH,
+  corridor3CourseDurationVh: CORRIDOR_3_D_VH,
+  corridor3CourseStaggerVh: CORRIDOR_3_S_VH,
+  corridor3HeightVh: CORRIDOR_3_HEIGHT_VH,
+  previewCorridor3OverlapRatio: PREVIEW_CORRIDOR_3_OVERLAP_RATIO,
+  previewCorridor3OverlapVh: PREVIEW_CORRIDOR_3_OVERLAP_VH,
+  destinationCorridor3OverlapRatio: DESTINATION_CORRIDOR_3_OVERLAP_RATIO,
+  destinationCorridor3OverlapVh: DESTINATION_CORRIDOR_3_OVERLAP_VH,
+  destinationZoneMinVh: DESTINATION_ZONE_MIN_VH,
+  finalReadingSpaceVh: FINAL_READING_SPACE_VH,
   totalActiveScrollVh: TOTAL_ACTIVE_SCROLL_VH,
-  sourceHoldEndP: Number((SOURCE_HOLD_VH / TOTAL_ACTIVE_SCROLL_VH).toFixed(4)), // 0.0200
-  corridorStartP: Number((SOURCE_HOLD_VH / TOTAL_ACTIVE_SCROLL_VH).toFixed(4)), // 0.0200
+  sourceHoldEndP: Number((SOURCE_HOLD_VH / TOTAL_ACTIVE_SCROLL_VH).toFixed(4)), // 0.0122 (8 / 656)
+  corridorStartP: Number((SOURCE_HOLD_VH / TOTAL_ACTIVE_SCROLL_VH).toFixed(4)), // 0.0122
   corridorEndP: Number(
     ((SOURCE_HOLD_VH + CORRIDOR_1_HEIGHT_VH) / TOTAL_ACTIVE_SCROLL_VH).toFixed(4)
-  ), // 0.5200 (208 / 400)
-  processStartP: Number((146 / TOTAL_ACTIVE_SCROLL_VH).toFixed(4)), // 0.3650
-  processEndP: Number((182 / TOTAL_ACTIVE_SCROLL_VH).toFixed(4)), // 0.4550
-  corridor2StartP: Number((192 / TOTAL_ACTIVE_SCROLL_VH).toFixed(4)), // 0.4800
+  ), // 0.3171 (208 / 656)
+  processStartP: Number((146 / TOTAL_ACTIVE_SCROLL_VH).toFixed(4)), // 0.2226
+  processEndP: Number((182 / TOTAL_ACTIVE_SCROLL_VH).toFixed(4)), // 0.2774
+  corridor2StartP: Number((192 / TOTAL_ACTIVE_SCROLL_VH).toFixed(4)), // 0.2927
   corridor2EndP: Number(
     ((192 + CORRIDOR_2_HEIGHT_VH) / TOTAL_ACTIVE_SCROLL_VH).toFixed(4)
-  ), // 0.9050 (362 / 400)
+  ), // 0.5518 (362 / 656)
   previewReadingStartP: Number(
     ((192 + CORRIDOR_2_HEIGHT_VH) / TOTAL_ACTIVE_SCROLL_VH).toFixed(4)
-  ), // 0.9050
-  previewReadingEndP: 1.0,
+  ), // 0.5518
+  previewReadingEndP: Number((396 / TOTAL_ACTIVE_SCROLL_VH).toFixed(4)), // 0.6037
+  corridor3StartP: Number((396 / TOTAL_ACTIVE_SCROLL_VH).toFixed(4)), // 0.6037
+  corridor3EndP: Number(
+    ((396 + CORRIDOR_3_HEIGHT_VH) / TOTAL_ACTIVE_SCROLL_VH).toFixed(4)
+  ), // 0.9390 (616 / 656)
+  finalReadingStartP: Number(
+    ((396 + CORRIDOR_3_HEIGHT_VH) / TOTAL_ACTIVE_SCROLL_VH).toFixed(4)
+  ), // 0.9390
+  finalReadingEndP: 1.0,
 }
 
 function corridorStartPForIndex(idx: number): number {
@@ -195,6 +246,25 @@ function corridor2EndPForIndex(c2Idx: number): number {
   )
 }
 
+function corridor3StartPForIndex(c3Idx: number): number {
+  return Number(
+    (
+      (c3Idx * PHASE05_MOTION_CONFIG.corridor3CourseStaggerVh) /
+      PHASE05_MOTION_CONFIG.corridor3HeightVh
+    ).toFixed(4)
+  )
+}
+
+function corridor3EndPForIndex(c3Idx: number): number {
+  return Number(
+    (
+      (c3Idx * PHASE05_MOTION_CONFIG.corridor3CourseStaggerVh +
+        PHASE05_MOTION_CONFIG.corridor3CourseDurationVh) /
+      PHASE05_MOTION_CONFIG.corridor3HeightVh
+    ).toFixed(4)
+  )
+}
+
 export interface Phase05StageStepMeta {
   index: number
   code: '01' | '02' | '03' | '04'
@@ -227,14 +297,14 @@ export const PHASE05_STAGE_STEPS: readonly Phase05StageStepMeta[] = [
     title: '导入预览',
     subtitle: '写入前确认',
     startP: PHASE05_MOTION_CONFIG.corridor2StartP,
-    endP: 1.0,
+    endP: PHASE05_MOTION_CONFIG.corridor3StartP,
   },
   {
     index: 3,
     code: '04',
     title: '写入本地',
     subtitle: '离线保存可查',
-    startP: 1.0,
+    startP: PHASE05_MOTION_CONFIG.corridor3StartP,
     endP: 1.0,
   },
 ] as const
@@ -266,8 +336,11 @@ export const SCHOOL_IMPORT_COURSES: SchoolImportCourse[] = [
     corridor2StartP: corridor2StartPForIndex(1), // 0.10
     corridor2EndP: corridor2EndPForIndex(1), // 0.30
     writeGroup: 1,
-    destStartP: 0.04,
-    destEndP: 0.28,
+    corridor3Index: 0,
+    corridor3StartP: corridor3StartPForIndex(0), // 0.00
+    corridor3EndP: corridor3EndPForIndex(0), // 0.20
+    destStartP: corridor3StartPForIndex(0),
+    destEndP: corridor3EndPForIndex(0),
   },
   {
     id: 'course-mon-3-4',
@@ -291,8 +364,11 @@ export const SCHOOL_IMPORT_COURSES: SchoolImportCourse[] = [
     corridor2StartP: corridor2StartPForIndex(2), // 0.20
     corridor2EndP: corridor2EndPForIndex(2), // 0.40
     writeGroup: 1,
-    destStartP: 0.09,
-    destEndP: 0.33,
+    corridor3Index: 1,
+    corridor3StartP: corridor3StartPForIndex(1), // 0.10
+    corridor3EndP: corridor3EndPForIndex(1), // 0.30
+    destStartP: corridor3StartPForIndex(1),
+    destEndP: corridor3EndPForIndex(1),
   },
   {
     id: 'course-mon-5-6',
@@ -316,8 +392,11 @@ export const SCHOOL_IMPORT_COURSES: SchoolImportCourse[] = [
     corridor2StartP: corridor2StartPForIndex(0), // 0.00
     corridor2EndP: corridor2EndPForIndex(0), // 0.20
     writeGroup: 1,
-    destStartP: 0.14,
-    destEndP: 0.38,
+    corridor3Index: 2,
+    corridor3StartP: corridor3StartPForIndex(2), // 0.20
+    corridor3EndP: corridor3EndPForIndex(2), // 0.40
+    destStartP: corridor3StartPForIndex(2),
+    destEndP: corridor3EndPForIndex(2),
   },
 
   // === Group 2｜周二～周四 ===
@@ -343,8 +422,11 @@ export const SCHOOL_IMPORT_COURSES: SchoolImportCourse[] = [
     corridor2StartP: corridor2StartPForIndex(3), // 0.30
     corridor2EndP: corridor2EndPForIndex(3), // 0.50
     writeGroup: 2,
-    destStartP: 0.34,
-    destEndP: 0.58,
+    corridor3Index: 3,
+    corridor3StartP: corridor3StartPForIndex(3), // 0.30
+    corridor3EndP: corridor3EndPForIndex(3), // 0.50
+    destStartP: corridor3StartPForIndex(3),
+    destEndP: corridor3EndPForIndex(3),
   },
   {
     id: 'course-wed-1-2',
@@ -368,8 +450,11 @@ export const SCHOOL_IMPORT_COURSES: SchoolImportCourse[] = [
     corridor2StartP: corridor2StartPForIndex(4), // 0.40
     corridor2EndP: corridor2EndPForIndex(4), // 0.60
     writeGroup: 2,
-    destStartP: 0.39,
-    destEndP: 0.63,
+    corridor3Index: 4,
+    corridor3StartP: corridor3StartPForIndex(4), // 0.40
+    corridor3EndP: corridor3EndPForIndex(4), // 0.60
+    destStartP: corridor3StartPForIndex(4),
+    destEndP: corridor3EndPForIndex(4),
   },
   {
     id: 'course-wed-5-6',
@@ -393,8 +478,11 @@ export const SCHOOL_IMPORT_COURSES: SchoolImportCourse[] = [
     corridor2StartP: corridor2StartPForIndex(5), // 0.50
     corridor2EndP: corridor2EndPForIndex(5), // 0.70
     writeGroup: 2,
-    destStartP: 0.44,
-    destEndP: 0.68,
+    corridor3Index: 5,
+    corridor3StartP: corridor3StartPForIndex(5), // 0.50
+    corridor3EndP: corridor3EndPForIndex(5), // 0.70
+    destStartP: corridor3StartPForIndex(5),
+    destEndP: corridor3EndPForIndex(5),
   },
   {
     id: 'course-thu-1-2',
@@ -418,8 +506,11 @@ export const SCHOOL_IMPORT_COURSES: SchoolImportCourse[] = [
     corridor2StartP: corridor2StartPForIndex(6), // 0.60
     corridor2EndP: corridor2EndPForIndex(6), // 0.80
     writeGroup: 2,
-    destStartP: 0.49,
-    destEndP: 0.73,
+    corridor3Index: 6,
+    corridor3StartP: corridor3StartPForIndex(6), // 0.60
+    corridor3EndP: corridor3EndPForIndex(6), // 0.80
+    destStartP: corridor3StartPForIndex(6),
+    destEndP: corridor3EndPForIndex(6),
   },
 
   // === Group 3｜周五 ===
@@ -445,8 +536,11 @@ export const SCHOOL_IMPORT_COURSES: SchoolImportCourse[] = [
     corridor2StartP: corridor2StartPForIndex(7), // 0.70
     corridor2EndP: corridor2EndPForIndex(7), // 0.90
     writeGroup: 3,
-    destStartP: 0.69,
-    destEndP: 0.91,
+    corridor3Index: 7,
+    corridor3StartP: corridor3StartPForIndex(7), // 0.70
+    corridor3EndP: corridor3EndPForIndex(7), // 0.90
+    destStartP: corridor3StartPForIndex(7),
+    destEndP: corridor3EndPForIndex(7),
   },
   {
     id: 'course-fri-7-8',
@@ -470,8 +564,11 @@ export const SCHOOL_IMPORT_COURSES: SchoolImportCourse[] = [
     corridor2StartP: corridor2StartPForIndex(8), // 0.80
     corridor2EndP: corridor2EndPForIndex(8), // 1.00
     writeGroup: 3,
-    destStartP: 0.74,
-    destEndP: 0.96,
+    corridor3Index: 8,
+    corridor3StartP: corridor3StartPForIndex(8), // 0.80
+    corridor3EndP: corridor3EndPForIndex(8), // 1.00
+    destStartP: corridor3StartPForIndex(8),
+    destEndP: corridor3EndPForIndex(8),
   },
 ]
 

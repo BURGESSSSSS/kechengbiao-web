@@ -514,17 +514,19 @@ export const ImportPreviewStage: React.FC<{
 }
 
 /**
- * 5. DESTINATION: 课程表 App 本地周视图（完全复用 Phase 03 视觉语言，Phase 05C 接收批量课程写入）
+ * 5. DESTINATION: 课程表 App 本地周视图（完全复用 Phase 03 视觉语言，Round 3 接收课程写入并成为最终主角）
  */
 export const DestinationAppWeekStage: React.FC<{
   courses: SchoolImportCourse[]
   registerDestinationNode?: (courseId: string, el: HTMLDivElement | null) => void
+  panelRef?: React.MutableRefObject<HTMLDivElement | null>
   destinationGridRef?: React.MutableRefObject<HTMLDivElement | null>
   completionCopyRef?: React.MutableRefObject<HTMLDivElement | null>
   initialStaticCompleted?: boolean
 }> = ({
   courses,
   registerDestinationNode,
+  panelRef,
   destinationGridRef,
   completionCopyRef,
   initialStaticCompleted = false,
@@ -535,15 +537,20 @@ export const DestinationAppWeekStage: React.FC<{
   })
 
   return (
-    <div data-stage-panel="destination" className="w-full lg:max-w-[720px] flex flex-col">
-      <div className="relative w-full bg-[#F6F6F6] rounded-[24px] sm:rounded-[28px] p-3.5 sm:p-5 lg:px-5 lg:py-3.5 ring-1 ring-black/[0.05] shadow-[0_12px_36px_-10px_rgba(15,23,42,0.06)]">
+    <div
+      ref={panelRef}
+      data-stage-panel="destination"
+      style={{ willChange: 'transform, opacity' }}
+      className="w-full lg:max-w-[780px] mx-auto flex flex-col"
+    >
+      <div className="relative w-full bg-[#F6F6F6] rounded-[24px] sm:rounded-[28px] p-3.5 sm:p-5 lg:px-6 lg:py-4 ring-1 ring-black/[0.05] shadow-[0_14px_40px_-10px_rgba(15,23,42,0.07)]">
         {/* 1. Top Bar: 第 7 周 + Date Range + 编辑 / 导入 */}
         <div className="flex items-start justify-between px-1">
           <div>
-            <div className="text-[21px] sm:text-[24px] lg:text-[22px] font-bold text-neutral-900 leading-none tracking-tight">
+            <div className="text-[21px] sm:text-[24px] lg:text-[23px] font-bold text-neutral-900 leading-none tracking-tight">
               第 7 周
             </div>
-            <div className="text-[11px] sm:text-[12px] lg:text-[11.5px] text-neutral-500 font-normal mt-1 lg:mt-0.5">
+            <div className="text-[11px] sm:text-[12px] lg:text-[12px] text-neutral-500 font-normal mt-1 lg:mt-0.5">
               10月12日 - 10月16日
             </div>
           </div>
@@ -581,17 +588,17 @@ export const DestinationAppWeekStage: React.FC<{
         </div>
 
         {/* 3. Weekday Header Row + 5×4 Course Grid */}
-        <div ref={destinationGridRef} className="relative mt-3 lg:mt-2">
+        <div ref={destinationGridRef} className="relative mt-3 lg:mt-2.5">
           {/* Weekday Headers: 周一 12 ~ 周五 16 */}
-          <div className="flex items-end mb-1.5 lg:mb-1">
-            <div className="w-7 sm:w-8 lg:w-9 shrink-0" />
+          <div className="flex items-end mb-1.5 lg:mb-1.5">
+            <div className="w-7 sm:w-8 lg:w-10 shrink-0" />
             <div className="flex-1 grid grid-cols-5 gap-1.5 lg:gap-2">
               {SCHOOL_WEEKDAYS.map((wd) => (
                 <div key={wd.day} className="flex flex-col items-center justify-center">
                   <span className="text-[10px] sm:text-[11px] text-neutral-500 font-normal leading-tight">
                     {wd.day}
                   </span>
-                  <span className="text-[12px] sm:text-[13px] lg:text-[12.5px] text-neutral-900 font-medium leading-tight mt-0.5">
+                  <span className="text-[12px] sm:text-[13px] lg:text-[13px] text-neutral-900 font-medium leading-tight mt-0.5">
                     {wd.appDate}
                   </span>
                 </div>
@@ -600,10 +607,10 @@ export const DestinationAppWeekStage: React.FC<{
           </div>
 
           {/* 5 × 4 Slots */}
-          <div className="flex flex-col gap-1.5 lg:gap-1.5">
+          <div className="flex flex-col gap-1.5 lg:gap-2">
             {APP_TIME_ROWS.map((timeLabel, rowIdx) => (
               <div key={timeLabel} className="flex items-start">
-                <div className="w-7 sm:w-8 lg:w-9 pt-1.5 text-[9.5px] sm:text-[10.5px] text-neutral-500 font-normal shrink-0 leading-none">
+                <div className="w-7 sm:w-8 lg:w-10 pt-1.5 text-[9.5px] sm:text-[10.5px] lg:text-[11px] text-neutral-500 font-normal shrink-0 leading-none tabular-nums">
                   {timeLabel}
                 </div>
 
@@ -616,7 +623,7 @@ export const DestinationAppWeekStage: React.FC<{
                       <div
                         key={slotKey}
                         data-destination-cell={slotKey}
-                        className="relative h-[74px] sm:h-[80px] lg:h-[75px] rounded-[11px] sm:rounded-[13px] lg:rounded-[13px] bg-[#EAEAEA]"
+                        className="relative h-[74px] sm:h-[80px] lg:h-[78px] rounded-[11px] sm:rounded-[13px] lg:rounded-[13px] bg-[#EAEAEA]"
                       >
                         {course && (
                           <div
@@ -629,17 +636,17 @@ export const DestinationAppWeekStage: React.FC<{
                               opacity: initialStaticCompleted ? 1 : 0,
                               willChange: 'opacity',
                             }}
-                            className={`w-full h-full rounded-[11px] sm:rounded-[13px] lg:rounded-[13px] p-1.5 lg:px-2 lg:py-1.5 overflow-hidden flex flex-col justify-start ${
+                            className={`w-full h-full rounded-[11px] sm:rounded-[13px] lg:rounded-[13px] p-1.5 lg:px-2.5 lg:py-1.5 overflow-hidden flex flex-col justify-start ${
                               course.appTheme === 'warm'
                                 ? 'bg-[#F3ECE1] text-[#5E3704]'
                                 : 'bg-[#E9E7F7] text-[#2B1B54]'
                             }`}
                           >
-                            <div className="shrink-0 text-[10px] sm:text-[11px] lg:text-[11px] font-semibold leading-[1.2] tracking-tight line-clamp-2 break-all">
+                            <div className="shrink-0 text-[10px] sm:text-[11px] lg:text-[11.5px] font-semibold leading-[1.2] tracking-tight line-clamp-2 break-all">
                               {course.name}
                             </div>
                             <div
-                              className={`overflow-hidden line-clamp-2 text-[8.5px] sm:text-[9.5px] lg:text-[9.5px] font-normal leading-[1.18] mt-0.5 break-all ${
+                              className={`overflow-hidden line-clamp-2 text-[8.5px] sm:text-[9.5px] lg:text-[10px] font-normal leading-[1.18] mt-0.5 break-all ${
                                 course.appTheme === 'warm'
                                   ? 'text-[#6D440E]'
                                   : 'text-[#3D2C6E]'
@@ -659,7 +666,7 @@ export const DestinationAppWeekStage: React.FC<{
         </div>
       </div>
 
-      {/* Completion Status Copy (Tightly grouped with Destination) */}
+      {/* Completion Status Copy (Section 18: Tightly grouped with Destination) */}
       <div
         ref={completionCopyRef}
         data-completion-status="true"
@@ -668,15 +675,12 @@ export const DestinationAppWeekStage: React.FC<{
           transform: initialStaticCompleted ? 'translate3d(0, 0px, 0)' : 'translate3d(0, 6px, 0)',
           willChange: 'opacity, transform',
         }}
-        className="mt-2.5 lg:mt-2 px-1.5 flex flex-col sm:flex-row sm:items-baseline justify-between gap-1"
+        className="mt-3 lg:mt-3.5 px-2 flex flex-col sm:flex-row sm:items-baseline justify-between gap-1.5"
       >
-        <div className="text-[13.5px] sm:text-[14px] text-neutral-900 font-semibold tracking-tight">
-          导入完成。
-          <span className="ml-1.5 font-normal text-neutral-600">
-            之后查课，不需要再打开教务系统。
-          </span>
+        <div className="text-[14px] sm:text-[14.5px] text-neutral-900 font-semibold tracking-tight">
+          导入完成。之后查课，不需要再打开教务系统。
         </div>
-        <div className="text-[11.5px] text-neutral-400 font-normal shrink-0">
+        <div className="text-[12px] text-neutral-500 font-medium shrink-0">
           课程写入本地 · 后续查看完全离线
         </div>
       </div>
@@ -685,10 +689,11 @@ export const DestinationAppWeekStage: React.FC<{
 }
 
 /**
- * Phase 05 Long Page Prototype (Round 2):
- * Spatial Narrative Long Page:
+ * Phase 05 Long Page Prototype (Round 3):
+ * Complete Spatial Narrative Long Page:
  * Section Header -> ZONE 1 (Source) -> CORRIDOR 1 (200vh) -> ZONE 2 (Process)
- * -> CORRIDOR 2 (170vh, D=34vh, S=17vh) -> ZONE 3 (Preview + Reading Space, 100vh)
+ * -> CORRIDOR 2 (170vh, D2=34vh, S2=17vh) -> ZONE 3 (Preview + Reading Space, 100vh)
+ * -> CORRIDOR 3 (220vh, D3=44vh, S3=22vh) -> ZONE 4 (Destination + Final Reading Space, ~92vh)
  * Zero pin, zero sticky Main Stage, locally sticky StageRail, zero wheel interception.
  */
 export const SchoolImportDemo: React.FC = () => {
@@ -702,6 +707,11 @@ export const SchoolImportDemo: React.FC = () => {
   const previewZoneRef = useRef<HTMLDivElement | null>(null)
   const previewPanelRef = useRef<HTMLDivElement | null>(null)
   const previewCountBadgeRef = useRef<HTMLSpanElement | null>(null)
+  const corridor3Ref = useRef<HTMLDivElement | null>(null)
+  const destinationZoneRef = useRef<HTMLDivElement | null>(null)
+  const destinationPanelRef = useRef<HTMLDivElement | null>(null)
+  const destinationGridRef = useRef<HTMLDivElement | null>(null)
+  const completionCopyRef = useRef<HTMLDivElement | null>(null)
 
   // StageRail & MobileStageHeader DOM refs (updated directly in applyGlobalProgress)
   const railRefs = useRef<StageRailDomRefs>({
@@ -713,6 +723,7 @@ export const SchoolImportDemo: React.FC = () => {
     stepSubtitles: [],
     transitionHintEl: null,
     transitionHint2El: null,
+    transitionHint3El: null,
     mobileStepCode: null,
     mobileStepTitle: null,
     mobileStepSubtitle: null,
@@ -725,6 +736,7 @@ export const SchoolImportDemo: React.FC = () => {
   const staticSecondaryStripRefs = useRef<Record<string, HTMLDivElement | null>>({})
   const staticCorridor2RowRefs = useRef<Record<string, HTMLDivElement | null>>({})
   const staticPreviewRowRefs = useRef<Record<string, HTMLDivElement | null>>({})
+  const staticDestinationRefs = useRef<Record<string, HTMLDivElement | null>>({})
   const stripLaneTopRef = useRef<HTMLDivElement | null>(null)
   const stripLaneBottomRef = useRef<HTMLDivElement | null>(null)
   const processBoxRef = useRef<HTMLDivElement | null>(null)
@@ -751,7 +763,7 @@ export const SchoolImportDemo: React.FC = () => {
     isMobile: false,
     viewportHeight: 900,
     stageWidth: 1200,
-    stageHeight: 4800,
+    stageHeight: 6400,
     stripLaneTopRect: { x: 340, y: 1800, width: 480, height: 38 },
     stripLaneBottomRect: { x: 340, y: 1800, width: 480, height: 38 },
     processBoxRect: { x: 340, y: 1860, width: 480, height: 210 },
@@ -789,15 +801,29 @@ export const SchoolImportDemo: React.FC = () => {
     /**
      * Measure and cache all stage geometry in sectionRef local coordinates
      * (localTop = elementRect.top - sectionRect.top, no scrollY added).
+     * Temporarily zeroes carrier transforms on previewPanel and destinationPanel
+     * so basePreviewRect and baseDestinationRect are pure untransformed DOM rects.
      */
     const measureStageGeometry = () => {
+      const prevPanel = previewPanelRef.current
+      const destPanel = destinationPanelRef.current
+      const savedPrevTransform = prevPanel ? prevPanel.style.transform : ''
+      const savedDestTransform = destPanel ? destPanel.style.transform : ''
+      if (prevPanel) prevPanel.style.transform = 'none'
+      if (destPanel) destPanel.style.transform = 'none'
+
       const rootBox = section.getBoundingClientRect()
-      if (rootBox.width === 0 || rootBox.height === 0) return
+      if (rootBox.width === 0 || rootBox.height === 0) {
+        if (prevPanel) prevPanel.style.transform = savedPrevTransform
+        if (destPanel) destPanel.style.transform = savedDestTransform
+        return
+      }
 
       const isMobile = window.innerWidth < 1024
       const topLane = toRelativeRect(stripLaneTopRef.current, rootBox)
       const bottomLane = toRelativeRect(stripLaneBottomRef.current, rootBox)
       const procBox = toRelativeRect(processBoxRef.current, rootBox)
+      const destGridR = toRelativeRect(destinationGridRef.current, rootBox)
 
       const coursesMap: StageGeometryCache['courses'] = {}
       for (const course of SCHOOL_IMPORT_COURSES) {
@@ -806,10 +832,12 @@ export const SchoolImportDemo: React.FC = () => {
         const secStripEl = staticSecondaryStripRefs.current[course.id]
         const c2RowEl = staticCorridor2RowRefs.current[course.id]
         const prevRowEl = staticPreviewRowRefs.current[course.id]
+        const destEl = staticDestinationRefs.current[course.id]
 
         const stripR = toRelativeRect(stripEl, rootBox)
         const prevR = prevRowEl ? toRelativeRect(prevRowEl, rootBox) : procBox
         const c2RowR = c2RowEl ? toRelativeRect(c2RowEl, rootBox) : prevR
+        const destR = destEl ? toRelativeRect(destEl, rootBox) : prevR
 
         coursesMap[course.id] = {
           sourceRect: toRelativeRect(srcEl, rootBox),
@@ -817,9 +845,12 @@ export const SchoolImportDemo: React.FC = () => {
           secondaryStripRect: secStripEl ? toRelativeRect(secStripEl, rootBox) : stripR,
           corridor2RowRect: c2RowR,
           previewRect: prevR,
-          destinationRect: prevR,
+          destinationRect: destR,
         }
       }
+
+      if (prevPanel) prevPanel.style.transform = savedPrevTransform
+      if (destPanel) destPanel.style.transform = savedDestTransform
 
       geometryCacheRef.current = {
         isMobile,
@@ -829,19 +860,24 @@ export const SchoolImportDemo: React.FC = () => {
         stripLaneTopRect: topLane,
         stripLaneBottomRect: bottomLane.width > 0 ? bottomLane : topLane,
         processBoxRect: procBox,
-        destinationGridTopY: procBox.y,
+        destinationGridTopY: destGridR.y > 0 ? destGridR.y : procBox.y,
         courses: coursesMap,
       }
     }
 
     /**
-     * Pure DOM state application for Long Page Round 2 progress p in [0, 1].
+     * Pure DOM state application for Long Page Round 3 progress p in [0, 1].
      */
     const applyGlobalProgress = (rawP: number) => {
       const p = clamp(rawP, 0, 1)
       currentProgressRef.current = p
       const geom = geometryCacheRef.current
-      const macro = computePhase05MacroState(p, SCHOOL_IMPORT_COURSES)
+      const macro = computePhase05MacroState(
+        p,
+        SCHOOL_IMPORT_COURSES,
+        geom.viewportHeight,
+        geom.isMobile
+      )
 
       // 0. Update Desktop Editorial Timeline StageRail & MobileStageHeader continuously
       const rRefs = railRefs.current
@@ -883,6 +919,10 @@ export const SchoolImportDemo: React.FC = () => {
         rRefs.transitionHint2El.style.opacity = macro.corridor2TransitionHintOpacity.toFixed(3)
         rRefs.transitionHint2El.style.transform = `translate3d(0, ${macro.corridor2TransitionHintY.toFixed(2)}px, 0)`
       }
+      if (rRefs.transitionHint3El) {
+        rRefs.transitionHint3El.style.opacity = macro.corridor3TransitionHintOpacity.toFixed(3)
+        rRefs.transitionHint3El.style.transform = `translate3d(0, ${macro.corridor3TransitionHintY.toFixed(2)}px, 0)`
+      }
 
       const activeMeta = PHASE05_STAGE_STEPS[macro.activeStepIndex]
       if (rRefs.mobileStepCode) {
@@ -898,7 +938,7 @@ export const SchoolImportDemo: React.FC = () => {
         rRefs.mobileProgressBar.style.width = `${clamp(macro.railProgressPct, 4, 100).toFixed(1)}%`
       }
 
-      // Container visual weight hierarchy (Section 15: Preview = 100%, upstream de-weights)
+      // Container visual weight hierarchy & Corridor 3 spatial carriers
       if (corridor1Ref.current) {
         corridor1Ref.current.style.opacity = macro.corridor1ContainerOpacity.toFixed(3)
       }
@@ -907,6 +947,21 @@ export const SchoolImportDemo: React.FC = () => {
       }
       if (corridor2Ref.current) {
         corridor2Ref.current.style.opacity = macro.corridor2ContainerOpacity.toFixed(3)
+      }
+      if (corridor3Ref.current) {
+        corridor3Ref.current.style.opacity = macro.corridor3ContainerOpacity.toFixed(3)
+      }
+      if (previewPanelRef.current) {
+        previewPanelRef.current.style.opacity = macro.previewStageOpacity.toFixed(3)
+        previewPanelRef.current.style.transform = `translate3d(${macro.previewCarrierXPx.toFixed(2)}px, ${macro.previewCarrierYPx.toFixed(2)}px, 0)`
+      }
+      if (destinationPanelRef.current) {
+        destinationPanelRef.current.style.opacity = macro.destinationStageOpacity.toFixed(3)
+        destinationPanelRef.current.style.transform = `translate3d(${macro.destinationCarrierXPx.toFixed(2)}px, ${macro.destinationCarrierYPx.toFixed(2)}px, 0)`
+      }
+      if (completionCopyRef.current) {
+        completionCopyRef.current.style.opacity = macro.completionOpacity.toFixed(3)
+        completionCopyRef.current.style.transform = `translate3d(0, ${macro.completionY.toFixed(2)}px, 0)`
       }
 
       for (let i = 0; i < SCHOOL_IMPORT_COURSES.length; i++) {
@@ -943,6 +998,12 @@ export const SchoolImportDemo: React.FC = () => {
           prevRowEl.style.opacity = state.staticPreviewOpacity.toFixed(3)
         }
 
+        // 2e. Static DestinationAppWeekStage Course Block opacity
+        const destEl = staticDestinationRefs.current[course.id]
+        if (destEl) {
+          destEl.style.opacity = state.staticDestinationOpacity.toFixed(3)
+        }
+
         // 3. Morph Overlay Card
         const cardEl = morphCardRefs.current[course.id]
         if (!cardEl) continue
@@ -973,14 +1034,14 @@ export const SchoolImportDemo: React.FC = () => {
           cardEl.style.boxShadow = 'none'
         }
 
-        // 3a. Left Source Color Bar -> Preview Identity Dot
+        // 3a. Left Source Color Bar -> Preview / Compact Dot
         const barEl = morphBarRefs.current[course.id]
         if (barEl) {
           const dotT = state.leftBarToDotProgress
           const procT = state.processLayerOpacity
           const w = lerp(2.5, 6, dotT)
           const h = lerp(14, 6, dotT)
-          const leftPx = lerp(lerp(12, 8, procT), 14, dotT)
+          const leftPx = lerp(lerp(12, 8, procT), 12, dotT)
           const topPct = lerp(50, 10, procT * (1 - dotT))
           barEl.style.opacity = state.leftBarOpacity.toFixed(3)
           barEl.style.width = `${w.toFixed(2)}px`
@@ -1035,7 +1096,7 @@ export const SchoolImportDemo: React.FC = () => {
           }
         }
 
-        // 3e. Layer 4: Preview Row Layer (Sections 4–6: Course Name + Weekday · Period · Location)
+        // 3e. Layer 4: Preview Row Layer
         const prevLayer = morphPreviewLayerRefs.current[course.id]
         if (prevLayer) {
           prevLayer.style.opacity = state.previewTextOpacity.toFixed(3)
@@ -1043,16 +1104,20 @@ export const SchoolImportDemo: React.FC = () => {
             state.previewTextOpacity > 0.005 ? 'visible' : 'hidden'
         }
 
-        // 3f. Layers 5..6 (kept hidden in Round 2; Destination is out of scope)
+        // 3f. Layer 5: Compact Record Layer (Corridor 3: displayName + day · period)
         const compactLayer = morphCompactLayerRefs.current[course.id]
         if (compactLayer) {
-          compactLayer.style.opacity = '0'
-          compactLayer.style.visibility = 'hidden'
+          compactLayer.style.opacity = state.compactRecordTextOpacity.toFixed(3)
+          compactLayer.style.visibility =
+            state.compactRecordTextOpacity > 0.005 ? 'visible' : 'hidden'
         }
+
+        // 3g. Layer 6: Destination Course Block Layer (Corridor 3 -> Destination)
         const destLayer = morphDestinationLayerRefs.current[course.id]
         if (destLayer) {
-          destLayer.style.opacity = '0'
-          destLayer.style.visibility = 'hidden'
+          destLayer.style.opacity = state.destinationTextOpacity.toFixed(3)
+          destLayer.style.visibility =
+            state.destinationTextOpacity > 0.005 ? 'visible' : 'hidden'
         }
       }
 
@@ -1078,7 +1143,13 @@ export const SchoolImportDemo: React.FC = () => {
       }
 
       if (previewCountBadgeRef.current) {
-        previewCountBadgeRef.current.textContent = `共 ${SCHOOL_IMPORT_COURSES.length} 门课程`
+        if (macro.corridor3P >= 0.96) {
+          previewCountBadgeRef.current.textContent = `已全部写入本地 · ${SCHOOL_IMPORT_COURSES.length} 门`
+        } else if (macro.corridor3P > 0.02) {
+          previewCountBadgeRef.current.textContent = `正在写入本地 · ${macro.settledDestinationCount}/${SCHOOL_IMPORT_COURSES.length} 门`
+        } else {
+          previewCountBadgeRef.current.textContent = `共 ${SCHOOL_IMPORT_COURSES.length} 门课程`
+        }
       }
     }
 
@@ -1090,7 +1161,12 @@ export const SchoolImportDemo: React.FC = () => {
     window.__getPhase05Progress = () => currentProgressRef.current
     window.__getPhase05Telemetry = () => ({
       globalP: currentProgressRef.current,
-      macro: computePhase05MacroState(currentProgressRef.current, SCHOOL_IMPORT_COURSES),
+      macro: computePhase05MacroState(
+        currentProgressRef.current,
+        SCHOOL_IMPORT_COURSES,
+        geometryCacheRef.current.viewportHeight,
+        geometryCacheRef.current.isMobile
+      ),
       motionConfig: PHASE05_MOTION_CONFIG,
     })
 
@@ -1148,6 +1224,7 @@ export const SchoolImportDemo: React.FC = () => {
   const showSource = previewState === 'ALL' || previewState === 'SOURCE'
   const showProcess = previewState === 'ALL' || previewState === 'PROCESS'
   const showPreview = previewState === 'ALL' || previewState === 'PREVIEW'
+  const showDestination = previewState === 'ALL' || previewState === 'DESTINATION'
 
   // Sort courses by corridor2Index (0..5) for Corridor 2 intermediate stream slots
   const corridor2StreamCourses = [...SCHOOL_IMPORT_COURSES]
@@ -1159,7 +1236,7 @@ export const SchoolImportDemo: React.FC = () => {
       id="school-import-demo"
       ref={sectionRef}
       data-phase05-state={previewState}
-      data-phase05-architecture="spatial-long-page-round-2"
+      data-phase05-architecture="spatial-long-page-round-3"
       data-corridor-d-vh={PHASE05_MOTION_CONFIG.corridorCourseDurationVh}
       data-corridor-s-vh={PHASE05_MOTION_CONFIG.corridorCourseStaggerVh}
       data-corridor1-height-vh={PHASE05_MOTION_CONFIG.corridor1HeightVh}
@@ -1171,6 +1248,13 @@ export const SchoolImportDemo: React.FC = () => {
       data-process-corridor2-overlap-ratio={PHASE05_MOTION_CONFIG.processCorridor2OverlapRatio}
       data-preview-corridor2-overlap-ratio={PHASE05_MOTION_CONFIG.previewCorridor2OverlapRatio}
       data-preview-zone-height-vh={PHASE05_MOTION_CONFIG.previewZoneMinVh}
+      data-corridor3-d-vh={PHASE05_MOTION_CONFIG.corridor3CourseDurationVh}
+      data-corridor3-s-vh={PHASE05_MOTION_CONFIG.corridor3CourseStaggerVh}
+      data-corridor3-height-vh={PHASE05_MOTION_CONFIG.corridor3HeightVh}
+      data-preview-corridor3-overlap-ratio={PHASE05_MOTION_CONFIG.previewCorridor3OverlapRatio}
+      data-destination-corridor3-overlap-ratio={PHASE05_MOTION_CONFIG.destinationCorridor3OverlapRatio}
+      data-destination-zone-height-vh={PHASE05_MOTION_CONFIG.destinationZoneMinVh}
+      data-final-reading-space-vh={PHASE05_MOTION_CONFIG.finalReadingSpaceVh}
       data-phase05b-start={PHASE05B_GLOBAL_START}
       data-phase05b-end={PHASE05B_GLOBAL_END}
       data-phase05c-start={PHASE05C_GLOBAL_START}
@@ -1209,6 +1293,7 @@ export const SchoolImportDemo: React.FC = () => {
               - Left Column: Locally sticky Stage Rail (ONLY Stage Rail is sticky)
               - Right Column: Normal scrolling Long Page:
                 SourceZone -> Corridor 1 -> ProcessZone -> Corridor 2 -> PreviewZone
+                -> Corridor 3 -> DestinationZone + Final Reading Space
              ================================================================= */}
           <div className="mt-8 sm:mt-10 lg:mt-12 flex flex-col lg:flex-row lg:items-stretch gap-6 lg:gap-12">
             {previewState === 'ALL' && <ImportStageRail railRefs={railRefs} />}
@@ -1414,15 +1499,74 @@ export const SchoolImportDemo: React.FC = () => {
                   </div>
                 </div>
               )}
+
+              {/* =============================================================
+                  PART 7: CORRIDOR 3 · PREVIEW -> DESTINATION (Round 3 Sections 4–12)
+                  Exact Height = (9 - 1) * 22 + 44 = 220vh (D3=44vh, S3=22vh).
+                  - Front 28% (-62vh) overlaps with PreviewZone
+                  - Back 34% (-75vh on DestinationZone) overlaps with DestinationZone
+                 ============================================================= */}
+              {previewState === 'ALL' && (
+                <div
+                  ref={corridor3Ref}
+                  data-corridor="preview-to-destination"
+                  data-corridor-front-overlap={PHASE05_MOTION_CONFIG.previewCorridor3OverlapRatio}
+                  data-corridor-back-overlap={PHASE05_MOTION_CONFIG.destinationCorridor3OverlapRatio}
+                  style={{
+                    height: `${PHASE05_MOTION_CONFIG.corridor3HeightVh}vh`,
+                    marginTop: `-${PHASE05_MOTION_CONFIG.previewCorridor3OverlapVh}vh`,
+                    willChange: 'opacity',
+                  }}
+                  className="relative z-10 pointer-events-none"
+                />
+              )}
+
+              {/* =============================================================
+                  PART 8: ZONE 4 · DESTINATION + FINAL READING SPACE (Sections 13–20)
+                  Overlaps the last 34% (-75vh) of Corridor 3.
+                  Post-Corridor-3 visible Zone height = 86vh (within 80–100vh),
+                  providing a 40vh Final Reading Space where all 9 courses are
+                  settled in Destination and the page scrolls naturally upward.
+                 ============================================================= */}
+              {showDestination && (
+                <div
+                  ref={destinationZoneRef}
+                  data-zone="destination"
+                  style={
+                    previewState === 'ALL'
+                      ? {
+                          minHeight: `${148 + PHASE05_MOTION_CONFIG.destinationZoneMinVh}vh`,
+                          marginTop: `-${PHASE05_MOTION_CONFIG.destinationCorridor3OverlapVh}vh`,
+                          paddingTop: '148vh',
+                        }
+                      : undefined
+                  }
+                  className="relative z-20 flex items-start pb-[6vh]"
+                >
+                  <div className="w-full">
+                    <DestinationAppWeekStage
+                      courses={SCHOOL_IMPORT_COURSES}
+                      panelRef={destinationPanelRef}
+                      destinationGridRef={destinationGridRef}
+                      completionCopyRef={completionCopyRef}
+                      initialStaticCompleted={previewState === 'DESTINATION'}
+                      registerDestinationNode={(id, el) => {
+                        staticDestinationRefs.current[id] = el
+                      }}
+                    />
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
       </div>
 
       {/* =====================================================================
-          CourseMorphOverlay (Sections 18–19):
+          CourseMorphOverlay (Section 23):
           Section-relative absolute overlay (position: absolute; inset: 0; pointer-events: none)
-          bridging SourceZone -> Corridor 1 -> ProcessZone -> Corridor 2 -> PreviewZone.
+          bridging SourceZone -> Corridor 1 -> ProcessZone -> Corridor 2 -> PreviewZone
+          -> Corridor 3 -> DestinationZone.
          ===================================================================== */}
       {previewState === 'ALL' && (
         <div
@@ -1462,7 +1606,7 @@ export const SchoolImportDemo: React.FC = () => {
                 }}
                 className="absolute overflow-hidden"
               >
-                {/* Continuous Left Color Identity Bar -> Preview Dot */}
+                {/* Continuous Left Color Identity Bar -> Preview / Compact Dot */}
                 <span
                   ref={(el) => {
                     morphBarRefs.current[course.id] = el
@@ -1587,21 +1731,43 @@ export const SchoolImportDemo: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Layer 5..6 placeholders (retained for future Destination reuse) */}
+                {/* Layer 5: COMPACT RECORD Content (Corridor 3: displayName + day · period) */}
                 <div
                   ref={(el) => {
                     morphCompactLayerRefs.current[course.id] = el
                   }}
                   style={{ opacity: 0, visibility: 'hidden' }}
-                  className="hidden"
-                />
+                  className="absolute inset-0 pl-6 pr-3 flex items-center justify-between gap-2 overflow-hidden"
+                >
+                  <span className="text-[12px] text-neutral-900 font-semibold tracking-tight truncate">
+                    {course.displayName}
+                  </span>
+                  <span className="text-[11px] text-neutral-500 font-medium shrink-0 tabular-nums">
+                    {course.day} · {course.startPeriod}–{course.endPeriod}节
+                  </span>
+                </div>
+
+                {/* Layer 6: DESTINATION APP COURSE BLOCK Content */}
                 <div
                   ref={(el) => {
                     morphDestinationLayerRefs.current[course.id] = el
                   }}
                   style={{ opacity: 0, visibility: 'hidden' }}
-                  className="hidden"
-                />
+                  className={`absolute inset-0 p-1.5 lg:px-2.5 lg:py-1.5 flex flex-col justify-start overflow-hidden ${
+                    course.appTheme === 'warm' ? 'text-[#5E3704]' : 'text-[#2B1B54]'
+                  }`}
+                >
+                  <div className="shrink-0 text-[10px] sm:text-[11px] lg:text-[11.5px] font-semibold leading-[1.2] tracking-tight line-clamp-2 break-all">
+                    {course.name}
+                  </div>
+                  <div
+                    className={`overflow-hidden line-clamp-2 text-[8.5px] sm:text-[9.5px] lg:text-[10px] font-normal leading-[1.18] mt-0.5 break-all ${
+                      course.appTheme === 'warm' ? 'text-[#6D440E]' : 'text-[#3D2C6E]'
+                    }`}
+                  >
+                    {course.appLocation}
+                  </div>
+                </div>
               </div>
             )
           })}
@@ -1610,4 +1776,5 @@ export const SchoolImportDemo: React.FC = () => {
     </section>
   )
 }
+
 

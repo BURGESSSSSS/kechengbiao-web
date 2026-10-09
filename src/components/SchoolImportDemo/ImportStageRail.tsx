@@ -10,6 +10,7 @@ export interface StageRailDomRefs {
   stepSubtitles: (HTMLDivElement | null)[]
   transitionHintEl?: HTMLDivElement | null
   transitionHint2El?: HTMLDivElement | null
+  transitionHint3El?: HTMLDivElement | null
   // Mobile compact progress header refs
   mobileStepCode: HTMLSpanElement | null
   mobileStepTitle: HTMLSpanElement | null
@@ -134,9 +135,13 @@ export const EditorialStageRailNode: React.FC<{
                 railRefs.current.transitionHintEl = el
               } else if (stepIndex === 1) {
                 railRefs.current.transitionHint2El = el
+              } else if (stepIndex === 2) {
+                railRefs.current.transitionHint3El = el
               }
             }}
-            data-rail-transition-hint={stepIndex === 0 ? 'true' : 'corridor2'}
+            data-rail-transition-hint={
+              stepIndex === 0 ? 'true' : stepIndex === 1 ? 'corridor2' : 'corridor3'
+            }
             style={{
               opacity: 0,
               transform: 'translate3d(0, 2px, 0)',
@@ -153,8 +158,8 @@ export const EditorialStageRailNode: React.FC<{
 }
 
 /**
- * Locally Sticky Desktop StageRail (Sections 9–12 & Round 2 Sections 16–17:
- * ONLY Rail is sticky at top: 136px; Main Stage / Source / Corridor / Process / Preview / Overlay scroll normally).
+ * Locally Sticky Desktop StageRail (Sections 9–12 & Round 3 Sections 21–22:
+ * ONLY Rail is sticky at top: 136px; Main Stage / Source / Corridor / Process / Preview / Destination / Overlay scroll normally).
  */
 export const ImportStageRail: React.FC<{
   railRefs: React.MutableRefObject<StageRailDomRefs>
@@ -167,7 +172,13 @@ export const ImportStageRail: React.FC<{
     >
       {PHASE05_STAGE_STEPS.map((step, idx) => {
         const isLast = idx === PHASE05_STAGE_STEPS.length - 1
-        const hasHint = idx === 0 || idx === 1
+        const hasHint = idx === 0 || idx === 1 || idx === 2
+        const hintText =
+          idx === 0
+            ? '正在提取课程'
+            : idx === 1
+              ? '正在整理预览'
+              : '正在写入课表'
         return (
           <div key={step.code} className={isLast ? 'pb-2' : hasHint ? 'pb-7' : 'pb-8'}>
             <EditorialStageRailNode
@@ -176,7 +187,7 @@ export const ImportStageRail: React.FC<{
               showConnectorBelow={!isLast}
               connectorClassName="bottom-0"
               showCorridorTransitionHint={hasHint}
-              transitionHintText={idx === 0 ? '正在提取课程' : '正在整理预览'}
+              transitionHintText={hintText}
             />
           </div>
         )
