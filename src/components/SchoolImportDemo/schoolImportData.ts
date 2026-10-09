@@ -86,19 +86,44 @@ export const SCHOOL_PERIOD_ROWS = [
 export const APP_TIME_ROWS = ['08:00', '10:00', '14:00', '16:00'] as const
 
 /**
- * Phase 05 Redesign Prototype｜Re-set in place (原位重排)
+ * Phase 05 Final Production Copy (Sections 4, 6, 11)
+ */
+export const SCHOOL_IMPORT_COPY = {
+  intro: {
+    title: '把学校里的课表带进来。',
+    bodyLine1: '在企业微信打开“我的课表”，完成采集后直接导入。',
+    bodyLine2: '课程写入本地，之后查课不再依赖教务系统。',
+    meta: '无需输入教务密码 · 导入后离线可用',
+  },
+  caption: {
+    source: '企业微信 · 我的课表',
+    app: '课程表 · 周视图',
+  },
+  completion: {
+    title: '导入完成。',
+    body: '之后查课，不需要再打开教务系统。',
+    meta: '课程写入本地 · 后续查看完全离线',
+  },
+} as const
+
+/**
+ * Phase 05 Production Configuration｜Re-set in place (原位重排)
  * Single normalized progress p ∈ [0, 1] configuration.
  */
 export const INPLACE_PROTOTYPE_CONFIG = {
   /** Frame dimensions on desktop (1698×900 / 1440×900) */
   frameWidthPx: 376,
-  frameHeightPx: 700,
+  frameHeightPx: 692,
   frameRadiusPx: 26,
 
+  /** Frame dimensions on mobile (390×844) */
+  mobileFrameMaxWidthPx: 358,
+  mobileFrameHeightPx: 668,
+  mobileFrameRadiusPx: 24,
+
   /** Active scroll distance for CSS sticky container */
-  scrollDistanceVh: 90,
-  /** Total section height = 100vh viewport + 90vh scroll travel */
-  sectionTotalHeightVh: 190,
+  desktopScrollDistanceVh: 88,
+  mobileScrollDistanceVh: 68,
 
   /** Global progress windows (p ∈ [0, 1]) */
   windows: {
@@ -107,7 +132,7 @@ export const INPLACE_PROTOTYPE_CONFIG = {
     /** 0.06–0.24: Motion 1 — High-saturation fill retracts to 3px left color tag; white text -> dark */
     colorToTagStart: 0.06,
     colorToTagEnd: 0.24,
-    /** 0.14–0.38: Motion 2 — Text simplification (mask / crop / re-layout; optional Variant B strikethrough) */
+    /** 0.14–0.38: Motion 2 — Text simplification (mask / crop / re-layout) */
     textSimplifyStart: 0.14,
     textSimplifyEnd: 0.38,
     /** 0.30–0.55: Motion 3 — 8 period rows merge into 4 time rows (1+2->08:00, 3+4->10:00, 5+6->14:00, 7+8->16:00) */
@@ -122,10 +147,13 @@ export const INPLACE_PROTOTYPE_CONFIG = {
     /** 0.66–0.86: Motion 6 — School Chrome collapses & 第7周 FLIP-morphs into App Week View Header */
     chromeDissolveStart: 0.66,
     chromeDissolveEnd: 0.86,
-    /** 0.82–0.94: Real App UI completion (bottom nav pill settles in) */
-    appUiCompleteStart: 0.82,
-    appUiCompleteEnd: 0.94,
-    /** 0.94–1.00: Stable final state + subtle outside marker "导入完成。" */
+    /** 0.80–0.92: Real App UI completion (bottom nav pill settles in) */
+    appUiCompleteStart: 0.80,
+    appUiCompleteEnd: 0.92,
+    /** 0.86–0.95: Desktop Completion Copy restrained reveal */
+    completionCopyStart: 0.86,
+    completionCopyEnd: 0.95,
+    /** 0.94–1.00: Stable final state */
     finalStableStart: 0.94,
   },
 } as const
@@ -308,11 +336,3 @@ export const SCHOOL_IMPORT_COURSES: SchoolImportCourse[] = [
     weekLabel: '第7周',
   },
 ]
-
-export const PHASE05_STAGE_STEPS = [
-  { code: '01', title: '教务系统源课表', subtitle: '读取第 7 周原始课表' },
-  { code: '02', title: '结构化抽取', subtitle: '解析课程、时间与地点' },
-  { code: '03', title: '导入预览', subtitle: '确认 9 门课程无误' },
-  { code: '04', title: '写入本地', subtitle: '生成 App 周视图' },
-] as const
-

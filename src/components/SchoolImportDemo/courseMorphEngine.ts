@@ -2,6 +2,13 @@ import { INPLACE_PROTOTYPE_CONFIG, type SchoolImportCourse } from './schoolImpor
 
 export type TextSimplifyVariant = 'A' | 'B'
 
+export interface InPlaceViewportOptions {
+  isMobile?: boolean
+  frameWidthPx?: number
+  frameHeightPx?: number
+  variant?: TextSimplifyVariant
+}
+
 export function clamp(val: number, min: number, max: number): number {
   return Math.max(min, Math.min(max, val))
 }
@@ -69,7 +76,7 @@ export interface InPlaceCourseCardVisualState {
   titleColor: string
   /** Location / metadata color: #FFFFFF -> #52525B -> #6D440E / #3D2C6E */
   locationColor: string
-  /** Title font size (px) and line height */
+  /** Title and location font sizes (px) — never compressed below readable App lower bound */
   titleFontSizePx: number
   locationFontSizePx: number
   /** Padding inside the card (px) */
@@ -79,7 +86,7 @@ export interface InPlaceCourseCardVisualState {
   redundantTextOpacity: number
   redundantMaxHeightPx: number
   redundantClipBottomPercent: number
-  /** Variant B optional lightweight 1.5px strikethrough progress */
+  /** Variant B optional lightweight 1.5px strikethrough progress (desktop only) */
   strikeLineWidthPercent: number
   strikeLineOpacity: number
   /** Clean App location opacity (for courses like 大学体育 where @本校区运动场[本校区运动场] -> 未填写) */
@@ -89,6 +96,10 @@ export interface InPlaceCourseCardVisualState {
 export interface InPlaceSchedulePrototypeState {
   globalP: number
   variant: TextSimplifyVariant
+  isMobile: boolean
+  frameWidthPx: number
+  frameHeightPx: number
+  frameRadiusPx: number
 
   /** Sub-window normalized progresses */
   colorToTagP: number
@@ -98,15 +109,20 @@ export interface InPlaceSchedulePrototypeState {
   tagToAppColorP: number
   chromeDissolveP: number
   appUiCompleteP: number
+  completionCopyP: number
   finalStableP: number
 
-  /** Frame & Canvas */
+  /** Frame & Stage Composition */
   frameBgColor: string
   frameSubtleSettleScale: number
-  topStageLabelSchoolOpacity: number
-  topStageLabelAppOpacity: number
-  outsideCompleteMarkerOpacity: number
-  outsideCompleteMarkerTranslateY: number
+  /** Desktop horizontal shift to center-left (-68px) as App state & right-side Completion Copy settle */
+  desktopStageShiftXPx: number
+  /** Editorial Source Caption ("企业微信 · 我的课表" -> "课程表 · 周视图") */
+  sourceCaptionSchoolOpacity: number
+  sourceCaptionAppOpacity: number
+  /** Desktop Right-Side Completion Copy ("导入完成。") */
+  desktopCompletionOpacity: number
+  desktopCompletionTranslateYPx: number
 
   /** Top Chrome (WeCom Host Bar + School Blue Bar + Unified Header Band) */
   wecomBarHeightPx: number
@@ -174,14 +190,32 @@ export interface InPlaceSchedulePrototypeState {
 }
 
 /**
- * Pure, deterministic state calculator for the Phase 05 "Re-set in place" prototype.
+ * Pure, deterministic state calculator for the Phase 05 "Re-set in place" production section.
  * Driven by a single normalized scroll progress `rawP ∈ [0, 1]`.
  * Strictly reversible, zero per-course stagger, zero rotation, zero overshoot.
  */
 export function computeInPlacePrototypeState(
   rawP: number,
-  variant: TextSimplifyVariant = 'A'
+  options: InPlaceViewportOptions | TextSimplifyVariant = 'A'
 ): InPlaceSchedulePrototypeState {
+  const opts: InPlaceViewportOptions =
+    typeof options === 'string' ? { variant: options } : options
+  const isMobile = Boolean(opts.isMobile)
+  const variant: TextSimplifyVariant = isMobile ? 'A' : opts.variant ?? 'A'
+  const frameWidthPx =
+    opts.frameWidthPx ??
+    (isMobile
+      ? INPLACE_PROTOTYPE_CONFIG.mobileFrameMaxWidthPx
+      : INPLACE_PROTOTYPE_CONFIG.frameWidthPx)
+  const frameHeightPx =
+    opts.frameHeightPx ??
+    (isMobile
+      ? INPLACE_PROTOTYPE_CONFIG.mobileFrameHeightPx
+      : INPLACE_PROTOTYPE_CONFIG.frameHeightPx)
+  const frameRadiusPx = isMobile
+    ? INPLACE_PROTOTYPE_CONFIG.mobileFrameRadiusPx
+    : INPLACE_PROTOTYPE_CONFIG.frameRadiusPx
+
   const globalP = clamp(rawP, 0, 1)
   const w = INPLACE_PROTOTYPE_CONFIG.windows
 
@@ -194,46 +228,52 @@ export function computeInPlacePrototypeState(
   const tagToAppColorP = easeInOutCubic(remap(globalP, w.tagToAppColorStart, w.tagToAppColorEnd))
   const chromeDissolveP = easeInOutCubic(remap(globalP, w.chromeDissolveStart, w.chromeDissolveEnd))
   const appUiCompleteP = easeInOutCubic(remap(globalP, w.appUiCompleteStart, w.appUiCompleteEnd))
+  const completionCopyP = easeOutCubic(
+    remap(globalP, w.completionCopyStart, w.completionCopyEnd)
+  )
   const finalStableP = easeOutCubic(remap(globalP, w.finalStableStart, 1.0))
 
-  // 2. Frame & Canvas background (#FFFFFF school table -> #F6F6F6 real App Week View)
+  // 2. Frame & Stage Composition
   const frameBgColor = interpolateHexColor('#FFFFFF', '#F6F6F6', gridToCardP)
-  // Very subtle whole-frame settle completing at 0.94, completely still in 0.94–1.00
+  // Very subtle whole-frame settle completing at 0.92, completely still in 0.92–1.00
   const settleBell =
-    globalP >= 0.82 && globalP <= 0.94
-      ? Math.sin(remap(globalP, 0.82, 0.94) * Math.PI) * 0.003
+    globalP >= 0.80 && globalP <= 0.92
+      ? Math.sin(remap(globalP, 0.80, 0.92) * Math.PI) * 0.0025
       : 0
   const frameSubtleSettleScale = 1 - settleBell
 
-  const topStageLabelSchoolOpacity = 1 - easeInOutCubic(remap(globalP, 0.64, 0.82))
-  const topStageLabelAppOpacity = easeInOutCubic(remap(globalP, 0.72, 0.88))
+  // Desktop composition shift: glides from center (0px) to center-left (-68px) as App state forms
+  const stageBalanceP = easeInOutCubic(remap(globalP, 0.72, 0.90))
+  const desktopStageShiftXPx = isMobile ? 0 : lerp(0, -68, stageBalanceP)
 
-  const outsideCompleteMarkerP = easeOutCubic(remap(globalP, 0.88, 0.95))
-  const outsideCompleteMarkerOpacity = outsideCompleteMarkerP
-  const outsideCompleteMarkerTranslateY = lerp(6, 0, outsideCompleteMarkerP)
+  // Editorial Source Caption ("企业微信 · 我的课表" -> "课程表 · 周视图")
+  const sourceCaptionSchoolOpacity = 1 - easeInOutCubic(remap(globalP, 0.66, 0.76))
+  const sourceCaptionAppOpacity = easeInOutCubic(remap(globalP, 0.74, 0.84))
+
+  // Desktop Completion Copy (enters very gently at 0.86–0.95: opacity 0 -> 1, translateY 10px -> 0)
+  const desktopCompletionOpacity = completionCopyP
+  const desktopCompletionTranslateYPx = lerp(10, 0, completionCopyP)
 
   // 3. Top Chrome Dissolve (0.66–0.86)
-  // WeCom black host bar clips/collapses upward first (0.66–0.80)
   const wecomCollapseP = easeInOutCubic(remap(globalP, 0.66, 0.80))
   const wecomBarHeightPx = lerp(34, 0, wecomCollapseP)
   const wecomBarOpacity = 1 - easeInOutCubic(remap(globalP, 0.66, 0.78))
   const wecomBarTranslateY = lerp(0, -10, wecomCollapseP)
 
-  // Blue "我的课表" bar compresses in height (0.68–0.84)
   const blueBarCollapseP = easeInOutCubic(remap(globalP, 0.68, 0.84))
   const schoolBlueBarHeightPx = lerp(34, 0, blueBarCollapseP)
   const schoolBlueBarOpacity = 1 - easeInOutCubic(remap(globalP, 0.68, 0.82))
 
-  // Unified Header Band expands from 28px (School semester row) to 88px (App Header + Week Nav)
-  const headerBandHeightPx = lerp(28, 88, chromeDissolveP)
+  const headerBandHeightPx = lerp(28, 86, chromeDissolveP)
   const headerBandBgColor = interpolateHexColor('#F8FAFC', '#F6F6F6', chromeDissolveP)
   const schoolSemesterTextOpacity = 1 - easeInOutCubic(remap(globalP, 0.66, 0.76))
   const schoolSemesterTranslateY = lerp(0, -8, easeInOutCubic(remap(globalP, 0.66, 0.76)))
 
-  // Shared "第7周" -> "第 7 周" FLIP / Geometry Morph (0.66–0.86)
-  const weekTitleLeftPx = lerp(304, 16, chromeDissolveP)
+  // Shared "第7周" -> "第 7 周" FLIP / Geometry Morph (adapts dynamically to frameWidthPx)
+  const startWeekLeftPx = Math.max(240, frameWidthPx - 70)
+  const weekTitleLeftPx = lerp(startWeekLeftPx, 16, chromeDissolveP)
   const weekTitleTopPx = lerp(6, 10, chromeDissolveP)
-  const weekTitleFontSizePx = lerp(11.5, 23, chromeDissolveP)
+  const weekTitleFontSizePx = lerp(11.5, isMobile ? 22 : 23, chromeDissolveP)
   const weekTitleFontWeight = Math.round(lerp(600, 700, chromeDissolveP))
   const weekTitleColor = interpolateHexColor('#1989FA', '#171717', chromeDissolveP)
   const weekTitleDigitGapPx = lerp(0.5, 4.5, chromeDissolveP)
@@ -259,17 +299,14 @@ export function computeInPlacePrototypeState(
   const weekdayDateColor = interpolateHexColor('#64748B', '#171717', gridToCardP)
 
   // 5. Schedule Grid Body (8 Period Rows -> 4 Time Rows, Grid Lines -> Spacing)
-  // Total frame height stays 700px throughout:
-  // At p=0: 34 + 34 + 28 + 36 + 536 + 32 = 700
-  // At p=1: 0  + 0  + 88 + 36 + 510 + 66 = 700
-  const bottomExpandP = easeInOutCubic(remap(globalP, 0.76, 0.92))
-  const bottomRegionHeightPx = lerp(32, 66, bottomExpandP)
+  const bottomExpandP = easeInOutCubic(remap(globalP, 0.76, 0.90))
+  const bottomRegionHeightPx = lerp(32, isMobile ? 62 : 64, bottomExpandP)
   const topRegionTotalPx = wecomBarHeightPx + schoolBlueBarHeightPx + headerBandHeightPx + 36
-  const gridBodyHeightPx = Math.max(480, 700 - topRegionTotalPx - bottomRegionHeightPx)
+  const gridBodyHeightPx = Math.max(450, frameHeightPx - topRegionTotalPx - bottomRegionHeightPx)
 
-  const gridOuterPadHorizontalPx = lerp(0, 8, gridToCardP)
+  const gridOuterPadHorizontalPx = lerp(0, isMobile ? 6 : 8, gridToCardP)
   const gridOuterPadVerticalPx = lerp(0, 4, gridToCardP)
-  const slotInsetPx = lerp(0.5, 3.2, gridToCardP)
+  const slotInsetPx = lerp(0.5, isMobile ? 2.8 : 3.2, gridToCardP)
   const tableGridLineOpacity = 1 - easeInOutCubic(remap(globalP, 0.40, 0.62))
   const periodSubDividerOpacity = 1 - easeInOutCubic(remap(globalP, 0.30, 0.46))
   const emptySlotBgOpacity = easeInOutCubic(remap(globalP, 0.44, 0.64))
@@ -283,7 +320,6 @@ export function computeInPlacePrototypeState(
   const appTimeRevealP = easeOutCubic(remap(globalP, 0.40, 0.55))
   const appTimeLabelOpacity = appTimeRevealP
   const appTimeLabelScale = lerp(0.92, 1.0, appTimeRevealP)
-  // Starts near the middle convergence point (+16px) and settles up to the App time row header position (0px)
   const appTimeLabelTranslateYPx = lerp(16, 0, appTimeRevealP)
 
   // 7. Bottom Region (School Summary Bar -> Real App Bottom Navigation Pill)
@@ -318,12 +354,16 @@ export function computeInPlacePrototypeState(
     const tagColorShiftP = easeInOutCubic(remap(globalP, 0.46, 0.62))
     const fillLayerColor = interpolateHexColor(course.sourceColor, appFillHex, tagColorShiftP)
 
-    // Left 3px tag accent bar (keeps the 3px editorial tag crisp while the softer beige/lavender sweeps across, then blends out)
-    const leftTagAccentColor = interpolateHexColor(course.sourceColor, appAccentTagHex, tagColorShiftP)
+    // Left 3px tag accent bar
+    const leftTagAccentColor = interpolateHexColor(
+      course.sourceColor,
+      appAccentTagHex,
+      tagColorShiftP
+    )
     const leftTagAccentOpacity =
       colorToTagP * (1 - easeInOutCubic(remap(globalP, 0.64, 0.74)))
 
-    // Editorial proof border (subtle hairline visible while in Color Tag / proof state, fades out as App card fill completes)
+    // Editorial proof border
     const proofBorderOpacity =
       colorToTagP * (1 - easeInOutCubic(remap(globalP, 0.58, 0.72)))
 
@@ -331,7 +371,7 @@ export function computeInPlacePrototypeState(
     const borderRadiusPx = lerp(2.5, 12, gridToCardP)
 
     // Text colors:
-    // Phase 1 (0.06–0.22): #FFFFFF -> #18181B (title) and #FFFFFF -> #52525B (location)
+    // Phase 1 (0.08–0.22): #FFFFFF -> #18181B (title) and #FFFFFF -> #52525B (location)
     // Phase 2 (0.52–0.72): #18181B -> appTitleHex and #52525B -> appLocationHex
     const textDarkenP = easeInOutCubic(remap(globalP, 0.08, 0.22))
     const editorialTitleHex = interpolateHexColor('#FFFFFF', '#18181B', textDarkenP)
@@ -340,19 +380,18 @@ export function computeInPlacePrototypeState(
     const editorialLocationHex = interpolateHexColor('#FFFFFF', '#52525B', textDarkenP)
     const locationColor = interpolateHexColor(editorialLocationHex, appLocationHex, tagToAppColorP)
 
-    // Typography sizing & padding re-layout
-    const titleFontSizePx = lerp(9.5, 10.5, rowMergeP)
-    const locationFontSizePx = lerp(8.5, 9.2, rowMergeP)
-    const padTopPx = lerp(3.5, 6.5, gridToCardP)
-    const padHorizontalPx = lerp(4, 7, gridToCardP)
+    // Typography sizing & padding re-layout (settles to readable 11px title / 10px location in Final App)
+    const titleFontSizePx = lerp(isMobile ? 9.5 : 9.8, 11, rowMergeP)
+    const locationFontSizePx = lerp(isMobile ? 8.8 : 9.0, 10, rowMergeP)
+    const padTopPx = lerp(3.5, isMobile ? 6.0 : 6.5, gridToCardP)
+    const padHorizontalPx = lerp(3.8, isMobile ? 6.0 : 7.0, gridToCardP)
 
     // Motion 2: Text simplification (0.14–0.38)
     let redundantCropP = textSimplifyP
     let strikeLineWidthPercent = 0
     let strikeLineOpacity = 0
 
-    if (variant === 'B') {
-      // Variant B: lightweight 1.5px strikethrough draws across first (0.14–0.25), then redundant text crops out (0.23–0.38)
+    if (variant === 'B' && !isMobile) {
       const strikeDrawP = easeOutCubic(remap(globalP, 0.14, 0.25))
       redundantCropP = easeInOutCubic(remap(globalP, 0.23, 0.38))
       strikeLineWidthPercent = strikeDrawP * 100
@@ -360,10 +399,9 @@ export function computeInPlacePrototypeState(
     }
 
     const redundantTextOpacity = 1 - redundantCropP
-    const redundantMaxHeightPx = lerp(28, 0, redundantCropP)
+    const redundantMaxHeightPx = lerp(isMobile ? 22 : 28, 0, redundantCropP)
     const redundantClipBottomPercent = redundantCropP * 100
 
-    // For 大学体育（三） where school text is "@本校区运动场[本校区运动场]" and App text is "未填写"
     const cleanLocationOpacity =
       course.appLocation === '未填写'
         ? easeInOutCubic(remap(globalP, 0.22, 0.38))
@@ -396,6 +434,10 @@ export function computeInPlacePrototypeState(
   return {
     globalP,
     variant,
+    isMobile,
+    frameWidthPx,
+    frameHeightPx,
+    frameRadiusPx,
     colorToTagP,
     textSimplifyP,
     rowMergeP,
@@ -403,13 +445,15 @@ export function computeInPlacePrototypeState(
     tagToAppColorP,
     chromeDissolveP,
     appUiCompleteP,
+    completionCopyP,
     finalStableP,
     frameBgColor,
     frameSubtleSettleScale,
-    topStageLabelSchoolOpacity,
-    topStageLabelAppOpacity,
-    outsideCompleteMarkerOpacity,
-    outsideCompleteMarkerTranslateY,
+    desktopStageShiftXPx,
+    sourceCaptionSchoolOpacity,
+    sourceCaptionAppOpacity,
+    desktopCompletionOpacity,
+    desktopCompletionTranslateYPx,
     wecomBarHeightPx,
     wecomBarOpacity,
     wecomBarTranslateY,
