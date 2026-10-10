@@ -802,15 +802,16 @@ export const SchoolImportDemo: React.FC = () => {
         className="w-full px-5 sm:px-8 md:px-14 lg:px-20 pt-10 sm:pt-14 md:pt-16 pb-4 sm:pb-6 md:pb-7"
       >
         <div className="w-full max-w-6xl mx-auto flex flex-col items-start text-left">
-          <h2 className="text-[35px] sm:text-5xl md:text-[60px] lg:text-[66px] font-bold tracking-[-0.035em] text-neutral-950 leading-[1.15] md:leading-[1.1]">
+          <span className="text-[12px] sm:text-[13px] font-medium tracking-widest uppercase text-neutral-400 mb-2.5 block">
+            {SCHOOL_IMPORT_COPY.intro.eyebrow}
+          </span>
+          <h2 className="text-[32px] sm:text-5xl md:text-[56px] lg:text-[62px] font-bold tracking-[-0.035em] text-neutral-950 leading-[1.15] md:leading-[1.1] max-w-3xl">
             {SCHOOL_IMPORT_COPY.intro.title}
           </h2>
-          <p className="mt-3.5 sm:mt-5 text-[15.5px] sm:text-[18px] md:text-[19px] text-neutral-500 font-normal leading-relaxed max-w-[540px]">
-            {SCHOOL_IMPORT_COPY.intro.bodyLine1}
-            <br className="hidden sm:inline" />
-            {SCHOOL_IMPORT_COPY.intro.bodyLine2}
+          <p className="mt-3.5 sm:mt-5 text-[15px] sm:text-[17.5px] md:text-[18.5px] text-neutral-500 font-normal leading-relaxed max-w-[620px]">
+            {SCHOOL_IMPORT_COPY.intro.body}
           </p>
-          <div className="mt-2.5 sm:mt-3.5 text-[13.5px] sm:text-[14.5px] md:text-[15px] text-neutral-400 font-normal tracking-wide">
+          <div className="mt-2.5 sm:mt-3.5 text-[13px] sm:text-[14px] md:text-[14.5px] text-neutral-400 font-normal tracking-wide">
             {SCHOOL_IMPORT_COPY.intro.meta}
           </div>
         </div>

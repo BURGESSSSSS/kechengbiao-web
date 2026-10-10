@@ -104,7 +104,7 @@ export const TodayScrollDemo: React.FC = () => {
 
   return (
     <section
-      id="today-demo"
+      id="today"
       ref={sectionRef}
       className="relative w-full bg-[#FBFBFD] select-none pt-6 sm:pt-7 md:pt-9 pb-14 sm:pb-20 md:pb-24"
     >
@@ -115,16 +115,19 @@ export const TodayScrollDemo: React.FC = () => {
         <div className="w-full max-w-6xl mx-auto flex flex-col md:flex-row items-start md:items-center justify-between gap-6 sm:gap-9 md:gap-12 lg:gap-16">
           {/* Left Column (Desktop 38%): Fixed Narrative Copy */}
           <div className="w-full md:w-[38%] flex flex-col items-start text-left shrink-0 md:-mt-10">
+            <span className="text-[12px] sm:text-[13px] font-medium tracking-widest uppercase text-neutral-400 mb-2.5 block">
+              今日日程
+            </span>
             <h2
               style={{ lineHeight: 1.25 }}
               className="text-2xl sm:text-4xl lg:text-[42px] font-semibold tracking-[-0.03em] text-neutral-950 leading-[1.25] sm:leading-[1.25] lg:leading-[1.25] mb-3 sm:mb-5"
             >
-              当前课程，
+              让当天的课程进度
               <br className="hidden sm:inline" />
-              直接显示在首页。
+              随时间自然推进
             </h2>
-            <p className="text-[14.5px] sm:text-lg lg:text-[19px] font-normal text-neutral-500 leading-relaxed tracking-[-0.01em] max-w-md">
-              剩余时间、上课地点和下一节课，一打开就能看到。
+            <p className="text-[14.5px] sm:text-base lg:text-[17.5px] font-normal text-neutral-500 leading-relaxed tracking-[-0.01em] max-w-md">
+              首页会根据当前时间自动更新课程状态、剩余时长和下一节安排。打开应用，就能直接看到今天现在该上什么课。
             </p>
           </div>
 

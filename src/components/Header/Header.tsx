@@ -61,34 +61,36 @@ export const Header: React.FC = () => {
       <div className="flex items-center gap-3 sm:gap-6">
         <nav className="hidden md:flex items-center gap-7 lg:gap-8 text-[14.5px] sm:text-[15px] font-medium text-neutral-600">
           <a
-            href="#hero"
+            href="#today"
             className="hover:text-neutral-950 transition-colors duration-150"
           >
-            概览
+            核心特性
           </a>
           <a
-            href="#showcase"
+            href="#school-import"
             className="hover:text-neutral-950 transition-colors duration-150"
           >
-            界面展示
+            导课方式
           </a>
           <a
             href="#performance"
             className="hover:text-neutral-950 transition-colors duration-150"
           >
-            原生性能
+            本地架构
           </a>
         </nav>
 
         <div className="flex items-center gap-2 sm:gap-2.5">
-          {/* Subtle Github/Open Source indicator */}
+          {/* Subtle GitHub indicator */}
           <a
-            href="#download"
+            href="https://github.com/Burgess987/Schedule"
+            target="_blank"
+            rel="noopener noreferrer"
             className="inline-flex items-center gap-1.5 px-2.5 py-1.5 sm:px-3 sm:py-1.5 text-[13.5px] sm:text-[14px] font-medium text-neutral-700 hover:text-neutral-950 rounded-full hover:bg-neutral-900/[0.04] transition-colors duration-150"
-            aria-label="开源仓库"
+            aria-label="GitHub 开源仓库"
           >
             <GithubIcon className="w-4 h-4" />
-            <span className="hidden sm:inline">开源</span>
+            <span className="hidden sm:inline">GitHub</span>
           </a>
 
           {/* Quick Header CTA */}
@@ -97,7 +99,7 @@ export const Header: React.FC = () => {
             className="inline-flex items-center gap-1.5 px-3.5 py-1.5 sm:px-4.5 sm:py-2 text-[13px] sm:text-[14px] font-medium text-white bg-neutral-950 rounded-full shadow-xs hover:bg-neutral-800 transition-colors duration-150 active:scale-[0.98]"
           >
             <Download className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-            <span>下载</span>
+            <span>下载 Android</span>
           </a>
         </div>
       </div>

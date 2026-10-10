@@ -20,6 +20,12 @@ const CARDS: CardItem[] = [
   },
 ]
 
+const CARD_DESCRIPTIONS: Record<string, string> = {
+  today: '按时间轴聚合当日课程，直接显示当前课程、剩余时间与下一节安排。',
+  week: '将周一至周五完整课表收于一屏，并支持跨周浏览与本地课程编辑。',
+  more: '集中管理学校课表导入、截图 OCR、课前提醒和本机课程数据。',
+}
+
 export const ThreeCardShowcase: React.FC = () => {
   // Default center is "今日" (index 1)
   const [activeIndex, setActiveIndex] = useState<number>(1)
@@ -38,6 +44,9 @@ export const ThreeCardShowcase: React.FC = () => {
   const animFrameRef = useRef<number | null>(null)
   const dragProgressRef = useRef<number>(0)
   dragProgressRef.current = dragProgress
+  const activeIndexRef = useRef<number>(1)
+  activeIndexRef.current = activeIndex
+  const pendingDeltaRef = useRef<number>(0)
 
   // Window resize observer for responsive step spacing
   useEffect(() => {
@@ -59,11 +68,18 @@ export const ThreeCardShowcase: React.FC = () => {
       if (animFrameRef.current) {
         cancelAnimationFrame(animFrameRef.current)
         animFrameRef.current = null
+        if (pendingDeltaRef.current !== 0) {
+          const nextIdx = (activeIndexRef.current + pendingDeltaRef.current + 3) % 3
+          setActiveIndex(nextIdx)
+          activeIndexRef.current = nextIdx
+          pendingDeltaRef.current = 0
+        }
       }
 
+      pendingDeltaRef.current = targetIndexDelta
       const initialProgress = dragProgressRef.current
       const startTime = performance.now()
-      const duration = 320 // ms
+      const duration = 280 // snappy responsive ms
 
       const step = (now: number) => {
         const elapsed = now - startTime
@@ -73,15 +89,20 @@ export const ThreeCardShowcase: React.FC = () => {
         const current = initialProgress + (targetProgress - initialProgress) * ease
 
         setDragProgress(current)
+        dragProgressRef.current = current
 
         if (t < 1) {
           animFrameRef.current = requestAnimationFrame(step)
         } else {
           animFrameRef.current = null
-          if (targetIndexDelta !== 0) {
-            setActiveIndex((prev) => (prev + targetIndexDelta + 3) % 3)
+          if (pendingDeltaRef.current !== 0) {
+            const nextIdx = (activeIndexRef.current + pendingDeltaRef.current + 3) % 3
+            setActiveIndex(nextIdx)
+            activeIndexRef.current = nextIdx
+            pendingDeltaRef.current = 0
           }
           setDragProgress(0)
+          dragProgressRef.current = 0
         }
       }
 
@@ -89,6 +110,31 @@ export const ThreeCardShowcase: React.FC = () => {
     },
     []
   )
+
+  // Explicit cyclic navigation actions matching product spec:
+  // Next: 今日(1) -> 周视图(0) -> 更多(2) -> 今日(1) (deltaIndex = -1, slide from left/targetProgress = 1)
+  const goNext = useCallback(() => {
+    animateToTarget(1, -1)
+  }, [animateToTarget])
+
+  // Prev: 今日(1) -> 更多(2) -> 周视图(0) -> 今日(1) (deltaIndex = 1, slide from right/targetProgress = -1)
+  const goPrev = useCallback(() => {
+    animateToTarget(-1, 1)
+  }, [animateToTarget])
+
+  // Keyboard navigation support
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (['INPUT', 'TEXTAREA'].includes((e.target as HTMLElement)?.tagName)) return
+      if (e.key === 'ArrowRight') {
+        goNext()
+      } else if (e.key === 'ArrowLeft') {
+        goPrev()
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [goNext, goPrev])
 
   // Pointer event handlers with setPointerCapture (mouse and touch)
   const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
@@ -186,6 +232,19 @@ export const ThreeCardShowcase: React.FC = () => {
 
   return (
     <div className="relative w-full max-w-6xl mx-auto flex flex-col items-center select-none pt-1 pb-16 overflow-hidden">
+      {/* Section Header: Material 3 three-view architecture */}
+      <div className="w-full max-w-3xl mx-auto text-center px-4 pt-4 sm:pt-6 pb-6 sm:pb-8">
+        <span className="text-[12px] sm:text-[13px] font-medium tracking-widest uppercase text-neutral-400 mb-2 block">
+          界面架构
+        </span>
+        <h2 className="text-2xl sm:text-4xl md:text-[40px] font-semibold tracking-[-0.03em] text-neutral-950 leading-[1.2] mb-3 sm:mb-4">
+          围绕日常查课的三大高频视图而设计
+        </h2>
+        <p className="text-[14.5px] sm:text-base md:text-[17px] font-normal text-neutral-500 leading-relaxed tracking-[-0.01em] max-w-2xl mx-auto">
+          遵循 Material 3 设计规范，摒弃传统校园应用里杂乱的资讯流与社交入口，只保留「今日」「周视图」与「更多」三个核心工作区。赶往教学楼途中确认下一节课，或查看整周排课、调整提醒，都可以直接完成。
+        </p>
+      </div>
+
       {/* 
         Independent Label Track:
         All three labels exist on the exact same horizontal baseline.
@@ -207,6 +266,9 @@ export const ThreeCardShowcase: React.FC = () => {
           return (
             <button
               key={card.id}
+              type="button"
+              onPointerDown={(e) => e.stopPropagation()}
+              onPointerUp={(e) => e.stopPropagation()}
               onClick={() => {
                 if (baseOffset === -1) animateToTarget(1, -1)
                 else if (baseOffset === 1) animateToTarget(-1, 1)
@@ -276,7 +338,10 @@ export const ThreeCardShowcase: React.FC = () => {
 
         {/* Quiet desktop flank navigation arrows */}
         <button
-          onClick={() => animateToTarget(1, -1)}
+          type="button"
+          onClick={goPrev}
+          onPointerDown={(e) => e.stopPropagation()}
+          onPointerUp={(e) => e.stopPropagation()}
           aria-label="查看上一视图"
           className="hidden md:flex absolute left-4 lg:left-10 z-40 w-10 h-10 rounded-full bg-white/75 backdrop-blur-md ring-1 ring-black/[0.06] shadow-sm items-center justify-center text-neutral-600 hover:text-neutral-950 hover:bg-white transition-all active:scale-95 cursor-pointer"
         >
@@ -284,7 +349,10 @@ export const ThreeCardShowcase: React.FC = () => {
         </button>
 
         <button
-          onClick={() => animateToTarget(-1, 1)}
+          type="button"
+          onClick={goNext}
+          onPointerDown={(e) => e.stopPropagation()}
+          onPointerUp={(e) => e.stopPropagation()}
           aria-label="查看下一视图"
           className="hidden md:flex absolute right-4 lg:right-10 z-40 w-10 h-10 rounded-full bg-white/75 backdrop-blur-md ring-1 ring-black/[0.06] shadow-sm items-center justify-center text-neutral-600 hover:text-neutral-950 hover:bg-white transition-all active:scale-95 cursor-pointer"
         >
@@ -297,6 +365,9 @@ export const ThreeCardShowcase: React.FC = () => {
         {CARDS.map((card, idx) => (
           <button
             key={card.id}
+            type="button"
+            onPointerDown={(e) => e.stopPropagation()}
+            onPointerUp={(e) => e.stopPropagation()}
             onClick={() => {
               const diff = ((idx - activeIndex + 1) % 3 + 3) % 3 - 1
               if (diff === 1) animateToTarget(-1, 1)
@@ -310,6 +381,13 @@ export const ThreeCardShowcase: React.FC = () => {
             }`}
           />
         ))}
+      </div>
+
+      {/* Active Card Description */}
+      <div className="w-full max-w-md mx-auto text-center px-4 mt-3 sm:mt-4 min-h-[38px] flex items-center justify-center">
+        <p className="text-[13px] sm:text-[14px] text-neutral-500 font-normal leading-relaxed transition-opacity duration-200">
+          {CARD_DESCRIPTIONS[CARDS[activeIndex].id]}
+        </p>
       </div>
     </div>
   )

@@ -385,17 +385,22 @@ export const ReminderScrollDemo: React.FC = () => {
         <div className="w-full max-w-6xl mx-auto flex flex-col md:flex-row items-start md:items-center justify-between gap-7 sm:gap-10 md:gap-12 lg:gap-16">
           {/* Desktop Left (38%) / Mobile Top: Narrative Copy */}
           <div className="w-full md:w-[38%] flex flex-col items-start text-left shrink-0">
+            <span className="text-[12px] sm:text-[13px] font-medium tracking-widest uppercase text-neutral-400 mb-2.5 block">
+              课前通知
+            </span>
             <h2
               style={{ lineHeight: 1.22 }}
               className="text-2xl sm:text-4xl md:text-[42px] lg:text-[44px] font-bold tracking-[-0.03em] text-neutral-950"
             >
-              到时间，再提醒你。
+              上课之前，
+              <br />
+              准时提醒你
             </h2>
-            <p className="mt-3 sm:mt-5 text-[15px] sm:text-[17px] text-neutral-500 font-normal leading-relaxed max-w-[390px]">
-              课程提醒交给 Android 系统调度。App 不在前台，也会在上课前按时出现。
+            <p className="mt-3 sm:mt-5 text-[14.5px] sm:text-base lg:text-[16.5px] text-neutral-500 font-normal leading-relaxed max-w-[390px]">
+              使用 Android 原生通知与系统定时任务，无需让应用长期挂在后台。可以选择提前 5、10、15 或 30 分钟提醒，也可以随时发送测试通知检查权限。
             </p>
             <div className="mt-4 sm:mt-6 text-[12.5px] sm:text-[13.5px] text-neutral-400 font-normal tracking-wide">
-              本地调度 · 无需后台常驻 · 重启自动恢复
+              Android 原生通知 · AlarmManager 定时唤醒 · 无需后台常驻
             </div>
           </div>
 

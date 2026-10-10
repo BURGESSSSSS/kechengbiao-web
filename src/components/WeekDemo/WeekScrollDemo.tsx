@@ -212,11 +212,11 @@ export const WEEK_COURSES: WeekCourseItem[] = [
 ]
 
 const WEEKDAYS = [
-  { label: '周一', date: '19' },
-  { label: '周二', date: '20' },
-  { label: '周三', date: '21' },
-  { label: '周四', date: '22' },
-  { label: '周五', date: '23' },
+  { label: '周一', date: '12' },
+  { label: '周二', date: '13' },
+  { label: '周三', date: '14' },
+  { label: '周四', date: '15' },
+  { label: '周五', date: '16' },
 ]
 
 const TIME_ROWS = ['08:00', '10:00', '14:00', '16:00']
@@ -513,14 +513,14 @@ export const WeekScrollDemo: React.FC = () => {
               ref={uiCardRef}
               className="relative w-full max-w-[530px] bg-[#F6F6F6] rounded-[26px] sm:rounded-[32px] p-3.5 sm:p-5 ring-1 ring-black/[0.05] shadow-[0_12px_36px_-10px_rgba(15,23,42,0.06)]"
             >
-              {/* 1. Top Bar: 第 8 周 + Date Range + 编辑 / 导入 */}
+              {/* 1. Top Bar: 第 7 周 + Date Range + 编辑 / 导入 */}
               <div className="flex items-start justify-between px-1">
                 <div>
                   <div className="text-[23px] sm:text-[28px] font-bold text-neutral-900 leading-none tracking-tight">
-                    第 8 周
+                    第 7 周
                   </div>
                   <div className="text-[11px] sm:text-[12.5px] text-neutral-500 font-normal mt-1.5">
-                    10月19日 - 10月25日
+                    10月12日 - 10月16日
                   </div>
                 </div>
 
@@ -661,17 +661,23 @@ export const WeekScrollDemo: React.FC = () => {
 
           {/* Desktop Right (36%) / Mobile Top: Fixed Narrative Copy */}
           <div className="w-full md:w-[36%] order-1 md:order-2 flex flex-col items-start text-left">
+            <span className="text-[12px] sm:text-[13px] font-medium tracking-widest uppercase text-neutral-400 mb-2.5 block">
+              全局周视图
+            </span>
             <h2
               style={{ lineHeight: 1.22 }}
-              className="text-2xl sm:text-4xl md:text-[42px] lg:text-[44px] font-bold tracking-[-0.03em] text-neutral-950"
+              className="text-2xl sm:text-4xl md:text-[40px] lg:text-[42px] font-bold tracking-[-0.03em] text-neutral-950"
             >
-              把一周放在
+              将整周排课清晰铺开，
               <br />
-              一张视图里。
+              并支持在本机直接编辑
             </h2>
-            <p className="mt-3 sm:mt-5 text-[15px] sm:text-[17px] text-neutral-500 font-normal leading-relaxed max-w-[360px]">
-              课程按时间排进一周，什么时候有课、什么时候空着，直接展开来看。
+            <p className="mt-3 sm:mt-4 text-[14.5px] sm:text-base lg:text-[16.5px] text-neutral-500 font-normal leading-relaxed max-w-[380px]">
+              周一到周五的课程按时间自然排开。临时调课、更换教室或新增课程时，可以直接修改本机课表，不必等待学校系统同步。
             </p>
+            <div className="mt-3.5 sm:mt-5 text-[12.5px] sm:text-[13.5px] text-neutral-400 font-normal tracking-wide">
+              第7周 · 10月12日–10月16日 · 自动合并连堂节次 · 支持本地增删改课
+            </div>
           </div>
         </div>
       </div>
