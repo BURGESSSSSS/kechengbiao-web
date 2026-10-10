@@ -25,7 +25,7 @@ export const Footer: React.FC = () => {
           为真实校园查课场景构建。
         </h2>
         <p className="text-[14.5px] sm:text-base md:text-[17px] text-neutral-600 font-normal leading-relaxed max-w-2xl mx-auto mb-8 sm:mb-10">
-          一个面向山东商务职业学院学生的开源 Android 原生项目。日常课程数据保存在本机，不接入广告 SDK，也不依赖云端后台完成日常查课。
+          一个面向山东商务职业学院学生的开源 Android 原生项目。日常课程数据保存在本机。
         </p>
 
         {/* Primary Download CTA */}

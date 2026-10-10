@@ -240,8 +240,8 @@ export const ThreeCardShowcase: React.FC = () => {
         <h2 className="text-2xl sm:text-4xl md:text-[40px] font-semibold tracking-[-0.03em] text-neutral-950 leading-[1.2] mb-3 sm:mb-4">
           围绕日常查课的三大高频视图而设计
         </h2>
-        <p className="text-[14.5px] sm:text-base md:text-[17px] font-normal text-neutral-500 leading-relaxed tracking-[-0.01em] max-w-2xl mx-auto">
-          遵循 Material 3 设计规范，摒弃传统校园应用里杂乱的资讯流与社交入口，只保留「今日」「周视图」与「更多」三个核心工作区。赶往教学楼途中确认下一节课，或查看整周排课、调整提醒，都可以直接完成。
+        <p className="text-[14.5px] sm:text-base md:text-[17px] font-normal text-neutral-500 leading-relaxed tracking-[-0.01em] max-w-xl mx-auto">
+          遵循 Material 3 设计规范，查看整周排课、调整提醒，都可以直接完成。
         </p>
       </div>
 

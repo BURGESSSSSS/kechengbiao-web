@@ -21,7 +21,7 @@ export const PerformanceSection: React.FC = () => {
 
         {/* Supporting Editorial Paragraph */}
         <p className="text-base sm:text-lg md:text-xl font-normal text-neutral-600 tracking-[-0.01em] leading-relaxed max-w-2xl mx-auto mb-6 sm:mb-8">
-          不再等待教务系统 12 秒以上的启动与网页加载时间，打开即用。日常课程直接从本机 Room 数据库读取，即使没有网络，也能立即查看课表。
+          不再等待教务系统 12 秒以上的启动与网页加载时间，打开即用。
         </p>
 
         {/* Supporting Metadata */}

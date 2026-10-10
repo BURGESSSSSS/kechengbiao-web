@@ -99,9 +99,9 @@ export const HeroIntro: React.FC = () => {
       {/* Subtitle / Body Paragraph */}
       <p
         ref={subtitleRef}
-        className="text-[14px] sm:text-[15.5px] md:text-[16.5px] font-normal text-neutral-600 leading-relaxed tracking-[-0.01em] max-w-lg sm:max-w-xl md:max-w-2xl mx-auto mb-5 sm:mb-6 px-4"
+        className="text-[14px] sm:text-[15.5px] md:text-[16.5px] font-normal text-neutral-600 leading-relaxed tracking-[-0.01em] max-w-lg sm:max-w-xl mx-auto mb-5 sm:mb-6 px-4"
       >
-        为日常高频查课的核心需求而打造。将每次都要打开企业微信、等待教务网页加载的繁琐流程，浓缩为点开即看的原生体验。应用基于 Kotlin 与 Jetpack Compose 构建，课程数据完整保存在手机本机——从教务课表采集、截图端侧识别到课前系统提醒，日常查课、编辑与识别等核心功能无需依赖云端服务器，随时离线可用。
+        为日常高频查课的核心需求而打造。应用基于 Kotlin 与 Jetpack Compose 构建，随时离线可用。
       </p>
 
       {/* Download Android Button */}
