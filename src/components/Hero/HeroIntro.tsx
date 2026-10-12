@@ -5,9 +5,7 @@ import { Download } from 'lucide-react'
 export const HeroIntro: React.FC = () => {
   const containerRef = useRef<HTMLDivElement>(null)
   const iconRef = useRef<HTMLDivElement>(null)
-  const eyebrowRef = useRef<HTMLDivElement>(null)
   const titleRef = useRef<HTMLHeadingElement>(null)
-  const subtitleRef = useRef<HTMLParagraphElement>(null)
   const ctaRef = useRef<HTMLDivElement>(null)
   const attributesRef = useRef<HTMLDivElement>(null)
 
@@ -24,20 +22,8 @@ export const HeroIntro: React.FC = () => {
         { opacity: 1, y: 0, scale: 1, duration: 0.8 }
       )
         .fromTo(
-          eyebrowRef.current,
-          { opacity: 0, y: 12 },
-          { opacity: 1, y: 0, duration: 0.75 },
-          '-=0.55'
-        )
-        .fromTo(
           titleRef.current,
           { opacity: 0, y: 14 },
-          { opacity: 1, y: 0, duration: 0.75 },
-          '-=0.55'
-        )
-        .fromTo(
-          subtitleRef.current,
-          { opacity: 0, y: 12 },
           { opacity: 1, y: 0, duration: 0.75 },
           '-=0.55'
         )
@@ -67,25 +53,17 @@ export const HeroIntro: React.FC = () => {
   return (
     <div
       ref={containerRef}
-      className="relative z-10 w-full max-w-xl sm:max-w-2xl md:max-w-3xl mx-auto flex flex-col items-center justify-center text-center pt-16 sm:pt-20 md:pt-24 pb-6 sm:pb-8 min-h-[500px]"
+      className="relative z-10 w-full max-w-xl sm:max-w-2xl mx-auto flex flex-col items-center justify-center text-center pt-16 sm:pt-20 md:pt-24 pb-2 sm:pb-4 h-[58svh] md:h-[62svh] min-h-[380px] max-h-[500px]"
     >
       {/* App Icon Container */}
       <div ref={iconRef} className="mb-3 sm:mb-4">
-        <div className="w-[68px] h-[68px] sm:w-[76px] sm:h-[76px] md:w-[82px] md:h-[82px] rounded-[20px] sm:rounded-[24px] bg-white/90 backdrop-blur-md p-1.5 ring-1 ring-black/[0.06] shadow-[0_8px_22px_rgba(0,0,0,0.05)] hover:shadow-[0_12px_28px_rgba(0,0,0,0.07)] transition-all duration-300">
+        <div className="w-[72px] h-[72px] sm:w-[80px] sm:h-[80px] md:w-[84px] md:h-[84px] rounded-[22px] sm:rounded-[26px] bg-white/90 backdrop-blur-md p-1.5 ring-1 ring-black/[0.06] shadow-[0_8px_22px_rgba(0,0,0,0.05)] hover:shadow-[0_12px_28px_rgba(0,0,0,0.07)] transition-all duration-300">
           <img
             src="/assets/app-icon-circle.png"
             alt="课程表 App 图标"
-            className="w-full h-full object-cover rounded-[16px] sm:rounded-[19px]"
+            className="w-full h-full object-cover rounded-[18px] sm:rounded-[21px]"
           />
         </div>
-      </div>
-
-      {/* Eyebrow */}
-      <div
-        ref={eyebrowRef}
-        className="text-[12px] sm:text-[13.5px] font-medium tracking-wide text-neutral-500 mb-2 sm:mb-2.5"
-      >
-        山东商务职业学院 · Android 原生应用
       </div>
 
       {/* Product Name / Main Title */}
@@ -95,14 +73,6 @@ export const HeroIntro: React.FC = () => {
       >
         山东商务学子的专属课程表
       </h1>
-
-      {/* Subtitle / Body Paragraph */}
-      <p
-        ref={subtitleRef}
-        className="text-[14px] sm:text-[15.5px] md:text-[16.5px] font-normal text-neutral-600 leading-relaxed tracking-[-0.01em] max-w-lg sm:max-w-xl mx-auto mb-5 sm:mb-6 px-4"
-      >
-        为日常高频查课的核心需求而打造。应用基于 Kotlin 与 Jetpack Compose 构建，随时离线可用。
-      </p>
 
       {/* Download Android Button */}
       <div ref={ctaRef} className="mb-3 sm:mb-3.5">

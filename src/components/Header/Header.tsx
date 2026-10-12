@@ -57,29 +57,8 @@ export const Header: React.FC = () => {
         </span>
       </div>
 
-      {/* Navigation & Secondary Actions */}
+      {/* Secondary Actions */}
       <div className="flex items-center gap-3 sm:gap-6">
-        <nav className="hidden md:flex items-center gap-7 lg:gap-8 text-[14.5px] sm:text-[15px] font-medium text-neutral-600">
-          <a
-            href="#today"
-            className="hover:text-neutral-950 transition-colors duration-150"
-          >
-            核心特性
-          </a>
-          <a
-            href="#school-import"
-            className="hover:text-neutral-950 transition-colors duration-150"
-          >
-            导课方式
-          </a>
-          <a
-            href="#performance"
-            className="hover:text-neutral-950 transition-colors duration-150"
-          >
-            本地架构
-          </a>
-        </nav>
-
         <div className="flex items-center gap-2 sm:gap-2.5">
           {/* Subtle GitHub indicator */}
           <a

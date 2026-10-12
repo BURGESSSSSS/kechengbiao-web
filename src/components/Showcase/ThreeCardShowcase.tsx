@@ -233,16 +233,10 @@ export const ThreeCardShowcase: React.FC = () => {
   return (
     <div className="relative w-full max-w-6xl mx-auto flex flex-col items-center select-none pt-1 pb-16 overflow-hidden">
       {/* Section Header: Material 3 three-view architecture */}
-      <div className="w-full max-w-3xl mx-auto text-center px-4 pt-4 sm:pt-6 pb-6 sm:pb-8">
-        <span className="text-[12px] sm:text-[13px] font-medium tracking-widest uppercase text-neutral-400 mb-2 block">
-          界面架构
-        </span>
-        <h2 className="text-2xl sm:text-4xl md:text-[40px] font-semibold tracking-[-0.03em] text-neutral-950 leading-[1.2] mb-3 sm:mb-4">
+      <div className="w-full max-w-3xl mx-auto text-center px-4 pt-2 sm:pt-3 pb-3 sm:pb-4">
+        <h2 className="text-2xl sm:text-3xl md:text-[34px] lg:text-[36px] font-semibold tracking-[-0.03em] text-neutral-950 leading-[1.25]">
           围绕日常查课的三大高频视图而设计
         </h2>
-        <p className="text-[14.5px] sm:text-base md:text-[17px] font-normal text-neutral-500 leading-relaxed tracking-[-0.01em] max-w-xl mx-auto">
-          遵循 Material 3 设计规范，查看整周排课、调整提醒，都可以直接完成。
-        </p>
       </div>
 
       {/* 
