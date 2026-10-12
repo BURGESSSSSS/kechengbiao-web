@@ -33,6 +33,6 @@ npm run preview -- --base /kechengbiao-web/
 
 图片使用 Vite 的 `import.meta.env.BASE_URL`，本地开发与线上子目录部署共用同一份代码。
 
-Android 应用源码与下载：[Burgess987/Schedule](https://github.com/Burgess987/Schedule)。
+Android 应用源码与下载：[BURGESSSSSS/schedule-app](https://github.com/BURGESSSSSS/schedule-app)。
 
 部署参考：[Vite 静态部署文档](https://vite.dev/guide/static-deploy.html)、[GitHub Pages 自定义工作流](https://docs.github.com/en/pages/getting-started-with-github-pages/using-custom-workflows-with-github-pages)。

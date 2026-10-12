@@ -40,7 +40,7 @@ export const Footer: React.FC = () => {
         {/* Primary Download CTA */}
         <div className="mb-10 sm:mb-12">
           <a
-            href="https://github.com/Burgess987/Schedule/releases"
+            href="https://github.com/BURGESSSSSS/schedule-app/releases"
             target="_blank"
             rel="noopener noreferrer"
             className="group inline-flex items-center gap-2 px-7 py-3 sm:px-8 sm:py-3.5 rounded-full bg-neutral-950 text-white text-[14px] sm:text-[15px] font-medium tracking-tight shadow-[0_4px_16px_rgba(0,0,0,0.12)] hover:bg-neutral-800 hover:shadow-[0_6px_20px_rgba(0,0,0,0.16)] active:scale-[0.98] transition-all duration-200 cursor-pointer"
@@ -53,7 +53,7 @@ export const Footer: React.FC = () => {
         {/* Secondary Links Row */}
         <div className="flex flex-wrap items-center justify-center gap-5 sm:gap-8 text-[13.5px] sm:text-[14px] font-medium text-neutral-600 mb-8 sm:mb-10">
           <a
-            href="https://github.com/Burgess987/Schedule"
+            href="https://github.com/BURGESSSSSS/schedule-app"
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-1.5 hover:text-neutral-950 transition-colors"
@@ -62,7 +62,7 @@ export const Footer: React.FC = () => {
             <span>GitHub 开源仓库</span>
           </a>
           <a
-            href="https://github.com/Burgess987/Schedule/issues"
+            href="https://github.com/BURGESSSSSS/schedule-app/issues"
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-1.5 hover:text-neutral-950 transition-colors"

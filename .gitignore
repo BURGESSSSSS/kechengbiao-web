@@ -19,6 +19,5 @@ dist/
 *.sw?
 .DS_Store
 
-# Temporary capture scratch frames and raw playwright videos
-reports/visual/frames/
-reports/visual/videos/
+# Local visual verification outputs
+reports/visual/

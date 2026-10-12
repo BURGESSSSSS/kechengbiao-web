@@ -62,7 +62,7 @@ export const Header: React.FC = () => {
         <div className="flex items-center gap-2 sm:gap-2.5">
           {/* Subtle GitHub indicator */}
           <a
-            href="https://github.com/Burgess987/Schedule"
+            href="https://github.com/BURGESSSSSS/schedule-app"
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-1.5 px-2.5 py-1.5 sm:px-3 sm:py-1.5 text-[13.5px] sm:text-[14px] font-medium text-neutral-700 hover:text-neutral-950 rounded-full hover:bg-neutral-900/[0.04] transition-colors duration-150"
