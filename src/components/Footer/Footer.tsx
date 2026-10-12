@@ -1,5 +1,5 @@
 import React from 'react'
-import { Download, Shield, MessageSquare } from 'lucide-react'
+import { Download, MessageSquare } from 'lucide-react'
 
 const GithubIcon: React.FC<{ className?: string }> = ({ className }) => (
   <svg
@@ -42,7 +42,7 @@ export const Footer: React.FC = () => {
         </div>
 
         {/* Secondary Links Row */}
-        <div className="flex flex-wrap items-center justify-center gap-5 sm:gap-8 text-[13.5px] sm:text-[14px] font-medium text-neutral-600 mb-10 sm:mb-12">
+        <div className="flex flex-wrap items-center justify-center gap-5 sm:gap-8 text-[13.5px] sm:text-[14px] font-medium text-neutral-600 mb-8 sm:mb-10">
           <a
             href="https://github.com/Burgess987/Schedule"
             target="_blank"
@@ -51,13 +51,6 @@ export const Footer: React.FC = () => {
           >
             <GithubIcon className="w-4 h-4" />
             <span>GitHub 开源仓库</span>
-          </a>
-          <a
-            href="#performance"
-            className="inline-flex items-center gap-1.5 hover:text-neutral-950 transition-colors"
-          >
-            <Shield className="w-4 h-4" />
-            <span>架构与隐私说明</span>
           </a>
           <a
             href="https://github.com/Burgess987/Schedule/issues"
@@ -69,6 +62,17 @@ export const Footer: React.FC = () => {
             <span>问题反馈</span>
           </a>
         </div>
+
+        {/* Developer Contact */}
+        <p className="text-[14.5px] sm:text-base md:text-[17px] text-neutral-600 font-normal leading-relaxed max-w-2xl mx-auto mb-8 sm:mb-10">
+          使用过程中遇到问题，或有任何改进建议，欢迎通过邮箱联系开发者：
+          <a
+            href="mailto:suyu20651@gmail.com"
+            className="text-neutral-900 hover:underline underline-offset-4 transition-colors"
+          >
+            suyu20651@gmail.com
+          </a>
+        </p>
 
         {/* Technology Stack Credits */}
         <div className="text-[12px] sm:text-[13px] text-neutral-400 font-normal tracking-wide">

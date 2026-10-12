@@ -7,11 +7,6 @@ export const PerformanceSection: React.FC = () => {
       className="relative w-full pt-8 sm:pt-12 md:pt-14 pb-9 sm:pb-12 md:pb-14 px-6 sm:px-10 bg-[#FBFBFD] overflow-hidden"
     >
       <div className="max-w-4xl mx-auto text-center">
-        {/* Eyebrow */}
-        <span className="text-[12px] sm:text-[13px] font-medium tracking-widest uppercase text-neutral-400 mb-3 block">
-          原生性能
-        </span>
-
         {/* Primary Headline: Unified solid black, emphasizing 0.3 秒 */}
         <h2 className="text-3xl sm:text-5xl md:text-6xl font-normal tracking-[-0.035em] text-neutral-950 leading-[1.25] md:leading-[1.2] mb-5 sm:mb-6 max-w-3xl mx-auto">
           纯原生架构驱动，
