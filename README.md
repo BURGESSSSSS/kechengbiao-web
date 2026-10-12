@@ -22,6 +22,7 @@ npm run preview
 
 ```sh
 npm run build -- --base /kechengbiao-web/
+npm run preview -- --base /kechengbiao-web/
 ```
 
 ## GitHub Pages
