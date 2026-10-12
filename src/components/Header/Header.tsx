@@ -37,47 +37,47 @@ export const Header: React.FC = () => {
 
   return (
     <header
-      className={`fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-4 sm:px-8 h-13 sm:h-14 transition-[background-color,border-color,box-shadow] duration-150 ease-out select-none ${
+      className={`fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-3.5 sm:px-8 h-12 sm:h-14 transition-all duration-200 ease-out select-none ${
         isScrolled
-          ? 'bg-[#FBFBFD] border-b border-black/[0.06] shadow-[0_1px_3px_rgba(0,0,0,0.02)]'
+          ? 'bg-[#FBFBFD]/85 backdrop-blur-md border-b border-black/[0.06] shadow-[0_1px_3px_rgba(0,0,0,0.02)]'
           : 'bg-transparent border-b border-transparent'
       }`}
     >
       {/* Brand Identity */}
-      <div className="flex items-center gap-2.5 sm:gap-3">
-        <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-[10px] sm:rounded-[11px] overflow-hidden ring-1 ring-black/[0.08] shadow-xs bg-white p-0.5 flex items-center justify-center shrink-0">
+      <div className="flex items-center gap-2 sm:gap-2.5">
+        <div className="w-[26px] h-[26px] sm:w-[32px] sm:h-[32px] rounded-full overflow-hidden ring-1 ring-black/[0.08] shadow-xs bg-white flex items-center justify-center shrink-0">
           <img
             src={`${import.meta.env.BASE_URL}assets/app-icon-circle.png`}
             alt="课程表 Logo"
-            className="w-full h-full object-cover rounded-[8px] sm:rounded-[9px]"
+            className="w-full h-full object-cover rounded-full"
           />
         </div>
-        <span className="font-semibold tracking-tight text-neutral-950 text-[15px] sm:text-[16.5px]">
+        <span className="font-semibold tracking-tight text-neutral-950 text-[14px] sm:text-[16px]">
           课程表
         </span>
       </div>
 
       {/* Secondary Actions */}
-      <div className="flex items-center gap-3 sm:gap-6">
-        <div className="flex items-center gap-2 sm:gap-2.5">
+      <div className="flex items-center gap-2 sm:gap-5">
+        <div className="flex items-center gap-1.5 sm:gap-2.5">
           {/* Subtle GitHub indicator */}
           <a
             href="https://github.com/BURGESSSSSS/schedule-app"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 px-2.5 py-1.5 sm:px-3 sm:py-1.5 text-[13.5px] sm:text-[14px] font-medium text-neutral-700 hover:text-neutral-950 rounded-full hover:bg-neutral-900/[0.04] transition-colors duration-150"
+            className="inline-flex items-center gap-1.5 p-1.5 sm:px-2.5 sm:py-1.5 text-[12.5px] sm:text-[13.5px] font-medium text-neutral-700 hover:text-neutral-950 rounded-full hover:bg-neutral-900/[0.04] transition-colors duration-150"
             aria-label="GitHub 开源仓库"
           >
-            <GithubIcon className="w-4 h-4" />
+            <GithubIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             <span className="hidden sm:inline">GitHub</span>
           </a>
 
           {/* Quick Header CTA */}
           <a
             href="#download"
-            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 sm:px-4.5 sm:py-2 text-[13px] sm:text-[14px] font-medium text-white bg-neutral-950 rounded-full shadow-xs hover:bg-neutral-800 transition-colors duration-150 active:scale-[0.98]"
+            className="inline-flex items-center gap-1 sm:gap-1.5 px-2.5 py-1 sm:px-3.5 sm:py-1.5 text-[11.5px] sm:text-[13px] font-medium text-white bg-neutral-950 rounded-full shadow-xs hover:bg-neutral-800 transition-colors duration-150 active:scale-[0.98]"
           >
-            <Download className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+            <Download className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
             <span>下载 Android</span>
           </a>
         </div>

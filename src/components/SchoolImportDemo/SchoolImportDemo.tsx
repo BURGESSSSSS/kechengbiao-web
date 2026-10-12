@@ -799,7 +799,7 @@ export const SchoolImportDemo: React.FC = () => {
          ===================================================================== */}
       <div
         data-testid="school-import-intro"
-        className="w-full px-5 sm:px-8 md:px-14 lg:px-20 pt-10 sm:pt-14 md:pt-16 pb-4 sm:pb-6 md:pb-7"
+        className="w-full px-5 sm:px-8 md:px-14 lg:px-20 pt-6 sm:pt-10 md:pt-12 pb-4 sm:pb-6 md:pb-7"
       >
         <div className="w-full max-w-6xl mx-auto flex flex-col items-start text-left">
           <span className="text-[12px] sm:text-[13px] font-medium tracking-widest uppercase text-neutral-400 mb-2.5 block">

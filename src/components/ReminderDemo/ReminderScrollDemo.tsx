@@ -379,7 +379,7 @@ export const ReminderScrollDemo: React.FC = () => {
     <section
       id="reminder-demo"
       ref={sectionRef}
-      className="relative w-full bg-[#FBFBFD] select-none pt-12 sm:pt-16 md:pt-20 pb-[380px] sm:pb-[420px] md:pb-[480px]"
+      className="relative w-full bg-[#FBFBFD] select-none pt-12 sm:pt-16 md:pt-20 pb-12 sm:pb-16 md:pb-20"
     >
       <div className="w-full px-4 sm:px-8 md:px-14 lg:px-20">
         <div className="w-full max-w-6xl mx-auto flex flex-col md:flex-row items-start md:items-center justify-between gap-7 sm:gap-10 md:gap-12 lg:gap-16">
