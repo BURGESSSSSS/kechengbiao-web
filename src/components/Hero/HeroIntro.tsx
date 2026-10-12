@@ -59,7 +59,7 @@ export const HeroIntro: React.FC = () => {
       <div ref={iconRef} className="mb-3 sm:mb-4">
         <div className="w-[72px] h-[72px] sm:w-[80px] sm:h-[80px] md:w-[84px] md:h-[84px] rounded-[22px] sm:rounded-[26px] bg-white/90 backdrop-blur-md p-1.5 ring-1 ring-black/[0.06] shadow-[0_8px_22px_rgba(0,0,0,0.05)] hover:shadow-[0_12px_28px_rgba(0,0,0,0.07)] transition-all duration-300">
           <img
-            src="/assets/app-icon-circle.png"
+            src={`${import.meta.env.BASE_URL}assets/app-icon-circle.png`}
             alt="课程表 App 图标"
             className="w-full h-full object-cover rounded-[18px] sm:rounded-[21px]"
           />

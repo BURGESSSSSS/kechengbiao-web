@@ -5,18 +5,18 @@ export const ProductShowcase: React.FC = () => {
     {
       id: 'week',
       name: '周视图',
-      image: '/assets/screen-week.jpg',
+      image: `${import.meta.env.BASE_URL}assets/screen-week.jpg`,
     },
     {
       id: 'today',
       name: '今日',
-      image: '/assets/screen-today.jpg',
+      image: `${import.meta.env.BASE_URL}assets/screen-today.jpg`,
       isCenter: true,
     },
     {
       id: 'more',
       name: '更多',
-      image: '/assets/screen-more.jpg',
+      image: `${import.meta.env.BASE_URL}assets/screen-more.jpg`,
     },
   ]
 
@@ -35,7 +35,7 @@ export const ProductShowcase: React.FC = () => {
             </span>
             <div className="w-[280px] rounded-[28px] overflow-hidden bg-white ring-1 ring-black/[0.04] shadow-[0_4px_20px_rgba(0,0,0,0.03)]">
               <img
-                src="/assets/screen-week.jpg"
+                src={`${import.meta.env.BASE_URL}assets/screen-week.jpg`}
                 alt="周视图"
                 className="w-full h-auto object-cover block"
                 loading="lazy"
@@ -50,7 +50,7 @@ export const ProductShowcase: React.FC = () => {
             </span>
             <div className="w-[325px] rounded-[30px] overflow-hidden bg-white ring-1 ring-black/[0.05] shadow-[0_6px_28px_rgba(0,0,0,0.05)]">
               <img
-                src="/assets/screen-today.jpg"
+                src={`${import.meta.env.BASE_URL}assets/screen-today.jpg`}
                 alt="今日"
                 className="w-full h-auto object-cover block"
                 loading="lazy"
@@ -65,7 +65,7 @@ export const ProductShowcase: React.FC = () => {
             </span>
             <div className="w-[280px] rounded-[28px] overflow-hidden bg-white ring-1 ring-black/[0.04] shadow-[0_4px_20px_rgba(0,0,0,0.03)]">
               <img
-                src="/assets/screen-more.jpg"
+                src={`${import.meta.env.BASE_URL}assets/screen-more.jpg`}
                 alt="更多"
                 className="w-full h-auto object-cover block"
                 loading="lazy"

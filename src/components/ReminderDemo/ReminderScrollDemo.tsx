@@ -605,7 +605,7 @@ export const ReminderScrollDemo: React.FC = () => {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <img
-                      src="/assets/app-icon-circle.png"
+                      src={`${import.meta.env.BASE_URL}assets/app-icon-circle.png`}
                       alt="课程表"
                       className="w-5 h-5 sm:w-[22px] sm:h-[22px] rounded-[6px] object-cover ring-1 ring-black/[0.06] shrink-0"
                     />

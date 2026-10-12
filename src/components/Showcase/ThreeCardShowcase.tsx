@@ -6,17 +6,17 @@ const CARDS: CardItem[] = [
   {
     id: 'week',
     name: '周视图',
-    image: '/assets/screen-week.jpg',
+    image: `${import.meta.env.BASE_URL}assets/screen-week.jpg`,
   },
   {
     id: 'today',
     name: '今日',
-    image: '/assets/screen-today.jpg',
+    image: `${import.meta.env.BASE_URL}assets/screen-today.jpg`,
   },
   {
     id: 'more',
     name: '更多',
-    image: '/assets/screen-more.jpg',
+    image: `${import.meta.env.BASE_URL}assets/screen-more.jpg`,
   },
 ]
 

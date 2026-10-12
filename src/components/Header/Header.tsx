@@ -47,7 +47,7 @@ export const Header: React.FC = () => {
       <div className="flex items-center gap-2.5 sm:gap-3">
         <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-[10px] sm:rounded-[11px] overflow-hidden ring-1 ring-black/[0.08] shadow-xs bg-white p-0.5 flex items-center justify-center shrink-0">
           <img
-            src="/assets/app-icon-circle.png"
+            src={`${import.meta.env.BASE_URL}assets/app-icon-circle.png`}
             alt="课程表 Logo"
             className="w-full h-full object-cover rounded-[8px] sm:rounded-[9px]"
           />
