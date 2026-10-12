@@ -24,8 +24,17 @@ export const Footer: React.FC = () => {
         <h2 className="text-2xl sm:text-4xl md:text-5xl font-semibold tracking-[-0.03em] text-neutral-950 mb-3 sm:mb-4">
           为真实校园查课场景构建。
         </h2>
-        <p className="text-[14.5px] sm:text-base md:text-[17px] text-neutral-600 font-normal leading-relaxed max-w-2xl mx-auto mb-8 sm:mb-10">
+        <p className="text-[14.5px] sm:text-base md:text-[17px] text-neutral-600 font-normal leading-relaxed max-w-2xl mx-auto mb-2 sm:mb-2.5">
           一个面向山东商务职业学院学生的开源 Android 原生项目。日常课程数据保存在本机。
+        </p>
+        <p className="text-[14.5px] sm:text-base md:text-[17px] text-neutral-600 font-normal leading-relaxed max-w-2xl mx-auto mb-8 sm:mb-10">
+          使用过程中遇到问题，或有任何改进建议，欢迎通过邮箱联系开发者：
+          <a
+            href="mailto:suyu20651@gmail.com"
+            className="text-neutral-900 hover:underline underline-offset-4 transition-colors"
+          >
+            suyu20651@gmail.com
+          </a>
         </p>
 
         {/* Primary Download CTA */}
@@ -62,17 +71,6 @@ export const Footer: React.FC = () => {
             <span>问题反馈</span>
           </a>
         </div>
-
-        {/* Developer Contact */}
-        <p className="text-[14.5px] sm:text-base md:text-[17px] text-neutral-600 font-normal leading-relaxed max-w-2xl mx-auto mb-8 sm:mb-10">
-          使用过程中遇到问题，或有任何改进建议，欢迎通过邮箱联系开发者：
-          <a
-            href="mailto:suyu20651@gmail.com"
-            className="text-neutral-900 hover:underline underline-offset-4 transition-colors"
-          >
-            suyu20651@gmail.com
-          </a>
-        </p>
 
         {/* Technology Stack Credits */}
         <div className="text-[12px] sm:text-[13px] text-neutral-400 font-normal tracking-wide">
