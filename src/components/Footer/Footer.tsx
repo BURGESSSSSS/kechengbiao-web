@@ -1,5 +1,6 @@
 import React from 'react'
 import { Download, MessageSquare } from 'lucide-react'
+import { useDownloadModal } from '../../context/DownloadContext'
 
 const GithubIcon: React.FC<{ className?: string }> = ({ className }) => (
   <svg
@@ -17,6 +18,8 @@ const GithubIcon: React.FC<{ className?: string }> = ({ className }) => (
 )
 
 export const Footer: React.FC = () => {
+  const { openDownloadModal } = useDownloadModal()
+
   return (
     <footer id="download" className="w-full bg-[#FBFBFD] border-t border-neutral-900/[0.06] select-none">
       {/* Top CTA & Summary Box */}
@@ -39,15 +42,14 @@ export const Footer: React.FC = () => {
 
         {/* Primary Download CTA */}
         <div className="mb-10 sm:mb-12">
-          <a
-            href="https://github.com/BURGESSSSSS/schedule-app/releases"
-            target="_blank"
-            rel="noopener noreferrer"
+          <button
+            type="button"
+            onClick={openDownloadModal}
             className="group inline-flex items-center gap-2 px-7 py-3 sm:px-8 sm:py-3.5 rounded-full bg-neutral-950 text-white text-[14px] sm:text-[15px] font-medium tracking-tight shadow-[0_4px_16px_rgba(0,0,0,0.12)] hover:bg-neutral-800 hover:shadow-[0_6px_20px_rgba(0,0,0,0.16)] active:scale-[0.98] transition-all duration-200 cursor-pointer"
           >
             <Download className="w-4 h-4 transition-transform group-hover:-translate-y-0.5 duration-200" />
             <span>下载 Android</span>
-          </a>
+          </button>
         </div>
 
         {/* Secondary Links Row */}

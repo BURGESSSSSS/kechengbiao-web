@@ -1,7 +1,16 @@
-import React, { useEffect, useRef, useState } from 'react'
-import gsap from 'gsap'
-import { ScrollTrigger } from 'gsap/ScrollTrigger'
-import { Check, ChevronLeft, Database, Globe, MoreHorizontal, Radio, RefreshCw, Smartphone, Wifi } from 'lucide-react'
+import React, { useState } from 'react'
+import {
+  Check,
+  ChevronLeft,
+  ChevronRight,
+  Database,
+  Globe,
+  MoreHorizontal,
+  Radio,
+  RefreshCw,
+  Smartphone,
+  Wifi,
+} from 'lucide-react'
 import {
   SCHEDULE_TIME_BANDS,
   SCHOOL_IMPORT_COURSES,
@@ -9,16 +18,15 @@ import {
   type SchoolImportCourse,
 } from './schoolImportData'
 
-gsap.registerPlugin(ScrollTrigger)
-
-type InspectionTab = 'wecom' | 'network' | 'local'
+const TABS = [
+  { id: 'wecom', label: '企微原表', icon: Globe, desc: '在企业微信打开「我的课表」' },
+  { id: 'network', label: '抓取接口', icon: Radio, desc: '截获 /wap/mycourseschedule.action 接口' },
+  { id: 'local', label: '本机保存', icon: Database, desc: '数据已入库，打开 App 即可直接离线查看' },
+] as const
 
 export const InspectionWorkspace: React.FC = () => {
-  const sectionRef = useRef<HTMLElement>(null)
-  const stageCardRef = useRef<HTMLDivElement>(null)
-
-  // Active stage tab: 'wecom' (0) -> 'network' (1) -> 'local' (2)
-  const [activeTab, setActiveTab] = useState<InspectionTab>('wecom')
+  // Active stage tab: 0 ('wecom') -> 1 ('network') -> 2 ('local')
+  const [activeIdx, setActiveIdx] = useState<number>(0)
 
   // Map courses by (dayCol, appTimeRow) for compact table rendering
   const courseBySlot = new Map<string, SchoolImportCourse>()
@@ -29,38 +37,17 @@ export const InspectionWorkspace: React.FC = () => {
   // Monday courses for inspection extraction preview
   const mondayCourses = SCHOOL_IMPORT_COURSES.filter((c) => c.dayCol === 0)
 
-  useEffect(() => {
-    const section = sectionRef.current
-    const stage = stageCardRef.current
-    if (!section || !stage) return
+  const handlePrev = () => {
+    setActiveIdx((prev) => (prev > 0 ? prev - 1 : 2))
+  }
 
-    const ctx = gsap.context(() => {
-      ScrollTrigger.create({
-        trigger: stage,
-        start: 'top 70%',
-        end: 'bottom 20%',
-        scrub: 0.2,
-        onUpdate: (self) => {
-          const p = self.progress
-          // Seamlessly transition tabs based on reading scroll progress
-          if (p < 0.38) {
-            setActiveTab('wecom')
-          } else if (p < 0.72) {
-            setActiveTab('network')
-          } else {
-            setActiveTab('local')
-          }
-        },
-      })
-    }, section)
-
-    return () => ctx.revert()
-  }, [])
+  const handleNext = () => {
+    setActiveIdx((prev) => (prev < 2 ? prev + 1 : 0))
+  }
 
   return (
     <section
       id="school-import"
-      ref={sectionRef}
       className="relative w-full bg-[#FBFBFD] select-none pt-10 sm:pt-14 md:pt-18 pb-14 sm:pb-20 md:pb-24"
     >
       <div className="w-full px-4 sm:px-8 md:px-14 lg:px-20">
@@ -94,7 +81,10 @@ export const InspectionWorkspace: React.FC = () => {
               <div className="flex items-center gap-2.5">
                 <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
                 <span>
-                  捕获真实接口 <code className="text-[11.5px] font-mono bg-neutral-200/60 px-1.5 py-0.5 rounded text-neutral-800">/wap/mycourseschedule.action</code>
+                  捕获真实接口{' '}
+                  <code className="text-[11.5px] font-mono bg-neutral-200/60 px-1.5 py-0.5 rounded text-neutral-800">
+                    /wap/mycourseschedule.action
+                  </code>
                 </span>
               </div>
               <div className="flex items-center gap-2.5">
@@ -113,10 +103,7 @@ export const InspectionWorkspace: React.FC = () => {
               Harmonized 1:1 with Today / Week / Reminder card dimensions
              ================================================================= */}
           <div className="w-full md:w-[56%] flex items-center justify-center">
-            <div
-              ref={stageCardRef}
-              className="relative w-full max-w-[510px] bg-[#F6F6F6] rounded-[28px] sm:rounded-[34px] p-4 sm:p-6 md:p-7 ring-1 ring-black/[0.05] shadow-[0_12px_36px_-10px_rgba(15,23,42,0.06)] flex flex-col gap-3.5 sm:gap-4"
-            >
+            <div className="group relative w-full max-w-[510px] bg-[#F6F6F6] rounded-[28px] sm:rounded-[34px] p-4 sm:p-6 md:p-7 ring-1 ring-black/[0.05] shadow-[0_12px_36px_-10px_rgba(15,23,42,0.06)] flex flex-col gap-3.5 sm:gap-4">
               {/* 1. Header Row */}
               <div className="flex items-center justify-between px-1">
                 <div>
@@ -136,53 +123,69 @@ export const InspectionWorkspace: React.FC = () => {
                 </div>
               </div>
 
-              {/* 2. Interactive Segment Control */}
-              <div className="grid grid-cols-3 p-1 bg-neutral-200/70 rounded-xl text-[12px] sm:text-[13px] font-medium text-neutral-600">
-                <button
-                  type="button"
-                  onClick={() => setActiveTab('wecom')}
-                  className={`py-1.5 rounded-lg flex items-center justify-center gap-1.5 transition-all duration-200 ${
-                    activeTab === 'wecom'
-                      ? 'bg-white text-neutral-950 shadow-xs font-semibold'
-                      : 'hover:text-neutral-900'
-                  }`}
-                >
-                  <Globe className="w-3.5 h-3.5" />
-                  <span>企微原表</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setActiveTab('network')}
-                  className={`py-1.5 rounded-lg flex items-center justify-center gap-1.5 transition-all duration-200 ${
-                    activeTab === 'network'
-                      ? 'bg-white text-neutral-950 shadow-xs font-semibold'
-                      : 'hover:text-neutral-900'
-                  }`}
-                >
-                  <Radio className="w-3.5 h-3.5" />
-                  <span>抓取接口</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setActiveTab('local')}
-                  className={`py-1.5 rounded-lg flex items-center justify-center gap-1.5 transition-all duration-200 ${
-                    activeTab === 'local'
-                      ? 'bg-white text-neutral-950 shadow-xs font-semibold'
-                      : 'hover:text-neutral-900'
-                  }`}
-                >
-                  <Database className="w-3.5 h-3.5" />
-                  <span>本机保存</span>
-                </button>
+              {/* 2. Interactive Segment Control with Sliding Pill */}
+              <div className="relative grid grid-cols-3 p-1 bg-neutral-200/70 rounded-xl text-[12px] sm:text-[13px] font-medium text-neutral-600">
+                {/* Active Pill Indicator */}
+                <div
+                  className="absolute top-1 bottom-1 w-[calc(33.333333%-2.67px)] bg-white rounded-lg shadow-xs transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] pointer-events-none"
+                  style={{
+                    transform: `translateX(calc(${activeIdx * 100}% + ${activeIdx * 4}px))`,
+                  }}
+                />
+
+                {TABS.map((tab, idx) => {
+                  const Icon = tab.icon
+                  const isActive = activeIdx === idx
+                  return (
+                    <button
+                      key={tab.id}
+                      type="button"
+                      onClick={() => setActiveIdx(idx)}
+                      onMouseEnter={() => setActiveIdx(idx)}
+                      className={`relative z-10 py-1.5 rounded-lg flex items-center justify-center gap-1.5 transition-colors duration-200 cursor-pointer ${
+                        isActive
+                          ? 'text-neutral-950 font-semibold'
+                          : 'text-neutral-600 hover:text-neutral-900'
+                      }`}
+                    >
+                      <Icon className="w-3.5 h-3.5" />
+                      <span>{tab.label}</span>
+                    </button>
+                  )
+                })}
               </div>
 
-              {/* 3. Main Stage Content (Smooth State Switch) */}
-              <div className="relative w-full min-h-[300px] sm:min-h-[315px] bg-white rounded-[20px] sm:rounded-[24px] border border-neutral-200/80 shadow-[0_2px_8px_rgba(0,0,0,0.015)] overflow-hidden flex flex-col justify-between">
-                {/* -----------------------------------------------------------
-                    STATE 1: WeCom Authentic Timetable Surface
-                   ----------------------------------------------------------- */}
-                {activeTab === 'wecom' && (
-                  <div className="w-full flex flex-col h-full animate-in fade-in duration-200">
+              {/* 3. Main Stage Content Carousel (Smooth Horizontal Slider with Hover Controls) */}
+              <div className="relative w-full h-[350px] sm:h-[365px] bg-white rounded-[20px] sm:rounded-[24px] border border-neutral-200/80 shadow-[0_2px_8px_rgba(0,0,0,0.015)] overflow-hidden">
+                {/* Left Hover Navigation Arrow */}
+                <button
+                  type="button"
+                  onClick={handlePrev}
+                  aria-label="查看上一页"
+                  className="absolute left-2.5 top-1/2 -translate-y-1/2 z-20 w-8 h-8 rounded-full bg-white/90 shadow-md border border-black/[0.06] flex items-center justify-center text-neutral-700 hover:text-neutral-950 hover:scale-110 active:scale-95 transition-all duration-200 opacity-0 group-hover:opacity-100 cursor-pointer backdrop-blur-sm"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </button>
+
+                {/* Right Hover Navigation Arrow */}
+                <button
+                  type="button"
+                  onClick={handleNext}
+                  aria-label="查看下一页"
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 z-20 w-8 h-8 rounded-full bg-white/90 shadow-md border border-black/[0.06] flex items-center justify-center text-neutral-700 hover:text-neutral-950 hover:scale-110 active:scale-95 transition-all duration-200 opacity-0 group-hover:opacity-100 cursor-pointer backdrop-blur-sm"
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+
+                {/* Sliding Carousel Track */}
+                <div
+                  className="flex w-[300%] h-full transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]"
+                  style={{ transform: `translateX(-${activeIdx * (100 / 3)}%)` }}
+                >
+                  {/* -----------------------------------------------------------
+                      PAGE 1: WeCom Authentic Timetable Surface
+                     ----------------------------------------------------------- */}
+                  <div className="w-1/3 shrink-0 flex flex-col justify-between h-full">
                     {/* WeCom App Chrome */}
                     <div className="px-3.5 sm:px-4 py-2.5 bg-[#EDEDED] border-b border-black/[0.06] flex items-center justify-between text-neutral-800 text-xs">
                       <div className="flex items-center gap-1.5 font-medium">
@@ -211,9 +214,14 @@ export const InspectionWorkspace: React.FC = () => {
 
                       <div className="space-y-1.5 pt-2">
                         {SCHEDULE_TIME_BANDS.map((band) => (
-                          <div key={band.bandIndex} className="grid grid-cols-6 gap-1.5 items-stretch min-h-[46px] sm:min-h-[50px]">
+                          <div
+                            key={band.bandIndex}
+                            className="grid grid-cols-6 gap-1.5 items-stretch min-h-[46px] sm:min-h-[50px]"
+                          >
                             <div className="flex flex-col items-center justify-center text-[10px] text-neutral-400 font-mono bg-neutral-100/70 rounded-md p-1">
-                              <span className="font-semibold text-neutral-600">{band.periodRangeLabel}</span>
+                              <span className="font-semibold text-neutral-600">
+                                {band.periodRangeLabel}
+                              </span>
                               <span className="text-[9px] text-neutral-400">{band.appTime}</span>
                             </div>
 
@@ -232,7 +240,9 @@ export const InspectionWorkspace: React.FC = () => {
                                 <div
                                   key={dayIdx}
                                   style={{
-                                    backgroundColor: isMonday ? course.sourceColor : `${course.sourceColor}33`,
+                                    backgroundColor: isMonday
+                                      ? course.sourceColor
+                                      : `${course.sourceColor}33`,
                                     color: isMonday ? '#FFFFFF' : '#333333',
                                   }}
                                   className={`rounded-md p-1 sm:p-1.5 flex flex-col justify-between text-[10px] leading-tight ${
@@ -256,13 +266,11 @@ export const InspectionWorkspace: React.FC = () => {
                       <span className="text-emerald-600 font-medium">第 7 周 (本周)</span>
                     </div>
                   </div>
-                )}
 
-                {/* -----------------------------------------------------------
-                    STATE 2: CDP Network Interception
-                   ----------------------------------------------------------- */}
-                {activeTab === 'network' && (
-                  <div className="w-full p-4 sm:p-5 bg-[#111318] text-white flex flex-col justify-between h-full animate-in fade-in duration-200">
+                  {/* -----------------------------------------------------------
+                      PAGE 2: CDP Network Interception
+                     ----------------------------------------------------------- */}
+                  <div className="w-1/3 shrink-0 p-4 sm:p-5 bg-[#111318] text-white flex flex-col justify-between h-full">
                     <div className="space-y-3">
                       {/* Technical Hook Header */}
                       <div className="flex items-center justify-between text-[11px] font-mono text-neutral-400 border-b border-white/10 pb-2.5">
@@ -299,7 +307,9 @@ export const InspectionWorkspace: React.FC = () => {
                       <div className="grid grid-cols-3 gap-2 text-center font-mono py-1">
                         <div className="bg-white/5 rounded-lg p-2 border border-white/5">
                           <div className="text-lg font-bold text-white">07</div>
-                          <div className="text-[10px] text-neutral-400 uppercase mt-0.5">Academic Week</div>
+                          <div className="text-[10px] text-neutral-400 uppercase mt-0.5">
+                            Academic Week
+                          </div>
                         </div>
                         <div className="bg-white/5 rounded-lg p-2 border border-white/5">
                           <div className="text-lg font-bold text-white">06</div>
@@ -318,13 +328,11 @@ export const InspectionWorkspace: React.FC = () => {
                       <span className="text-emerald-400">Ready for Room</span>
                     </div>
                   </div>
-                )}
 
-                {/* -----------------------------------------------------------
-                    STATE 3: Local Persistence Proof (Room SQLite & Native App UI)
-                   ----------------------------------------------------------- */}
-                {activeTab === 'local' && (
-                  <div className="w-full p-4 sm:p-5 bg-white flex flex-col justify-between h-full animate-in fade-in duration-200">
+                  {/* -----------------------------------------------------------
+                      PAGE 3: Local Persistence Proof (Room SQLite & Native App UI)
+                     ----------------------------------------------------------- */}
+                  <div className="w-1/3 shrink-0 p-4 sm:p-5 bg-white flex flex-col justify-between h-full">
                     <div className="space-y-3">
                       {/* Room Database Banner */}
                       <div className="p-3 bg-emerald-50/70 border border-emerald-100 rounded-xl flex items-center justify-between">
@@ -391,21 +399,37 @@ export const InspectionWorkspace: React.FC = () => {
                       <Smartphone className="w-3.5 h-3.5 text-neutral-400" />
                     </div>
                   </div>
-                )}
+                </div>
               </div>
 
-              {/* 4. Bottom Explanatory Strip */}
+              {/* 4. Bottom Interactive Pagination Strip */}
               <div className="px-2 text-[12px] text-neutral-500 font-normal flex items-center justify-between">
-                <span>
-                  {activeTab === 'wecom' && '在企业微信打开「我的课表」'}
-                  {activeTab === 'network' && '截获 /wap/mycourseschedule.action 接口'}
-                  {activeTab === 'local' && '数据已入库，打开 App 即可直接离线查看'}
+                <span className="transition-opacity duration-200">
+                  {TABS[activeIdx].desc}
                 </span>
-                <span className="font-mono text-neutral-400 text-[11px]">
-                  {activeTab === 'wecom' && '1/3'}
-                  {activeTab === 'network' && '2/3'}
-                  {activeTab === 'local' && '3/3'}
-                </span>
+
+                <div className="flex items-center gap-2 shrink-0">
+                  {/* Dot Indicators */}
+                  <div className="flex items-center gap-1.5">
+                    {TABS.map((_, dotIdx) => (
+                      <button
+                        key={dotIdx}
+                        type="button"
+                        onClick={() => setActiveIdx(dotIdx)}
+                        aria-label={`切换到第 ${dotIdx + 1} 页`}
+                        className={`h-1.5 rounded-full transition-all duration-300 ${
+                          activeIdx === dotIdx
+                            ? 'w-4 bg-neutral-800'
+                            : 'w-1.5 bg-neutral-300 hover:bg-neutral-400'
+                        }`}
+                      />
+                    ))}
+                  </div>
+
+                  <span className="font-mono text-neutral-400 text-[11px] ml-1">
+                    {activeIdx + 1}/3
+                  </span>
+                </div>
               </div>
             </div>
           </div>

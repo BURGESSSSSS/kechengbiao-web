@@ -7,6 +7,8 @@ import { WeekScrollDemo } from './components/WeekDemo/WeekScrollDemo'
 import { ReminderScrollDemo } from './components/ReminderDemo/ReminderScrollDemo'
 import { SchoolImportDemo } from './components/SchoolImportDemo/SchoolImportDemo'
 import { Footer } from './components/Footer/Footer'
+import { DownloadModal } from './components/DownloadModal/DownloadModal'
+import { DownloadProvider } from './context/DownloadContext'
 import { useSmoothScroll } from './hooks/useSmoothScroll'
 
 export const App: React.FC = () => {
@@ -14,18 +16,21 @@ export const App: React.FC = () => {
   useSmoothScroll()
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#FBFBFD] text-neutral-900 selection:bg-neutral-900 selection:text-white">
-      <Header />
-      <main className="flex-1">
-        <Hero />
-        <PerformanceSection />
-        <TodayScrollDemo />
-        <WeekScrollDemo />
-        <ReminderScrollDemo />
-        <SchoolImportDemo />
-      </main>
-      <Footer />
-    </div>
+    <DownloadProvider>
+      <div className="min-h-screen flex flex-col bg-[#FBFBFD] text-neutral-900 selection:bg-neutral-900 selection:text-white">
+        <Header />
+        <main className="flex-1">
+          <Hero />
+          <PerformanceSection />
+          <TodayScrollDemo />
+          <WeekScrollDemo />
+          <ReminderScrollDemo />
+          <SchoolImportDemo />
+        </main>
+        <Footer />
+        <DownloadModal />
+      </div>
+    </DownloadProvider>
   )
 }
 

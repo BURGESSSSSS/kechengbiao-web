@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react'
 import gsap from 'gsap'
 import { Download } from 'lucide-react'
+import { useDownloadModal } from '../../context/DownloadContext'
 
 export const HeroIntro: React.FC = () => {
   const containerRef = useRef<HTMLDivElement>(null)
@@ -8,6 +9,7 @@ export const HeroIntro: React.FC = () => {
   const titleRef = useRef<HTMLHeadingElement>(null)
   const ctaRef = useRef<HTMLDivElement>(null)
   const attributesRef = useRef<HTMLDivElement>(null)
+  const { openDownloadModal } = useDownloadModal()
 
   useEffect(() => {
     const ctx = gsap.context(() => {
@@ -48,6 +50,7 @@ export const HeroIntro: React.FC = () => {
     e.preventDefault()
     const btn = e.currentTarget as HTMLElement
     gsap.fromTo(btn, { scale: 0.96 }, { scale: 1, duration: 0.25, ease: 'power1.out' })
+    openDownloadModal()
   }
 
   return (
@@ -76,14 +79,14 @@ export const HeroIntro: React.FC = () => {
 
       {/* Download Android Button */}
       <div ref={ctaRef} className="mb-3 sm:mb-3.5">
-        <a
-          href="#download"
+        <button
+          type="button"
           onClick={handleDownloadClick}
           className="group inline-flex items-center gap-2 px-6 py-2.5 sm:px-7 sm:py-3.5 rounded-full bg-neutral-950 text-white text-[13px] sm:text-[15px] font-medium tracking-tight shadow-[0_4px_14px_rgba(0,0,0,0.1)] hover:bg-neutral-800 hover:shadow-[0_6px_18px_rgba(0,0,0,0.14)] active:scale-[0.98] transition-all duration-200 cursor-pointer"
         >
           <Download className="w-3.5 h-3.5 sm:w-4 sm:h-4 transition-transform group-hover:-translate-y-0.5 duration-200" />
           <span>下载 Android</span>
-        </a>
+        </button>
       </div>
 
       {/* Second Information Tier: 4 Core Attributes */}

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { Download } from 'lucide-react'
+import { useDownloadModal } from '../../context/DownloadContext'
 
 const GithubIcon: React.FC<{ className?: string }> = ({ className }) => (
   <svg
@@ -18,6 +19,7 @@ const GithubIcon: React.FC<{ className?: string }> = ({ className }) => (
 
 export const Header: React.FC = () => {
   const [isScrolled, setIsScrolled] = useState<boolean>(false)
+  const { openDownloadModal } = useDownloadModal()
 
   useEffect(() => {
     const handleScroll = () => {
@@ -73,13 +75,14 @@ export const Header: React.FC = () => {
           </a>
 
           {/* Quick Header CTA */}
-          <a
-            href="#download"
-            className="inline-flex items-center gap-1 sm:gap-1.5 px-2.5 py-1 sm:px-3.5 sm:py-1.5 text-[11.5px] sm:text-[13px] font-medium text-white bg-neutral-950 rounded-full shadow-xs hover:bg-neutral-800 transition-colors duration-150 active:scale-[0.98]"
+          <button
+            type="button"
+            onClick={openDownloadModal}
+            className="inline-flex items-center gap-1 sm:gap-1.5 px-2.5 py-1 sm:px-3.5 sm:py-1.5 text-[11.5px] sm:text-[13px] font-medium text-white bg-neutral-950 rounded-full shadow-xs hover:bg-neutral-800 transition-colors duration-150 active:scale-[0.98] cursor-pointer"
           >
             <Download className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
             <span>下载 Android</span>
-          </a>
+          </button>
         </div>
       </div>
     </header>
