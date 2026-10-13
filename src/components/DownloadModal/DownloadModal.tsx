@@ -110,12 +110,12 @@ export const DownloadModal: React.FC = () => {
                   <span className="font-semibold text-[14.5px] sm:text-[15.5px] text-neutral-900 group-hover:text-neutral-950">
                     GitHub 下载
                   </span>
-                  <span className="px-2 py-0.5 rounded-full bg-neutral-100 text-neutral-600 text-[10.5px] font-medium font-mono">
-                    Releases
+                  <span className="px-2 py-0.5 rounded-full bg-neutral-100 text-neutral-600 text-[10.5px] font-medium">
+                    免登录
                   </span>
                 </div>
                 <div className="text-[11.5px] sm:text-[12.5px] text-neutral-500 font-normal mt-0.5">
-                  官方开源仓库发布 · 需顺畅网络访问
+                  官方 Releases 发布 · 免登录直接下载 APK
                 </div>
               </div>
             </div>
@@ -142,11 +142,11 @@ export const DownloadModal: React.FC = () => {
                     123云盘下载
                   </span>
                   <span className="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 text-[10.5px] font-medium border border-emerald-100">
-                    高速免登
+                    高速不限速
                   </span>
                 </div>
                 <div className="text-[11.5px] sm:text-[12.5px] text-neutral-500 font-normal mt-0.5">
-                  国内不限速下载通道 · 免登录即开即下
+                  国内高速下载通道 · 需登录 123 云盘账号
                 </div>
               </div>
             </div>
