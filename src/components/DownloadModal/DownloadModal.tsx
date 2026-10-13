@@ -78,9 +78,14 @@ export const DownloadModal: React.FC = () => {
             />
           </div>
           <div>
-            <h3 id="download-modal-title" className="text-[17px] sm:text-[19px] font-bold text-neutral-950 tracking-tight leading-tight">
-              下载课程表 Android
-            </h3>
+            <div className="flex items-center gap-2">
+              <h3 id="download-modal-title" className="text-[17px] sm:text-[19px] font-bold text-neutral-950 tracking-tight leading-tight">
+                下载课程表 Android
+              </h3>
+              <span className="px-2 py-0.5 rounded-full bg-neutral-200/70 text-neutral-800 text-[11px] font-mono font-semibold">
+                v{DOWNLOAD_CONFIG.latestVersion}
+              </span>
+            </div>
             <p className="text-[12px] sm:text-[13px] text-neutral-500 font-normal mt-0.5">
               选择适合你的下载方式 · 官方正版保证
             </p>
@@ -134,14 +139,14 @@ export const DownloadModal: React.FC = () => {
               <div>
                 <div className="flex items-center gap-2">
                   <span className="font-semibold text-[14.5px] sm:text-[15.5px] text-neutral-900 group-hover:text-neutral-950">
-                    国内网盘下载
+                    123云盘下载
                   </span>
                   <span className="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 text-[10.5px] font-medium border border-emerald-100">
                     高速免登
                   </span>
                 </div>
                 <div className="text-[11.5px] sm:text-[12.5px] text-neutral-500 font-normal mt-0.5">
-                  国内不限速下载通道 · 即开即下
+                  国内不限速下载通道 · 免登录即开即下
                 </div>
               </div>
             </div>
@@ -157,7 +162,7 @@ export const DownloadModal: React.FC = () => {
             <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
             <span>无广告 · 无常驻后台 · 纯本地运行</span>
           </div>
-          <span>Android 8.0+</span>
+          <span>Android 7.0+</span>
         </div>
       </div>
     </div>
