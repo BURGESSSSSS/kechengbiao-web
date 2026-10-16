@@ -142,11 +142,11 @@ export const DownloadModal: React.FC = () => {
                     123云盘下载
                   </span>
                   <span className="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 text-[10.5px] font-medium border border-emerald-100">
-                    高速不限速
+                    免登录
                   </span>
                 </div>
                 <div className="text-[11.5px] sm:text-[12.5px] text-neutral-500 font-normal mt-0.5">
-                  国内高速下载通道 · 需登录 123 云盘账号
+                  国内下载通道 · 免登录，分享流量由发布者承担
                 </div>
               </div>
             </div>

@@ -13,7 +13,7 @@ export const DOWNLOAD_CONFIG = {
   githubUrl: 'https://github.com/BURGESSSSSS/schedule-app/releases/tag/v1.3.7',
 
   // 国内高速网盘下载地址（123云盘分享）
-  panUrl: 'https://1819336239.share.123pan.cn/123pan/LPl9jv-CleAh',
+  panUrl: 'https://1819336239.share.123pan.cn/123pan/LPl9jv-2JeHh',
 
   // 网盘提取码（如无提取码留空）
   panCode: '',
